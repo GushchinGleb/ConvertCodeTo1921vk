@@ -403,6 +403,21 @@
               <FileType>1</FileType>
               <FilePath>.\main.c</FilePath>
             </File>
+            <File>
+              <FileName>initDevice.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\initDevice.c</FilePath>
+            </File>
+            <File>
+              <FileName>InternalFlashUtils.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\InternalFlashUtils.c</FilePath>
+            </File>
+            <File>
+              <FileName>FlashPrimitive.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\FlashPrimitive.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -430,6 +445,26 @@
             </File>
           </Files>
         </Group>
+        <Group>
+          <GroupName>include</GroupName>
+          <Files>
+            <File>
+              <FileName>initDevice.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\include\initDevice.h</FilePath>
+            </File>
+            <File>
+              <FileName>InternalFlashPrimitives.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\include\InternalFlashPrimitives.h</FilePath>
+            </File>
+            <File>
+              <FileName>InternalFlashUtils.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\include\InternalFlashUtils.h</FilePath>
+            </File>
+          </Files>
+        </Group>
       </Groups>
     </Target>
   </Targets>
@@ -439,5 +474,14 @@
     <components/>
     <files/>
   </RTE>
+
+  <LayerInfo>
+    <Layers>
+      <Layer>
+        <LayName>blinky</LayName>
+        <LayPrjMark>1</LayPrjMark>
+      </Layer>
+    </Layers>
+  </LayerInfo>
 
 </Project>
