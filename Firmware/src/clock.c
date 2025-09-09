@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "board.h"
+#include "../inc/board.h"
 
 // Bare-metal register struct definitions omitted for brevity.
 // Pseudocode using VK035 fields; replace BASE/fields with your header pack.

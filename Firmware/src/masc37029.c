@@ -1,5 +1,5 @@
-#include "masc37029.h"
-#include "i2c_master.h"
+#include "../inc/masc37029.h"
+#include "../inc/i2c_master.h"
 
 bool masc_read_id(uint8_t* id){
   return i2cm_read_reg(I2C_ADDR_MASC, MASC_CHIPID, id);

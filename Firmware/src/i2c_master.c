@@ -1,4 +1,4 @@
-#include "i2c_master.h"
+#include "../inc/i2c_master.h"
 
 // Map to I2C instance used for MASC (e.g., I2C0 as master)
 #define I2C_BASE ((volatile uint32_t*)0x40030000)

@@ -1,4 +1,4 @@
-#include "flash_if.h"
+#include "../inc/flash_if.h"
 #include <string.h>
 
 // Replace with actual base addresses from A.4 regs in your device headers

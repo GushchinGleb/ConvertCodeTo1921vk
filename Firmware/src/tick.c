@@ -1,5 +1,5 @@
-#include "tick.h"
-#include "sfp28.h"
+#include "../inc/tick.h"
+#include "../inc/sfp28.h"
 
 // Configure a general-purpose timer to 1 kHz and roll flags.
 

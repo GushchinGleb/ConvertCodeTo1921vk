@@ -1,5 +1,5 @@
-#include "eeprom_a0a2.h"
-#include "flash_if.h"
+#include "../inc/eeprom_a0a2.h"
+#include "../inc/flash_if.h"
 #include <string.h>
 
 // Choose Flash locations (adjust within 64KB program flash)

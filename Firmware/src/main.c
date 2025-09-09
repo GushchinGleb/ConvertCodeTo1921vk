@@ -1,12 +1,12 @@
 #include <stdint.h>
-#include "board.h"
-#include "sfp28.h"
-#include "tick.h"
-#include "flash_if.h"
-#include "i2c_master.h"
-#include "i2c_slave.h"
-#include "eeprom_a0a2.h"
-#include "masc37029.h"
+#include "../inc/board.h"
+#include "../inc/sfp28.h"
+#include "../inc/tick.h"
+#include "../inc/flash_if.h"
+#include "../inc/i2c_master.h"
+#include "../inc/i2c_slave.h"
+#include "../inc/eeprom_a0a2.h"
+#include "../inc/masc37029.h"
 
 static void gpio_init(void){
   // Configure VK035 GPIO dir, pull, altfunc:
@@ -32,13 +32,13 @@ int main(void){
   i2cs_init(I2C_ADDR_A0); // We’ll handle 0x50 & 0x51 in ISR by aliasing or instantiate a second slave if HW supports dual address.
 
   // 4) Probe MASC
-  uint8_t id=0;
+  uint8_t id = 0;
   if(masc_read_id(&id)){
     // compare against 0x87/0x8D
   }
 
   // 5) Main loop
-  for(;;){
+  while (1){
     uint8_t f = g_time_flags; g_time_flags = 0;
 
     if(f & TIME_100MS_FLAG){

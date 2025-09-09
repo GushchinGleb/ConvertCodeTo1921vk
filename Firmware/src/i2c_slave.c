@@ -1,6 +1,6 @@
-#include "i2c_slave.h"
-#include "eeprom_a0a2.h"
-#include "sfp28.h"
+#include "../inc/i2c_slave.h"
+#include "../inc/eeprom_a0a2.h"
+#include "../inc/sfp28.h"
 
 // Use I2C1 as SFP slave (addresses 0x50/0x51). We’ll switch the page based on the upper address byte (as in SFP A2 paging).
 
