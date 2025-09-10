@@ -1,4 +1,10 @@
-#pragma once
+#ifndef _BOARD_H
+#define _BOARD_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
 #include <stdint.h>
 
 // ===== I2C addresses =====
@@ -17,3 +23,9 @@
 
 // ===== Clocks =====
 // We’ll run from PLL for 100 MHz SYSCLK if HSE present; otherwise OSI.
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
+#endif // _BOARD_H

@@ -10,7 +10,7 @@
       <TargetName>blinky_K1921VK035</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5060750::V5.06 update 6 (build 750)::ARMCC</pCCUsed>
+      <pCCUsed>5060960::V5.06 update 7 (build 960)::.\ARMCC</pCCUsed>
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
@@ -325,7 +325,7 @@
             <wLevel>2</wLevel>
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
-            <uC99>0</uC99>
+            <uC99>1</uC99>
             <uGnu>0</uGnu>
             <useXO>0</useXO>
             <v6Lang>1</v6Lang>
@@ -399,11 +399,6 @@
           <GroupName>src</GroupName>
           <Files>
             <File>
-              <FileName>clock.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\clock.c</FilePath>
-            </File>
-            <File>
               <FileName>eeprom_a0a2.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\eeprom_a0a2.c</FilePath>
@@ -417,11 +412,6 @@
               <FileName>i2c_master.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\i2c_master.c</FilePath>
-            </File>
-            <File>
-              <FileName>i2c_slave.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\i2c_slave.c</FilePath>
             </File>
             <File>
               <FileName>main.c</FileName>
@@ -464,11 +454,6 @@
               <FilePath>.\inc\i2c_master.h</FilePath>
             </File>
             <File>
-              <FileName>i2c_slave.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\inc\i2c_slave.h</FilePath>
-            </File>
-            <File>
               <FileName>masc37029.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\inc\masc37029.h</FilePath>
@@ -486,67 +471,17 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>CMSIS</GroupName>
+          <GroupName>retarget</GroupName>
           <Files>
             <File>
-              <FileName>cmsis_armcc.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\CMSIS\Core\Include\cmsis_armcc.h</FilePath>
-            </File>
-            <File>
-              <FileName>cmsis_armclang.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\CMSIS\Core\Include\cmsis_armclang.h</FilePath>
-            </File>
-            <File>
-              <FileName>cmsis_compiler.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\CMSIS\Core\Include\cmsis_compiler.h</FilePath>
-            </File>
-            <File>
-              <FileName>cmsis_gcc.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\CMSIS\Core\Include\cmsis_gcc.h</FilePath>
-            </File>
-            <File>
-              <FileName>cmsis_iccarm.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\CMSIS\Core\Include\cmsis_iccarm.h</FilePath>
-            </File>
-            <File>
-              <FileName>cmsis_version.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\CMSIS\Core\Include\cmsis_version.h</FilePath>
-            </File>
-            <File>
-              <FileName>core_cm4.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\CMSIS\Core\Include\core_cm4.h</FilePath>
-            </File>
-            <File>
-              <FileName>mpu_armv7.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\CMSIS\Core\Include\mpu_armv7.h</FilePath>
-            </File>
-            <File>
-              <FileName>K1921VK035.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\CMSIS\Device\Include\K1921VK035.h</FilePath>
-            </File>
-            <File>
-              <FileName>system_K1921VK035.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\CMSIS\Device\Include\system_K1921VK035.h</FilePath>
-            </File>
-            <File>
-              <FileName>startup_K1921VK035.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>.\CMSIS\Device\Source\ARM\startup_K1921VK035.s</FilePath>
-            </File>
-            <File>
-              <FileName>system_K1921VK035.c</FileName>
+              <FileName>retarget.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\CMSIS\Device\Source\system_K1921VK035.c</FilePath>
+              <FilePath>.\Retarget\retarget.c</FilePath>
+            </File>
+            <File>
+              <FileName>retarget_conf.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Retarget\retarget_conf.h</FilePath>
             </File>
           </Files>
         </Group>

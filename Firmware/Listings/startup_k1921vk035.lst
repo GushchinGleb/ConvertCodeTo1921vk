@@ -654,12 +654,11 @@ ARM Macro Assembler    Page 10
 ARM Macro Assembler    Page 11 
 
 
-Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
-erwork --depend=.\objects\startup_k1921vk035.d -o.\objects\startup_k1921vk035.o
- -I.\RTE\_blinky_K1921VK035 -IF:\Keil_v5\ARM\PACK\NIIET\K1921VK035_DFP\2.0.5\De
-vice\Include -IF:\Keil_v5\ARM\CMSIS\Include --predefine="__UVISION_VERSION SETA
- 525" --predefine="K1921VK035 SETA 1" --list=.\listings\startup_k1921vk035.lst 
-CMSIS\Device\Source\ARM\startup_K1921VK035.s
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp.sp --apcs=
+interwork --depend=.\objects\startup_k1921vk035.d -o.\objects\startup_k1921vk03
+5.o -ID:\Documents\Keil\NIIET\K1921VK035_DFP\2.0.5\Device\Include --predefine="
+__UVISION_VERSION SETA 536" --predefine="K1921VK035 SETA 1" --list=.\listings\s
+tartup_k1921vk035.lst CMSIS\Device\Source\ARM\startup_K1921VK035.s
 
 
 
@@ -1653,3 +1652,4 @@ Symbol: __use_two_region_memory
 Comment: __use_two_region_memory unused
 3 symbols
 436 symbols in table
+le

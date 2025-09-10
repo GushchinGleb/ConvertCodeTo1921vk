@@ -1,4 +1,10 @@
-#pragma once
+#ifndef _SFP28_H
+#define _SFP28_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
 #include <stdint.h>
 
 // Software / password constants (ported 1:1)
@@ -15,3 +21,9 @@
 #define TIME_1SEC_FLAG  (1u << 2)
 
 extern volatile uint8_t g_time_flags;
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
+#endif // _SFP28_H

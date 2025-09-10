@@ -1,57 +1,73 @@
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+	
+#include "K1921VK035.h"
 #include "../inc/flash_if.h"
+#include <stdint.h>
 #include <string.h>
 
-// Replace with actual base addresses from A.4 regs in your device headers
-#define FLASH_BASE   ((volatile uint32_t*)0x40020000)
-#define FLASH_ADDR   (*(volatile uint32_t*)(FLASH_BASE + 0x00/4))
-#define FLASH_DATA0  (*(volatile uint32_t*)(FLASH_BASE + 0x04/4))
-#define FLASH_DATA1  (*(volatile uint32_t*)(FLASH_BASE + 0x08/4))
-#define FLASH_CMD    (*(volatile uint32_t*)(FLASH_BASE + 0x24/4))
-#define FLASH_STAT   (*(volatile uint32_t*)(FLASH_BASE + 0x28/4))
+#define W_SIZE (8) // the size of the flash word (byte)
 
-#define CMD_KEY   (0xC0DEu << 16)
-#define CMD_WR    (1u << 1)
-#define CMD_RD    (1u << 1)   // RD shares the bit per table; write the correct opcode field for read
-#define CMD_ERSEC (1u << 2)
-
-static inline bool wait_ready(void){
-  // poll FLASH_STAT BUSY==0, check ERR bits; exact bitfields per A.4.6. :contentReference[oaicite:17]{index=17}
-  for(volatile int i=0;i<1000000;i++){
-    uint32_t s = FLASH_STAT;
-    if((s & (1u<<0))==0) return (s & 0xDEAD0000u)==0; // placeholder ERR mask
+static int8_t wait_ready(){
+  for (volatile uint32_t i = 0; i < 1000000u; i++) {
+    if(!MFLASH->STAT_bit.BUSY) {
+			return 0;
+		}
   }
-  return false;
+  return -1; // timeout
 }
 
-bool flash_page_erase(uint32_t addr){
-  FLASH_ADDR = addr;
-  FLASH_CMD  = CMD_KEY | CMD_ERSEC;
-  return wait_ready();
+int8_t flash_page_erase(uint32_t addr) {
+	if (wait_ready()) {
+		return -1; // timeout
+	}
+
+  MFLASH->ADDR = addr; // [page 255]
+	MFLASH->CMD = 1 << MFLASH_CMD_ERSEC_Pos | MFLASH_CMD_KEY_Access << MFLASH_CMD_KEY_Pos; // perform erase [page 256]
+	return wait_ready();
 }
 
-bool flash_write128(uint32_t addr, const uint32_t* p){
-  // Write 128 bytes in 64-bit beats via DATA0/DATA1, sequencing CMD.WR each step. :contentReference[oaicite:18]{index=18}
-  for(uint32_t off=0; off<128; off+=8){
-    FLASH_ADDR = addr + off;
-    FLASH_DATA0 = p[0];
-    FLASH_DATA1 = p[1];
-    FLASH_CMD = CMD_KEY | CMD_WR;
-    if(!wait_ready()) return false;
-    p += 2;
+int8_t flash_read(uint32_t addr, uint8_t* data, uint32_t size) {
+	if (wait_ready()) {
+		return -1; // timeout
+	}
+
+	for (uint32_t off = 0; off < size; off += 4) {
+		const uint32_t remain = size - off;
+    MFLASH->ADDR = addr + off; // [page 255]
+	  MFLASH->CMD = 1 << MFLASH_CMD_RD_Pos | (uint32_t)MFLASH_CMD_KEY_Access << MFLASH_CMD_KEY_Pos; // perform erase [page 256]
+		if(!wait_ready()) {
+			return -1; // timeout
+		}
+		uint8_t data_prep[W_SIZE] = {0};
+		memcpy(&data[off], MFLASH->DATA, remain > W_SIZE ? W_SIZE : remain);
   }
-  return true;
+	
+	return 0; // ok
 }
 
-bool flash_read128(uint32_t addr, uint32_t* p){
-  for(uint32_t off=0; off<128; off+=8){
-    FLASH_ADDR = addr + off;
-    FLASH_CMD = CMD_KEY | CMD_RD;
-    if(!wait_ready()) return false;
-    p[0] = FLASH_DATA0;
-    p[1] = FLASH_DATA1;
-    p += 2;
+int8_t flash_write(uint32_t addr, const uint8_t* data, uint32_t size) {
+	if (wait_ready()) {
+		return -1; // timeout
+	}
+
+	for(uint32_t off = 0; off < size; off += W_SIZE){
+		const uint32_t remain = size - off;
+    MFLASH->ADDR = addr + off; // [page 255]
+		uint8_t data_prep[8] = {0};
+		memcpy(data_prep, &data[off], remain > W_SIZE ? W_SIZE : remain);
+		memcpy(MFLASH->DATA, data_prep, W_SIZE);
+	  MFLASH->CMD = 1 << MFLASH_CMD_WR_Pos | MFLASH_CMD_KEY_Access << MFLASH_CMD_KEY_Pos; // perform erase [page 256]
+		
+    if(!wait_ready()) {
+			return -1; // timeout
+		}
   }
-  return true;
+	
+	return 0; // ok
 }
 
-bool flash_init(void){ return true; }
+#ifdef __cplusplus
+}
+#endif // __cplusplus

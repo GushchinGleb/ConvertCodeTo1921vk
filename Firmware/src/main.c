@@ -1,51 +1,124 @@
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+	
 #include <stdint.h>
+
+#include "K1921VK035.h"
+
 #include "../inc/board.h"
+#include "../inc/eeprom_a0a2.h"
+#include "../inc/flash_if.h"
+#include "../inc/masc37029.h"
+#include "../inc/i2c_master.h"
 #include "../inc/sfp28.h"
 #include "../inc/tick.h"
-#include "../inc/flash_if.h"
-#include "../inc/i2c_master.h"
-#include "../inc/i2c_slave.h"
-#include "../inc/eeprom_a0a2.h"
-#include "../inc/masc37029.h"
 
-static void gpio_init(void){
-  // Configure VK035 GPIO dir, pull, altfunc:
-  // - assign I2C1 pins for SFP slave (SCL/SDA)
-  // - assign I2C0 pins for MASC master (SCL/SDA)
-  // - TX_DISABLE/RS pins outputs; LOS/TX_FAULT inputs
-  // GPIO register details are in Appendix A.2. (dir, alt func, pull). :contentReference[oaicite:32]{index=32}
-}
+extern uint8_t Time_flags;
+extern eep_page_t g_a0_low, g_a0_hi, g_a2_low, g_a2_hi;
 
-int main(void){
-  // 1) Clocks
-  select_sysclk_osi();                 // safe
-  clock_init_100mhz_from_hse(8000000); // or keep OSI if no crystal
+static void gpio_init();
+static void Check_timer_interval();
+static void periph_init();
 
-  // 2) GPIO and peripherals
-  gpio_init();
-  tick_init(100000000u);
-  flash_init();
+//-----------------------------------------------------------------------------
+// main() Routine
+// ----------------------------------------------------------------------------
+// Note: the software watchdog timer is not disabled by default in this
+// example, so a long-running program will reset periodically unless
+// the timer is disabled or your program periodically writes to it.
+//
+// Review the "Watchdog Timer" section under the part family's datasheet
+// for details. To find the datasheet, select your part in the
+// Simplicity Launcher and click on "Data Sheet".
+//-----------------------------------------------------------------------------
+int main (void) {
+	//Dummy call to shut up linker warning
+  SystemInit();
+
+	//Init peripheral modules
+	periph_init();
+
+	//Init variables
+	//Init_variables();
+
+	//Load SFP28 module memory blocks from flash
   eep_pages_init_from_flash();
 
-  // 3) I2C: master to MASC; slave to host
-  i2cm_init(/*pclk*/100000000u, /*scl*/100000u);
-  i2cs_init(I2C_ADDR_A0); // We’ll handle 0x50 & 0x51 in ISR by aliasing or instantiate a second slave if HW supports dual address.
+	//Init MASC-37029
+	init_MASC_37029();
 
-  // 4) Probe MASC
-  uint8_t id = 0;
-  if(masc_read_id(&id)){
-    // compare against 0x87/0x8D
-  }
+	//Check Global TxDisable
+//	Check_TxDisable();
 
-  // 5) Main loop
-  while (1){
-    uint8_t f = g_time_flags; g_time_flags = 0;
+	while (1) {
+		//Check timer intervals
+		Check_timer_interval();
 
-    if(f & TIME_100MS_FLAG){
-      // poll LOS/TX_FAULT, update A2 Stat_Control bits, etc.
-    }
-    if(f & TIME_1SEC_FLAG){
-      // optional periodic commits or MASC health checks
-    }
-  }
+		//Check register action
+		//Check_register_action();
+
+		//Check flash page update action
+//		Check_flash_page_action();
+
+		//Work with interrupt flags
+//		Work_with_interrupts();
+
+		//Check Global TxDisable
+//		Check_TxDisable();
+
+	}
 }
+
+static void gpio_init(){
+	// Pin 27 (GPIO B1)
+	GPIOB->OUTMODE_bit.PIN1  = 0x0; // push pull [page 212]
+	GPIOB->OUTENSET_bit.PIN1 = 0x1; // [page 51], [page 9]
+	GPIOB->DATAOUTCLR_bit.PIN1 = 1; // [page 51]
+}
+
+static void periph_init() {
+	SystemCoreClockUpdate(); 
+
+  gpio_init();
+  tick_init(SystemCoreClock); // periodic timers
+
+  i2cm_init(SystemCoreClock, 100000u);
+  i2cs_init(I2C_ADDR_A0);
+}
+
+void Check_timer_interval() {
+	if(Time_flags & TIME_100MS_FLAG) {
+		//100 ms interval
+		Time_flags &= ~TIME_100MS_FLAG;
+
+		//Read input pins state
+		//Read_In_pins();
+		//Work with ADC
+		//Work_with_MASC_ADC();
+
+		//TEST
+		GPIOB->DATAOUTTGL_bit.PIN1 = 1; // [page 51]
+
+	}
+	if(Time_flags & TIME_500MS_FLAG) {
+		//500 ms interval
+		Time_flags &= ~TIME_500MS_FLAG;
+
+		//Read state of MASC
+		//Read_MASC_state();
+
+	}
+	if(Time_flags & TIME_1SEC_FLAG) {
+		//1 second interval
+		Time_flags &= ~TIME_1SEC_FLAG;
+
+		//Read CPU temperature
+		//Read_temperature_sensor();
+
+	}
+}
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus

@@ -1,11 +1,14 @@
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
 #include "../inc/masc37029.h"
 #include "../inc/i2c_master.h"
 
-bool masc_read_id(uint8_t* id){
-  return i2cm_read_reg(I2C_ADDR_MASC, MASC_CHIPID, id);
+void init_MASC_37029() {
+	/** BLOCKED_BY: I2C */
 }
 
-bool masc_init_defaults(void){
-  // Write your power-up register set via i2cm_write_reg()
-  return true;
+#ifdef __cplusplus
 }
+#endif // __cplusplus
