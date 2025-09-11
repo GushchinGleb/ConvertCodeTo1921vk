@@ -347,8 +347,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\inc\masc37029.h</PathWithFileName>
-      <FilenameWithoutPath>masc37029.h</FilenameWithoutPath>
+      <PathWithFileName>.\inc\sfp28.h</PathWithFileName>
+      <FilenameWithoutPath>sfp28.h</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -359,8 +359,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\inc\sfp28.h</PathWithFileName>
-      <FilenameWithoutPath>sfp28.h</FilenameWithoutPath>
+      <PathWithFileName>.\inc\tick.h</PathWithFileName>
+      <FilenameWithoutPath>tick.h</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -371,8 +371,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\inc\tick.h</PathWithFileName>
-      <FilenameWithoutPath>tick.h</FilenameWithoutPath>
+      <PathWithFileName>.\inc\MASC_37029_defs.h</PathWithFileName>
+      <FilenameWithoutPath>MASC_37029_defs.h</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

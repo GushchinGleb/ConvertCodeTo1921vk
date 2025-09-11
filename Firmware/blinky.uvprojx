@@ -454,11 +454,6 @@
               <FilePath>.\inc\i2c_master.h</FilePath>
             </File>
             <File>
-              <FileName>masc37029.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\inc\masc37029.h</FilePath>
-            </File>
-            <File>
               <FileName>sfp28.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\inc\sfp28.h</FilePath>
@@ -467,6 +462,11 @@
               <FileName>tick.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\inc\tick.h</FilePath>
+            </File>
+            <File>
+              <FileName>MASC_37029_defs.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\inc\MASC_37029_defs.h</FilePath>
             </File>
           </Files>
         </Group>

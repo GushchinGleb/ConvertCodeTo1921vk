@@ -1,11 +1,6 @@
-#ifndef _MASC37029_H
-#define _MASC37029_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
-
-#include <stdint.h>
+//=========================================================
+#ifndef __MASC_37029_DEFS_H__
+#define __MASC_37029_DEFS_H__
 
 //-----------------------------------------------------------------------------
 // --- Registers address
@@ -55,10 +50,4 @@ extern "C" {
 #define MASC_37029_CHIPID_VALUE			0x87	//
 #define MASC_37028_CHIPID_VALUE			0x8D	//
 
-void init_MASC_37029(void);
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
-	
-#endif // _MASC37029_H
+#endif	//__MASC_37029_DEFS_H__

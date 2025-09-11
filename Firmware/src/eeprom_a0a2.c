@@ -4,30 +4,31 @@ extern "C" {
 
 #include "../inc/eeprom_a0a2.h"
 #include "../inc/flash_if.h"
+#include "../inc/sfp28.h"
 #include <string.h>
 
 // Flash locations (adjust within 64KB program flash)
-// The last 512B split into 4×128B
-#define FLASH_A0_LOW  (0x0000F800u)
-#define FLASH_A0_HI   (0x0000F880u)
-#define FLASH_A2_LOW  (0x0000F900u)
-#define FLASH_A2_HI   (0x0000F980u)
+// The last 1KB is for user data
+#define FLASH_PAGE  (0x0000FC00)
+#define FLASH_A0    (FLASH_PAGE + sizeof(A0_Page.var))
+#define FLASH_A2    (FLASH_A0   + sizeof(A2_Page.var))
+#define FLASH_A2_UP (FLASH_A2   + sizeof(A2Up_Page.var))
 
-eep_page_t g_a0_low, g_a0_hi, g_a2_low, g_a2_hi;
+A0_Page_t A0_Page;
+A2_Page_t A2_Page;
+A2Up_Page_t A2Up_Page;
 
-void eep_pages_init_from_flash(void) {
-  flash_read(FLASH_A0_LOW, (uint8_t*)&g_a0_low, sizeof(eep_page_t));
-  flash_read(FLASH_A0_HI,  (uint8_t*)&g_a0_low, sizeof(eep_page_t));
-  flash_read(FLASH_A2_LOW, (uint8_t*)&g_a0_low, sizeof(eep_page_t));
-  flash_read(FLASH_A2_HI,  (uint8_t*)&g_a0_low, sizeof(eep_page_t));
+void a0a2_pages_init_from_flash(void) {
+  flash_read(FLASH_A0,    (uint8_t*)&A0_Page.var,   sizeof(A0_Page.var));
+  flash_read(FLASH_A2,    (uint8_t*)&A2_Page.var,   sizeof(A2_Page.var));
+  flash_read(FLASH_A2_UP, (uint8_t*)&A2Up_Page.var, sizeof(A2Up_Page.var));
 }
 
-void eep_pages_commit_to_flash(void) {
-  flash_page_erase(FLASH_A0_LOW);
-  flash_write(FLASH_A0_LOW, (uint8_t*)&g_a0_low, sizeof(eep_page_t));
-  flash_write(FLASH_A0_HI,  (uint8_t*)&g_a0_low, sizeof(eep_page_t));
-  flash_write(FLASH_A2_LOW, (uint8_t*)&g_a0_low, sizeof(eep_page_t));
-  flash_write(FLASH_A2_HI,  (uint8_t*)&g_a0_low, sizeof(eep_page_t));
+void a0a2_pages_commit_to_flash(void) {
+  flash_page_erase(FLASH_PAGE);
+  flash_write(FLASH_A0,    (uint8_t*)&A0_Page.var,   sizeof(A0_Page.var));
+  flash_write(FLASH_A2,    (uint8_t*)&A2_Page.var,   sizeof(A2_Page.var));
+  flash_write(FLASH_A2_UP, (uint8_t*)&A2Up_Page.var, sizeof(A2Up_Page.var));
 }
 
 #ifdef __cplusplus

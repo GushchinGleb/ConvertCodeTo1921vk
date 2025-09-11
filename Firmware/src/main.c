@@ -9,17 +9,20 @@ extern "C" {
 #include "../inc/board.h"
 #include "../inc/eeprom_a0a2.h"
 #include "../inc/flash_if.h"
-#include "../inc/masc37029.h"
+#include "../inc/MASC_37029_defs.h"
 #include "../inc/i2c_master.h"
 #include "../inc/sfp28.h"
 #include "../inc/tick.h"
 
 extern uint8_t Time_flags;
-extern eep_page_t g_a0_low, g_a0_hi, g_a2_low, g_a2_hi;
+extern A0_Page_t A0_Page;
+extern A2_Page_t A2_Page;
+extern A2Up_Page_t A2Up_Page;
 
 static void gpio_init(void);
 static void Check_timer_interval(void);
 static void i2c_check(void);
+static void Init_variables(void);
 static void periph_init(void);
 
 //-----------------------------------------------------------------------------
@@ -34,25 +37,15 @@ static void periph_init(void);
 // Simplicity Launcher and click on "Data Sheet".
 //-----------------------------------------------------------------------------
 int main (void) {
-	//Dummy call to shut up linker warning
   SystemInit();
 
-	//Init peripheral modules
 	periph_init();
 
-	//Init variables
-	//Init_variables();
+	Init_variables();
+		
+	i2c_check(); /** TODO: Remove on release */
 
-	//Load SFP28 module memory blocks from flash
-  eep_pages_init_from_flash();
-	
-	i2c_check();
-
-	//Init MASC-37029
-	init_MASC_37029();
-
-	//Check Global TxDisable
-//	Check_TxDisable();
+	Init_MASC_37029();
 
 	while (1) {
 		//Check timer intervals
@@ -79,7 +72,6 @@ static void gpio_init(){
 	#define PIN_LED PIN8
 	#define LED_EN GPIOAEN
 	
-	
 	RCU->HCLKCFG_bit.LED_EN = 1;
   RCU->HRSTCFG_bit.LED_EN = 1;
 	
@@ -89,24 +81,20 @@ static void gpio_init(){
 }
 
 void Check_timer_interval() {
-	if(Time_flags & TIME_100MS_FLAG) {
-		//100 ms interval
+	if(Time_flags & TIME_100MS_FLAG) { // 100 ms
 		Time_flags &= ~TIME_100MS_FLAG;
 
-		//Read input pins state
-		//Read_In_pins();
-		//Work with ADC
-		//Work_with_MASC_ADC();
+		Read_In_pins();
+		
+		Work_with_MASC_ADC();
 	}
-	if(Time_flags & TIME_500MS_FLAG) {
-		//500 ms interval
+	if(Time_flags & TIME_500MS_FLAG) { // 500 ms
 		Time_flags &= ~TIME_500MS_FLAG;
 
-		//Read state of MASC
-		//Read_MASC_state();
+		Read_MASC_state();
 
 	}
-	if(Time_flags & TIME_1SEC_FLAG) {
+	if(Time_flags & TIME_1SEC_FLAG) { // 1 s
 		//1 second interval
 		Time_flags &= ~TIME_1SEC_FLAG;
 
@@ -136,12 +124,15 @@ static void i2c_check(void) {
 		while (1)
 			GPIO_LED->DATAOUTTGL_bit.PIN_LED = 1; // [page 51];
 	}
-
-	while (1) {
-		/* main loop */
-	}
 }
 
+static void Init_variables(void) {
+	memset(&A0_Page, 0, 128);
+	memset(&A2_Page, 0, 128);
+	memset(&A2Up_Page, 0, 128);
+
+  a0a2_pages_init_from_flash();
+}
 
 static void periph_init() {
 	SystemCoreClockUpdate(); 
