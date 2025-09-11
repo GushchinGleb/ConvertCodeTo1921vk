@@ -5,7 +5,7 @@ extern "C" {
 #include "../inc/masc37029.h"
 #include "../inc/i2c_master.h"
 
-void init_MASC_37029() {
+void init_MASC_37029(void) {
 	/** BLOCKED_BY: I2C */
 }
 
