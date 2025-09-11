@@ -9,7 +9,7 @@ extern "C" {
 
 // Configure a general-purpose timer to 1 kHz and roll flags.
 
-extern uint8_t Time_flags;
+uint8_t Time_flags;
 static uint16_t s_ms = 0;
 
 void tick_init(uint32_t sysclk_hz){

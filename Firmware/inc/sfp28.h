@@ -167,6 +167,7 @@ typedef struct A0_Page_TypeDef {
 } A0_Page_TypeDef;
 
 typedef union A0_Page_Un {
+	uint8_t Bytes[128];
 	A0_Page_TypeDef var;
 } A0_Page_t; // 128 = 0x80
 
@@ -201,6 +202,7 @@ typedef struct A2_Page_TypeDef {
 } A2_Page_TypeDef;
 
 typedef union A2_Page_Un {
+	uint8_t Bytes[128];
 	A2_Page_TypeDef var;
 } A2_Page_t; // 128 = 0x80
 
@@ -298,6 +300,7 @@ typedef struct A2Up_Page_TypeDef {
 } A2Up_Page_TypeDef;
 
 typedef union A2Up_Page_Un {
+	uint8_t Bytes[128];
 	A2Up_Page_TypeDef var;
 } A2Up_Page_t; // 128 = 0x80
 

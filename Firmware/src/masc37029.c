@@ -10,6 +10,8 @@ extern "C" {
 #include "../inc/MASC_37029_defs.h"
 #include "../inc/sfp28.h"
 
+uint8_t ADC_stage;
+
 const MASC_37029_cfg_struct_t MASC_37029_default_config;// = { };
 //	.RESET_REG = 0 };
 

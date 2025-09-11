@@ -20,10 +20,15 @@ extern A2_Page_t A2_Page;
 extern A2Up_Page_t A2Up_Page;
 
 static void gpio_init(void);
+static uint8_t Check_CC_BASE_and_CC_EXT(const uint8_t *A0Low_ptr);
+static uint8_t Check_CC_DMI(const uint8_t *A2Low_ptr);
+static uint8_t Check_Cfg_data_CSum(const A2Up_Page_t *A2UpPtr);
 static void Check_timer_interval(void);
+static void Check_register_action(void);
 static void i2c_check(void);
 static void Init_variables(void);
 static void periph_init(void);
+static void read_in_pins(void);
 
 //-----------------------------------------------------------------------------
 // main() Routine
@@ -51,40 +56,155 @@ int main (void) {
 		//Check timer intervals
 		Check_timer_interval();
 
-		//Check register action
-		//Check_register_action();
-
-		//Check flash page update action
-//		Check_flash_page_action();
-
-		//Work with interrupt flags
-//		Work_with_interrupts();
-
-		//Check Global TxDisable
-//		Check_TxDisable();
-
+		Check_register_action();
 	}
 }
 
 static void gpio_init(){
-	// Pin A8
+	// Pin LED (B8) OUT
 	#define GPIO_LED GPIOB
 	#define PIN_LED PIN8
-	#define LED_EN GPIOAEN
+	#define LED_EN GPIOBEN
 	
 	RCU->HCLKCFG_bit.LED_EN = 1;
   RCU->HRSTCFG_bit.LED_EN = 1;
-	
 	GPIO_LED->DENSET_bit.PIN_LED  = 0x0; // push pull [page 212]
 	GPIO_LED->OUTENSET_bit.PIN_LED = 0x1; // [page 51], [page 9]
 	GPIO_LED->DATAOUTCLR_bit.PIN_LED = 1; // [page 51]
+	
+	// Pin TX_DISABLE (A7) IN
+	#define GPIO_TX_DISABLE GPIOA
+	#define TX_DISABLE_PIN PIN7
+	#define TX_DISABLE_EN GPIOAEN
+	#define TX_DISABLE ((GPIO_TX_DISABLE->DATA_bit.VAL & (1 << 7)) >> 7)
+	
+	RCU->HCLKCFG_bit.TX_DISABLE_EN = 1;
+  RCU->HRSTCFG_bit.TX_DISABLE_EN = 1;
+	GPIO_TX_DISABLE->DENSET_bit.TX_DISABLE_PIN = 0x0; // push pull [page 212]
+	GPIO_TX_DISABLE->INMODE_bit.TX_DISABLE_PIN = 0x1; // [page 51], [page 9]
+	
+	// Pin TX_FAULT (A6) IN
+	#define GPIO_TX_FAULT GPIOA
+	#define TX_FAULT_PIN PIN6
+	#define TX_FAULT_EN GPIOAEN
+	#define TX_FAULT ((GPIO_TX_FAULT->DATA_bit.VAL & (1 << 6)) >> 6)
+	
+	RCU->HCLKCFG_bit.TX_FAULT_EN = 1;
+  RCU->HRSTCFG_bit.TX_FAULT_EN = 1;
+	GPIO_TX_FAULT->DENSET_bit.TX_FAULT_PIN = 0x0; // push pull [page 212]
+	GPIO_TX_FAULT->INMODE_bit.TX_FAULT_PIN = 0x1; // [page 51], [page 9]
+	
+	// Pin LOS (A13) IN
+	#define GPIO_LOS GPIOA
+	#define LOS_PIN PIN13
+	#define LOS_EN GPIOAEN
+	#define LOS ((GPIO_LOS->DATA_bit.VAL & (1 << 13)) >> 13)
+	
+	RCU->HCLKCFG_bit.LOS_EN = 1;
+  RCU->HRSTCFG_bit.LOS_EN = 1;
+	GPIO_LOS->DENSET_bit.LOS_PIN = 0x0; // push pull [page 212]
+	GPIO_LOS->INMODE_bit.LOS_PIN = 0x1; // [page 51], [page 9]
+	
+	// Pin RS0 (A12) IN
+	#define GPIO_RS0 GPIOA
+	#define RS0_PIN PIN12
+	#define RS0_EN GPIOAEN
+	#define RS0 ((GPIO_RS0->DATA_bit.VAL & (1 << 12)) >> 12)
+	
+	RCU->HCLKCFG_bit.RS0_EN = 1;
+  RCU->HRSTCFG_bit.RS0_EN = 1;
+	GPIO_RS0->DENSET_bit.RS0_PIN = 0x0; // push pull [page 212]
+	GPIO_RS0->INMODE_bit.RS0_PIN = 0x1; // [page 51], [page 9]
+	
+	// Pin RS1 (A14) IN
+	#define GPIO_RS1 GPIOA
+	#define RS1_PIN PIN14
+	#define RS1_EN GPIOAEN
+	#define RS1 ((GPIO_RS1->DATA_bit.VAL & (1 << 14)) >> 14)
+	
+	RCU->HCLKCFG_bit.RS1_EN = 1;
+  RCU->HRSTCFG_bit.RS1_EN = 1;
+	GPIO_RS1->DENSET_bit.RS1_PIN = 0x0; // push pull [page 212]
+	GPIO_RS1->INMODE_bit.RS1_PIN = 0x1; // [page 51], [page 9]
+	
+	// Pin M_RS0 (A10) OUT
+	#define GPIO_M_RS0 GPIOA
+	#define M_RS0_PIN PIN10
+	#define M_RS0_EN GPIOBEN
+	#define M_RS0 GPIO_M_RS0->DATAOUTCLR_bit.M_RS0_PIN
+	
+	RCU->HCLKCFG_bit.M_RS0_EN = 1;
+  RCU->HRSTCFG_bit.M_RS0_EN = 1;
+	GPIO_M_RS0->DENSET_bit.M_RS0_PIN  = 0x0; // push pull [page 212]
+	GPIO_M_RS0->OUTENSET_bit.M_RS0_PIN = 0x1; // [page 51], [page 9]
+	
+	// Pin M_RS1 (A11) OUT
+	#define GPIO_M_RS1 GPIOA
+	#define M_RS1_PIN PIN11
+	#define M_RS1_EN GPIOBEN
+	#define M_RS1 GPIO_M_RS1->DATAOUTCLR_bit.M_RS1_PIN
+	
+	RCU->HCLKCFG_bit.M_RS1_EN = 1;
+  RCU->HRSTCFG_bit.M_RS1_EN = 1;
+	GPIO_M_RS1->DENSET_bit.M_RS1_PIN  = 0x0; // push pull [page 212]
+	GPIO_M_RS1->OUTENSET_bit.M_RS1_PIN = 0x1; // [page 51], [page 9]
+}
+
+static uint8_t Check_CC_BASE_and_CC_EXT(const uint8_t *A0Low_ptr) {
+	uint8_t result = 0;	//default result is OK
+
+	//Check CC_BASE
+	uint16_t Temp_u16 = 0;
+	for(uint16_t i = CC_BASE_START; i < CC_BASE_POS; i++) {
+		Temp_u16 += A0Low_ptr[i];
+	}
+	if(A0Low_ptr[CC_BASE_POS] != (Temp_u16 & 0xFF))
+		result += 1;
+
+	//Check CC_BASE
+	Temp_u16 = 0;
+	for(uint16_t i = CC_EXT_START; i < CC_EXT_POS; i++) {
+		Temp_u16 += A0Low_ptr[i];
+	}
+	if(A0Low_ptr[CC_EXT_POS] != (Temp_u16 & 0xFF))
+		result += 2;
+
+	return(result);
+}
+
+static uint8_t Check_CC_DMI(const uint8_t *A2Low_ptr) {
+	uint8_t result = 0;	//default result is OK
+
+	//Check CC_DMI
+	uint16_t Temp_u16 = 0;
+	for(uint16_t i = CC_DMI_START; i < CC_DMI_POS; i++) {
+		Temp_u16 += A2Low_ptr[i];
+	}
+	if(A2Low_ptr[CC_DMI_POS] != (Temp_u16 & 0xFF))
+		result = 1;
+
+	return(result);
+}
+
+static uint8_t Check_Cfg_data_CSum(const A2Up_Page_t *A2UpPtr) {
+	uint8_t result = 0;	//default result is OK
+
+	//Check CC_BASE
+	uint16_t Temp_u16 = 0;
+	for(uint16_t i = 0; i < sizeof(SFP28_cfg_t); i++) {
+		Temp_u16 += A2UpPtr->Bytes[i];
+	}
+	if(Temp_u16 != A2UpPtr->var.CSum)
+		result = 1;		//Bad CSum
+
+	return(result);
 }
 
 void Check_timer_interval() {
 	if(Time_flags & TIME_100MS_FLAG) { // 100 ms
 		Time_flags &= ~TIME_100MS_FLAG;
 
-		Read_In_pins();
+		read_in_pins();
 		
 		Work_with_MASC_ADC();
 	}
@@ -103,6 +223,102 @@ void Check_timer_interval() {
 
 		//TEST
 		GPIO_LED->DATAOUTTGL_bit.PIN_LED = 1; // [page 51]
+	}
+}
+
+static void Check_register_action(void) {
+	uint8_t Temp_page_data[128];
+	
+	if(A2Up_Page.var.GrpCommand != 0) {
+		//There is active group command
+		A2Up_Page.var.GrpCmdResult = 0xFF;
+		if(A2Up_Page.var.GrpCommand == GRP_CMD_MASC_DATA_RD) {
+			//Group command to read data from MASC chip (max 15 bytes)
+			if(A2Up_Page.var.GrpSize > SMB_IN_BUF_SIZE)
+				A2Up_Page.var.GrpSize = SMB_IN_BUF_SIZE;
+			if(Read_bytes_from_MASC(A2Up_Page.var.GrpAddress, A2Up_Page.var.GrpSize, A2Up_Page.var.GrpBuffer))
+				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_OK;	//success
+			else
+				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_ERR;	//error
+		}
+		else if(A2Up_Page.var.GrpCommand == GRP_CMD_MASC_DATA_WR) {
+			//Group command to write data to MASC chip (max 16 bytes)
+			if(A2Up_Page.var.GrpSize > SMB_OUT_BUF_SIZE)
+				A2Up_Page.var.GrpSize = SMB_OUT_BUF_SIZE;
+			if(Write_bytes_to_MASC(A2Up_Page.var.GrpAddress, A2Up_Page.var.GrpSize, A2Up_Page.var.GrpBuffer))
+				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_OK;	//success
+			else
+				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_ERR;	//error
+		}
+		else if(A2Up_Page.var.GrpCommand == GRP_CMD_WRITE_1ST_QUARTER) {
+			//Group command to write 1st quarter (32 bytes) of page data
+			memcpy(Temp_page_data, A2Up_Page.var.GrpBuffer, 32);
+		}
+		else if(A2Up_Page.var.GrpCommand == GRP_CMD_WRITE_2ND_QUARTER) {
+			//Group command to write 2nd quarter (32 bytes) of page data
+			memcpy(&Temp_page_data[32], A2Up_Page.var.GrpBuffer, 32);
+		}
+		else if(A2Up_Page.var.GrpCommand == GRP_CMD_WRITE_3RD_QUARTER) {
+			//Group command to write 3rd quarter (32 bytes) of page data
+			memcpy(&Temp_page_data[64], A2Up_Page.var.GrpBuffer, 32);
+		}
+		else if(A2Up_Page.var.GrpCommand == GRP_CMD_WR_4TH_Q_AND_UPDATE) {
+			//Group command to write 4th quarter (32 bytes) of page data and update flash page
+			memcpy(&Temp_page_data[96], A2Up_Page.var.GrpBuffer, 32);
+			uint16_t Temp_u16 = 0;
+			for(uint8_t i = 0; i < 128; i++) {
+				Temp_u16 += Temp_page_data[i];
+			}
+			if(Temp_u16 == ((A2Up_Page.var.GrpBuf_CRC[0] << 8) | A2Up_Page.var.GrpBuf_CRC[1])) {
+				//Correct CRC -> check page number (UpPage05.var.GrpAddress)
+				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_OK;
+				if(A2Up_Page.var.GrpAddress == FLASH_UPD_A0_LOW) {
+					//Update A0 Low Page -> Check CC_BASE and CC_EXT
+					uint8_t Temp_u8 = Check_CC_BASE_and_CC_EXT(Temp_page_data);
+					if(Temp_u8 == 0) {
+						//Correct values for CC_BASE and CC_EXT
+						//Copy data to A0 Low Page in RAM
+						memcpy(&A0_Page.Bytes[0], Temp_page_data, 128);
+						//Update A0 Low page in Flash
+						a0a2_pages_commit_to_flash();
+					} else
+						A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_CC_BASE_FAIL + Temp_u8 - 1;
+				} else if(A2Up_Page.var.GrpAddress == FLASH_UPD_A2_LOW) {
+					//Update A2 Low Page -> Check CC_DMI
+					uint8_t Temp_u8 = Check_CC_DMI(Temp_page_data);
+					if(Temp_u8 == 0) {
+						//Correct values for CC_DMI
+						//Copy data to A2 Low Page in RAM
+						memcpy(&A2_Page.Bytes[0], Temp_page_data, 128);
+						//Update A2 Low page in Flash
+						a0a2_pages_commit_to_flash();
+					} else
+						A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_CC_DMI_FAIL;
+				} else if(A2Up_Page.var.GrpAddress == FLASH_UPD_A2_HI) {
+					//Update A2 Up Page -> Check config CRC
+					if(Check_Cfg_data_CSum((A2Up_Page_t *)&Temp_page_data) == 0) {
+						//Copy only config structure to A2Up page in RAM
+						memcpy((uint8_t *)&A2Up_Page, Temp_page_data, (sizeof(SFP28_cfg_t) + 2));	//copy data with CSum
+						memcpy(&A0_Page.Bytes[0], Temp_page_data, 128);
+						//Update A0 Low page in Flash
+						a0a2_pages_commit_to_flash();
+					} else
+						A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_CFG_CRC_FAIL;
+				}
+			}
+			else
+				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_CRC_FAIL;
+		}
+//		else if(UpPage07.var.GrpCommand == GRP_CMD_Tx_CALIBR_UPDATE) {
+//			//Group command to update values of calibration coefs in RAM
+//			memcpy(&UpPage04.var.TxPwr_calibration, &UpPage07.var.GrpBuffer[0], 8);	//copy Tx Pwr calibration
+//		}
+//		else if(UpPage07.var.GrpCommand == GRP_CMD_Rx_CALIBR_UPDATE) {
+//			//Group command to update values of calibration coefs in RAM
+//			memcpy(&UpPage04.var.RxPwr_calibration, &UpPage07.var.GrpBuffer[0], 8);	//copy Rx Pwr calibration
+//		}
+
+		A2Up_Page.var.GrpCommand = 0;	//Command is handled -> Clear it
 	}
 }
 
@@ -141,6 +357,42 @@ static void periph_init() {
   tick_init(SystemCoreClock); // periodic timers
 
   i2c_init(I2C, SystemCoreClock, 100000u);
+}
+
+static void read_in_pins() {
+	if(TX_DISABLE) {
+		A2_Page.var.Stat_Control |= ST_TX_DISABLE_STATE_FLAG;
+	} else {
+		A2_Page.var.Stat_Control &= ~ST_TX_DISABLE_STATE_FLAG;
+	}
+	//Check Tx Fault pin
+	if(TX_FAULT) {
+		A2_Page.var.Stat_Control |= ST_TX_FAULT_STATE_FLAG;
+	} else {
+		A2_Page.var.Stat_Control &= ~ST_TX_FAULT_STATE_FLAG;
+	}
+	//Check Rx LOS pin
+	if(LOS) {
+		A2_Page.var.Stat_Control |= ST_RX_LOS_STATE_FLAG;
+	} else {
+		A2_Page.var.Stat_Control &= ~ST_RX_LOS_STATE_FLAG;
+	}
+	//Check RS0 pin and translate signal to M_RS0
+	if(RS0) {
+		A2_Page.var.Stat_Control |= ST_RS0_STATE_FLAG;
+		M_RS0 = 1;
+	} else {
+		A2_Page.var.Stat_Control &= ~ST_RS0_STATE_FLAG;
+		M_RS0 = 0;
+	}
+	//Check RS1 pin and translate signal to M_RS1
+	if(RS1) {
+		A2_Page.var.Stat_Control |= ST_RS1_STATE_FLAG;
+		M_RS1 = 1;
+	} else {
+		A2_Page.var.Stat_Control &= ~ST_RS1_STATE_FLAG;
+		M_RS1 = 0;
+	}
 }
 
 #ifdef __cplusplus
