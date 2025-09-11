@@ -1,6 +1,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
+
+/**
+ * @brief The last 1KB (page size) of flash is reserved for user data.
+ * The maximum program capasity is 63KB.
+ */
 	
 #include <stdint.h>
 
@@ -13,6 +18,8 @@ extern "C" {
 #include "../inc/i2c_master.h"
 #include "../inc/sfp28.h"
 #include "../inc/tick.h"
+
+#include "../Retarget/retarget_conf.h" // printf
 
 extern uint8_t Time_flags;
 extern A0_Page_t A0_Page;
@@ -48,7 +55,7 @@ int main (void) {
 
 	Init_variables();
 		
-	i2c_check(); /** TODO: Remove on release */
+	i2c_check(); /** TODO: Remove after testing */
 
 	Init_MASC_37029();
 
@@ -330,6 +337,7 @@ static void i2c_check(void) {
 	/* Write example */
 	if (i2c_write_buffer(I2C, SLAVE_ADDR, tx_data, 2u) != I2C_DRV_OK) {
 		/* error handling */
+		printf("i2c_write_buffer failed\n");
 		while (1) 
 			GPIO_LED->DATAOUTTGL_bit.PIN_LED = 1; // [page 51];
 	}
@@ -337,9 +345,13 @@ static void i2c_check(void) {
 	/* Read example */
 	if (i2c_read_buffer(I2C, SLAVE_ADDR, rx_data, 4u) != I2C_DRV_OK) {
 		/* error handling */
+		printf("i2c_read_buffer failed\n");
 		while (1)
 			GPIO_LED->DATAOUTTGL_bit.PIN_LED = 1; // [page 51];
 	}
+	
+	
+	printf("i2c_check success\n");
 }
 
 static void Init_variables(void) {

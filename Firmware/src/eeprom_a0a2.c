@@ -7,8 +7,12 @@ extern "C" {
 #include "../inc/sfp28.h"
 #include <string.h>
 
-// Flash locations (adjust within 64KB program flash)
-// The last 1KB is for user data
+/**
+ * @brief
+ * Flash locations (adjust within 64KB program flash) 
+ * The last 1KB (page size) of flash is reserved for user data.
+ * The maximum program capasity is 63KB.
+ */
 #define FLASH_PAGE  (0x0000FC00)
 #define FLASH_A0    (FLASH_PAGE + sizeof(A0_Page.var))
 #define FLASH_A2    (FLASH_A0   + sizeof(A2_Page.var))
