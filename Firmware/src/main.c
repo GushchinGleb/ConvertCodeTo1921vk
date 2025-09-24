@@ -16,15 +16,17 @@ extern "C" {
 #include "../inc/flash_if.h"
 #include "../inc/MASC_37029_defs.h"
 #include "../inc/i2c_master.h"
+#include "../inc/pages.h"
 #include "../inc/sfp28.h"
+#include "../inc/soft_i2c_slave.h"
 #include "../inc/tick.h"
 
 #include "../Retarget/retarget_conf.h" // printf
 
 extern uint8_t Time_flags;
-extern A0_Page_t A0_Page;
-extern A2_Page_t A2_Page;
-extern A2Up_Page_t A2Up_Page;
+extern A0_Page_t A0_Page; // from eeprom_a0a2.c
+extern A2_Page_t A2_Page; // from eeprom_a0a2.c
+extern A2Up_Page_t A2Up_Page; // from eeprom_a0a2.c
 
 static void gpio_init(void);
 static uint8_t Check_CC_BASE_and_CC_EXT(const uint8_t *A0Low_ptr);
@@ -57,7 +59,8 @@ int main (void) {
 		
 	i2c_check(); /** TODO: Remove after testing */
 
-	Init_MASC_37029();
+	Init_MALD_37645();
+	Init_MATA_37644();
 
 	while (1) {
 		//Check timer intervals
@@ -180,7 +183,7 @@ static uint8_t Check_Cfg_data_CSum(const A2Up_Page_t *A2UpPtr) {
 
 	//Check CC_BASE
 	uint16_t Temp_u16 = 0;
-	for(uint16_t i = 0; i < sizeof(SFP28_cfg_t); i++) {
+	for(uint16_t i = 0; i < sizeof(MATA_cfg_t) + sizeof(MALD_cfg_t); i++) {
 		Temp_u16 += A2UpPtr->Bytes[i];
 	}
 	if(Temp_u16 != A2UpPtr->var.CSum)
@@ -195,12 +198,14 @@ void Check_timer_interval() {
 
 		read_in_pins();
 		
-		Work_with_MASC_ADC();
+		Work_with_MATA_ADC();
+		Work_with_MALD_ADC();
 	}
 	if(Time_flags & TIME_500MS_FLAG) { // 500 ms
 		Time_flags &= ~TIME_500MS_FLAG;
 
-		Read_MASC_state();
+		Read_MALD_state();
+		Read_MATA_state();
 
 	}
 	if(Time_flags & TIME_1SEC_FLAG) { // 1 s
@@ -225,7 +230,7 @@ static void Check_register_action(void) {
 			//Group command to read data from MASC chip (max 15 bytes)
 			if(A2Up_Page.var.GrpSize > SMB_IN_BUF_SIZE)
 				A2Up_Page.var.GrpSize = SMB_IN_BUF_SIZE;
-			if(Read_bytes_from_MASC(A2Up_Page.var.GrpAddress, A2Up_Page.var.GrpSize, A2Up_Page.var.GrpBuffer))
+			if(i2c_read_buffer(I2C0, A2Up_Page.var.GrpAddress, A2Up_Page.var.GrpBuffer, A2Up_Page.var.GrpSize))
 				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_OK;	//success
 			else
 				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_ERR;	//error
@@ -234,7 +239,7 @@ static void Check_register_action(void) {
 			//Group command to write data to MASC chip (max 16 bytes)
 			if(A2Up_Page.var.GrpSize > SMB_OUT_BUF_SIZE)
 				A2Up_Page.var.GrpSize = SMB_OUT_BUF_SIZE;
-			if(Write_bytes_to_MASC(A2Up_Page.var.GrpAddress, A2Up_Page.var.GrpSize, A2Up_Page.var.GrpBuffer))
+			if(i2c_write_buffer(I2C0, A2Up_Page.var.GrpAddress, A2Up_Page.var.GrpBuffer, A2Up_Page.var.GrpSize))
 				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_OK;	//success
 			else
 				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_ERR;	//error
@@ -287,7 +292,7 @@ static void Check_register_action(void) {
 					//Update A2 Up Page -> Check config CRC
 					if(Check_Cfg_data_CSum((A2Up_Page_t *)&Temp_page_data) == 0) {
 						//Copy only config structure to A2Up page in RAM
-						memcpy((uint8_t *)&A2Up_Page, Temp_page_data, (sizeof(SFP28_cfg_t) + 2));	//copy data with CSum
+						memcpy((uint8_t *)&A2Up_Page, Temp_page_data, (sizeof(MATA_cfg_t) + sizeof(MALD_cfg_t) + 2));	//copy data with CSum
 						memcpy(&A0_Page.Bytes[0], Temp_page_data, 128);
 						//Update A0 Low page in Flash
 						a0a2_pages_commit_to_flash();
@@ -347,9 +352,12 @@ static void periph_init() {
 	SystemCoreClockUpdate(); 
 
   gpio_init();
+
   tick_init(SystemCoreClock); // periodic timers
 
   i2c_init(I2C, SystemCoreClock, 100000u);
+	
+	soft_I2C_init();
 }
 
 static void read_in_pins() {

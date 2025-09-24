@@ -250,6 +250,19 @@ bool Write_bytes_to_MASC(uint8_t RegAddr, uint8_t Num, const uint8_t *Pointer)
 	
 	return i2c_write_buffer(I2C0, I2C_MASC_ADDR, data, Num + 1) == I2C_DRV_OK;
 }
+
+
+bool Write_bytes_to_MATA(uint8_t RegAddr, uint8_t Num, const uint8_t *Pointer)
+{
+	if(Num > SMB_OUT_BUF_SIZE)
+		Num = SMB_OUT_BUF_SIZE;
+	
+	uint8_t data[SMB_OUT_BUF_SIZE + 1];
+	data[0] = RegAddr;
+	memcpy(&data[1], Pointer, Num);
+	
+	return i2c_write_buffer(I2C0, I2C_MATA_ADDR, data, Num + 1) == I2C_DRV_OK;
+}
 //================================================================================
 
 #ifdef __cplusplus

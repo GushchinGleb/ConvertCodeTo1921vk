@@ -419,11 +419,6 @@
               <FilePath>.\src\main.c</FilePath>
             </File>
             <File>
-              <FileName>masc37029.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\masc37029.c</FilePath>
-            </File>
-            <File>
               <FileName>tick.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\tick.c</FilePath>
@@ -437,6 +432,16 @@
               <FileName>soft_i2c_api.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\soft_i2c_api.c</FilePath>
+            </File>
+            <File>
+              <FileName>MATA_37644.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\MATA_37644.c</FilePath>
+            </File>
+            <File>
+              <FileName>MALD_37645.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\MALD_37645.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -474,14 +479,24 @@
               <FilePath>.\inc\tick.h</FilePath>
             </File>
             <File>
-              <FileName>MASC_37029_defs.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\inc\MASC_37029_defs.h</FilePath>
-            </File>
-            <File>
               <FileName>soft_i2c_slave.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\inc\soft_i2c_slave.h</FilePath>
+            </File>
+            <File>
+              <FileName>MATA_37644.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\inc\MATA_37644.h</FilePath>
+            </File>
+            <File>
+              <FileName>MALD_37645.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\inc\MALD_37645.h</FilePath>
+            </File>
+            <File>
+              <FileName>pages.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\inc\pages.h</FilePath>
             </File>
           </Files>
         </Group>
