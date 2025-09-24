@@ -349,8 +349,7 @@ static void i2c_check(void) {
 		while (1)
 			GPIO_LED->DATAOUTTGL_bit.PIN_LED = 1; // [page 51];
 	}
-	
-	
+
 	printf("i2c_check success\n");
 }
 
