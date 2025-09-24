@@ -362,9 +362,6 @@ extern uint8_t Debug_ptr;
 //from F392_SFP28_v0_0.c
 void SiLabs_Startup (void);
 void T0_Waitms(uint8_t ms);
-uint8_t *I2C_Decode_page_address(uint8_t Address);
-void I2C_Write_data(uint8_t Byte);
-uint8_t I2C_Read_data(void);
 void I2C_Check_IntFlags(void);
 
 //from InitDevice.c

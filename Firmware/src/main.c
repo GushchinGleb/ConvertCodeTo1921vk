@@ -68,13 +68,15 @@ int main (void) {
 }
 
 static void gpio_init(){
+	RCU->HCLKCFG_bit.GPIOAEN = 1;
+  RCU->HRSTCFG_bit.GPIOAEN = 1;
+	RCU->HCLKCFG_bit.GPIOBEN = 1;
+  RCU->HRSTCFG_bit.GPIOBEN = 1;
+	
 	// Pin LED (B8) OUT
 	#define GPIO_LED GPIOB
 	#define PIN_LED PIN8
-	#define LED_EN GPIOBEN
 	
-	RCU->HCLKCFG_bit.LED_EN = 1;
-  RCU->HRSTCFG_bit.LED_EN = 1;
 	GPIO_LED->DENSET_bit.PIN_LED  = 0x0; // push pull [page 212]
 	GPIO_LED->OUTENSET_bit.PIN_LED = 0x1; // [page 51], [page 9]
 	GPIO_LED->DATAOUTCLR_bit.PIN_LED = 1; // [page 51]
@@ -82,44 +84,32 @@ static void gpio_init(){
 	// Pin TX_DISABLE (A7) IN
 	#define GPIO_TX_DISABLE GPIOA
 	#define TX_DISABLE_PIN PIN7
-	#define TX_DISABLE_EN GPIOAEN
 	#define TX_DISABLE ((GPIO_TX_DISABLE->DATA_bit.VAL & (1 << 7)) >> 7)
 	
-	RCU->HCLKCFG_bit.TX_DISABLE_EN = 1;
-  RCU->HRSTCFG_bit.TX_DISABLE_EN = 1;
 	GPIO_TX_DISABLE->DENSET_bit.TX_DISABLE_PIN = 0x0; // push pull [page 212]
 	GPIO_TX_DISABLE->INMODE_bit.TX_DISABLE_PIN = 0x1; // [page 51], [page 9]
 	
 	// Pin TX_FAULT (A6) IN
 	#define GPIO_TX_FAULT GPIOA
 	#define TX_FAULT_PIN PIN6
-	#define TX_FAULT_EN GPIOAEN
 	#define TX_FAULT ((GPIO_TX_FAULT->DATA_bit.VAL & (1 << 6)) >> 6)
 	
-	RCU->HCLKCFG_bit.TX_FAULT_EN = 1;
-  RCU->HRSTCFG_bit.TX_FAULT_EN = 1;
 	GPIO_TX_FAULT->DENSET_bit.TX_FAULT_PIN = 0x0; // push pull [page 212]
 	GPIO_TX_FAULT->INMODE_bit.TX_FAULT_PIN = 0x1; // [page 51], [page 9]
 	
 	// Pin LOS (A13) IN
 	#define GPIO_LOS GPIOA
 	#define LOS_PIN PIN13
-	#define LOS_EN GPIOAEN
 	#define LOS ((GPIO_LOS->DATA_bit.VAL & (1 << 13)) >> 13)
 	
-	RCU->HCLKCFG_bit.LOS_EN = 1;
-  RCU->HRSTCFG_bit.LOS_EN = 1;
 	GPIO_LOS->DENSET_bit.LOS_PIN = 0x0; // push pull [page 212]
 	GPIO_LOS->INMODE_bit.LOS_PIN = 0x1; // [page 51], [page 9]
 	
 	// Pin RS0 (A12) IN
 	#define GPIO_RS0 GPIOA
 	#define RS0_PIN PIN12
-	#define RS0_EN GPIOAEN
 	#define RS0 ((GPIO_RS0->DATA_bit.VAL & (1 << 12)) >> 12)
 	
-	RCU->HCLKCFG_bit.RS0_EN = 1;
-  RCU->HRSTCFG_bit.RS0_EN = 1;
 	GPIO_RS0->DENSET_bit.RS0_PIN = 0x0; // push pull [page 212]
 	GPIO_RS0->INMODE_bit.RS0_PIN = 0x1; // [page 51], [page 9]
 	
@@ -129,30 +119,22 @@ static void gpio_init(){
 	#define RS1_EN GPIOAEN
 	#define RS1 ((GPIO_RS1->DATA_bit.VAL & (1 << 14)) >> 14)
 	
-	RCU->HCLKCFG_bit.RS1_EN = 1;
-  RCU->HRSTCFG_bit.RS1_EN = 1;
 	GPIO_RS1->DENSET_bit.RS1_PIN = 0x0; // push pull [page 212]
 	GPIO_RS1->INMODE_bit.RS1_PIN = 0x1; // [page 51], [page 9]
 	
 	// Pin M_RS0 (A10) OUT
 	#define GPIO_M_RS0 GPIOA
 	#define M_RS0_PIN PIN10
-	#define M_RS0_EN GPIOBEN
 	#define M_RS0 GPIO_M_RS0->DATAOUTCLR_bit.M_RS0_PIN
 	
-	RCU->HCLKCFG_bit.M_RS0_EN = 1;
-  RCU->HRSTCFG_bit.M_RS0_EN = 1;
 	GPIO_M_RS0->DENSET_bit.M_RS0_PIN  = 0x0; // push pull [page 212]
 	GPIO_M_RS0->OUTENSET_bit.M_RS0_PIN = 0x1; // [page 51], [page 9]
 	
 	// Pin M_RS1 (A11) OUT
 	#define GPIO_M_RS1 GPIOA
 	#define M_RS1_PIN PIN11
-	#define M_RS1_EN GPIOBEN
 	#define M_RS1 GPIO_M_RS1->DATAOUTCLR_bit.M_RS1_PIN
 	
-	RCU->HCLKCFG_bit.M_RS1_EN = 1;
-  RCU->HRSTCFG_bit.M_RS1_EN = 1;
 	GPIO_M_RS1->DENSET_bit.M_RS1_PIN  = 0x0; // push pull [page 212]
 	GPIO_M_RS1->OUTENSET_bit.M_RS1_PIN = 0x1; // [page 51], [page 9]
 }

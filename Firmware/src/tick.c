@@ -14,12 +14,21 @@ static uint16_t s_ms = 0;
 
 void tick_init(uint32_t sysclk_hz){
 	const uint32_t timer_freq = 1000u; // 1 kHz
-	const uint32_t delay_tiks = sysclk_hz / timer_freq - 1;
+	uint32_t delay_tiks = sysclk_hz / timer_freq - 1;
 
 	TMR0->VALUE = delay_tiks; // [page 56]
 	TMR0->LOAD = delay_tiks;  // [page 56]
 
   TMR0->CTRL = 1 << TMR_CTRL_INTEN_Pos | 1 << TMR_CTRL_ON_Pos; // [page 56], page[309]
+	
+	
+	const uint32_t soft_i2c_freq = 100000 * 2; // 200 kHz
+	delay_tiks = sysclk_hz / soft_i2c_freq - 1;
+
+	TMR1->VALUE = delay_tiks; // [page 56]
+	TMR1->LOAD = delay_tiks;  // [page 56]
+
+  TMR1->CTRL = 1 << TMR_CTRL_INTEN_Pos | 1 << TMR_CTRL_ON_Pos; // [page 56], page[309]
 	
 	return;
 }
@@ -37,6 +46,8 @@ void TMR0_IRQHandler(void) { // startup_K1921VK035.s:100
 		s_ms=0;
 	}
 }
+
+// TMR1_IRQHandler is realised in soft_i2c.c
 
 #ifdef __cplusplus
 }
