@@ -52,6 +52,10 @@ static void read_in_pins(void);
 //-----------------------------------------------------------------------------
 int main (void) {
   SystemInit();
+  
+    RCU->OSECFG_bit.EN = 1; // enable external clock
+    RCU->OSECFG_bit.XOEN = 1; // enable external clock input
+    RCU->PLLCFG_bit.BYPASS = 1; // enable bypass (use external clock as is)
 
 	periph_init();
 
@@ -349,13 +353,14 @@ static void Init_variables(void) {
 }
 
 static void periph_init() {
-	SystemCoreClockUpdate(); 
+	// SystemCoreClockUpdate(); 
+    custSystemCoreClock = 16000000; // 8 MHz
 
   gpio_init();
 
-  tick_init(SystemCoreClock); // periodic timers
+  tick_init(custSystemCoreClock); // periodic timers
 
-  i2c_init(I2C, SystemCoreClock, 100000u);
+  i2c_init(I2C, custSystemCoreClock, 100000u);
 	
 	soft_I2C_init();
 }
