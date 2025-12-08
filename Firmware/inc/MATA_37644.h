@@ -44,9 +44,9 @@ extern "C" {
 
 #pragma pack(push,1)
 typedef struct {
-	uint8_t CHIPID            ;
+	uint8_t CHIPID            ; // 128
 	uint8_t REVID             ;
-	uint8_t RESET             ;
+	uint8_t RESET             ; // 130
 	uint8_t MONITORS          ;
 	uint8_t CDRCTRL           ;
 	uint8_t I2C_ADDRESS_MODE  ;
@@ -56,15 +56,15 @@ typedef struct {
 	uint8_t LOS_LOL_STATUS    ;
 	uint8_t LOS_LOL_ALARM     ;
 	uint8_t LOS_CTRL          ;
-	uint8_t SLA               ;
+	uint8_t SLA               ; // 140
 	uint8_t TIA_CTRL          ;
 	uint8_t OUTPUT_CTRL       ;
 	uint8_t OUTPUT_SWING      ;
 	uint8_t OUTPUT_DEEMPH     ;
-	uint8_t ADC_CONFIG0       ;
+	uint8_t ADC_CONFIG0       ; // 145
 	uint8_t ADC_CONFIG2       ;
 	uint8_t ADC_OUT0_MSBS     ;
-	uint8_t ADC_OUT0_LSBS     ;
+	uint8_t ADC_OUT0_LSBS     ; // 148
 } MATA_37644_cfg_struct_t; // size 21 bytes
 
 typedef struct {

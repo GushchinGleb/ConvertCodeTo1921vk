@@ -409,11 +409,6 @@
               <FilePath>.\src\flash_if.c</FilePath>
             </File>
             <File>
-              <FileName>i2c_master.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\i2c_master.c</FilePath>
-            </File>
-            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\main.c</FilePath>
@@ -424,16 +419,6 @@
               <FilePath>.\src\tick.c</FilePath>
             </File>
             <File>
-              <FileName>soft_i2c_slave.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\soft_i2c_slave.c</FilePath>
-            </File>
-            <File>
-              <FileName>soft_i2c_api.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\soft_i2c_api.c</FilePath>
-            </File>
-            <File>
               <FileName>MATA_37644.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\MATA_37644.c</FilePath>
@@ -442,6 +427,16 @@
               <FileName>MALD_37645.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\MALD_37645.c</FilePath>
+            </File>
+            <File>
+              <FileName>com_i2c_api.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\com_i2c_api.c</FilePath>
+            </File>
+            <File>
+              <FileName>soft_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\soft_i2c.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -464,11 +459,6 @@
               <FilePath>.\inc\flash_if.h</FilePath>
             </File>
             <File>
-              <FileName>i2c_master.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\inc\i2c_master.h</FilePath>
-            </File>
-            <File>
               <FileName>sfp28.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\inc\sfp28.h</FilePath>
@@ -477,11 +467,6 @@
               <FileName>tick.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\inc\tick.h</FilePath>
-            </File>
-            <File>
-              <FileName>soft_i2c_slave.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\inc\soft_i2c_slave.h</FilePath>
             </File>
             <File>
               <FileName>MATA_37644.h</FileName>
@@ -497,6 +482,16 @@
               <FileName>pages.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\inc\pages.h</FilePath>
+            </File>
+            <File>
+              <FileName>MASC_37029_defs.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\inc\MASC_37029_defs.h</FilePath>
+            </File>
+            <File>
+              <FileName>soft_i2c.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\inc\soft_i2c.h</FilePath>
             </File>
           </Files>
         </Group>

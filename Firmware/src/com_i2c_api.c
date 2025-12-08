@@ -20,7 +20,7 @@ extern A2Up_Page_t A2Up_Page;
  * @param Byte[IN] - byte received from master
  * @param I2C_Current_Address[IN] the master send the byte to this address
  */
-void I2C_Write_data(uint8_t Byte, uint8_t I2C_Current_Address) {
+void com_I2C_Write_data(uint8_t Byte, uint8_t I2C_Current_Address) {
 	// Check address for write capability
 	if(I2C_Data_Pointer == (uint8_t *)&A0_Page) {
 		//Work with A0 low page -> no available addresses
@@ -50,7 +50,7 @@ void I2C_Write_data(uint8_t Byte, uint8_t I2C_Current_Address) {
  * @brief Read byte from current address of selected page
  * @param I2C_Current_Address[IN] the master send the byte to this address
  */
-uint8_t I2C_Read_data(uint8_t I2C_Current_Address) {
+uint8_t com_I2C_Read_data(uint8_t I2C_Current_Address) {
 	uint8_t RdByte;
 	// Check address for write capability
 	if(I2C_Data_Pointer == (uint8_t *)&A2Up_Page) {
@@ -77,7 +77,7 @@ uint8_t I2C_Read_data(uint8_t I2C_Current_Address) {
 	return RdByte;
 }
 
-uint8_t *I2C_Decode_page_address(uint8_t Address, uint8_t I2C_Current_Page) {
+uint8_t* com_I2C_Decode_page_address(uint8_t Address, uint8_t I2C_Current_Page) {
 	//Default address is A0 page
 	uint8_t *Pointer = (uint8_t *)&A0_Page;
 

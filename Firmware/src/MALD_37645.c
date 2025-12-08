@@ -7,7 +7,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "../inc/i2c_master.h"
+#include "../inc/soft_i2c.h"
 #include "../inc/pages.h"
 
 extern A2Up_Page_t A2Up_Page; // from eeprom_a0a2.c
@@ -277,13 +277,12 @@ void Read_MALD_state(void)
 }
 
 //Read 'Num' bytes from MASC-37029 beginning from 'RegAddr' to buffer
-bool read_register_from_MALD(uint8_t addr, uint8_t *value)
-{
-  if (i2c_write_buffer(I2C0, MALD_CHIPID, &addr, sizeof(addr)) != I2C_DRV_OK) {
-    return false;
-  }
-  
-  return i2c_read_buffer(I2C0, MALD_CHIPID, value, sizeof(value)) == I2C_DRV_OK; //add additional byte because of last byte always read as 0xFF
+bool read_register_from_MALD(uint8_t addr, uint8_t *value) {
+	if (int_I2C_write(MALD_CHIPID, &addr, sizeof(addr)) != 0) {
+		return false;
+	}
+	
+  return int_I2C_read(MALD_CHIPID, value, sizeof(*value)) == 0; //add additional byte because of last byte always read as 0xFF
 }
 
 //Write 'Num' bytes to MASC-37029 beginning from 'RegAddr' from buffer
@@ -291,8 +290,8 @@ bool write_register_to_MALD(uint8_t addr, uint8_t value) {
   static uint8_t send_buff[2];
   send_buff[0] = addr;
   send_buff[1] = value;
-
-  return i2c_write_buffer(I2C0, MALD_CHIPID, send_buff, sizeof(send_buff)) == I2C_DRV_OK;
+	
+	return int_I2C_write(MALD_CHIPID, send_buff, sizeof(send_buff)) == 0;
 }
 
 #ifdef __cplusplus

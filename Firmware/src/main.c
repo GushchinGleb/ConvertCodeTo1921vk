@@ -15,10 +15,9 @@ extern "C" {
 #include "../inc/eeprom_a0a2.h"
 #include "../inc/flash_if.h"
 #include "../inc/MASC_37029_defs.h"
-#include "../inc/i2c_master.h"
 #include "../inc/pages.h"
 #include "../inc/sfp28.h"
-#include "../inc/soft_i2c_slave.h"
+#include "../inc/soft_i2c.h"
 #include "../inc/tick.h"
 
 #include "../Retarget/retarget_conf.h" // printf
@@ -234,7 +233,7 @@ static void Check_register_action(void) {
 			//Group command to read data from MASC chip (max 15 bytes)
 			if(A2Up_Page.var.GrpSize > SMB_IN_BUF_SIZE)
 				A2Up_Page.var.GrpSize = SMB_IN_BUF_SIZE;
-			if(i2c_read_buffer(I2C0, A2Up_Page.var.GrpAddress, A2Up_Page.var.GrpBuffer, A2Up_Page.var.GrpSize))
+			if(int_I2C_read(A2Up_Page.var.GrpAddress, A2Up_Page.var.GrpBuffer, A2Up_Page.var.GrpSize) == 0)
 				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_OK;	//success
 			else
 				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_ERR;	//error
@@ -243,7 +242,7 @@ static void Check_register_action(void) {
 			//Group command to write data to MASC chip (max 16 bytes)
 			if(A2Up_Page.var.GrpSize > SMB_OUT_BUF_SIZE)
 				A2Up_Page.var.GrpSize = SMB_OUT_BUF_SIZE;
-			if(i2c_write_buffer(I2C0, A2Up_Page.var.GrpAddress, A2Up_Page.var.GrpBuffer, A2Up_Page.var.GrpSize))
+			if(int_I2C_write(A2Up_Page.var.GrpAddress, A2Up_Page.var.GrpBuffer, A2Up_Page.var.GrpSize) == 0)
 				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_OK;	//success
 			else
 				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_ERR;	//error
@@ -326,7 +325,7 @@ static void i2c_check(void) {
 	uint8_t rx_data[4];
 
 	/* Write example */
-	if (i2c_write_buffer(I2C, SLAVE_ADDR, tx_data, 2u) != I2C_DRV_OK) {
+	if (int_I2C_write(SLAVE_ADDR, tx_data, 2u) != 0) {
 		/* error handling */
 		printf("i2c_write_buffer failed\n");
 		while (1) 
@@ -334,7 +333,7 @@ static void i2c_check(void) {
 	}
 
 	/* Read example */
-	if (i2c_read_buffer(I2C, SLAVE_ADDR, rx_data, 4u) != I2C_DRV_OK) {
+	if (int_I2C_write(SLAVE_ADDR, rx_data, 4u) != 0) {
 		/* error handling */
 		printf("i2c_read_buffer failed\n");
 		while (1)
@@ -354,13 +353,11 @@ static void Init_variables(void) {
 
 static void periph_init() {
 	// SystemCoreClockUpdate(); 
-    custSystemCoreClock = 16000000; // 8 MHz
+  uint32_t custSystemCoreClock = 16000000; // 8 MHz
 
   gpio_init();
 
   tick_init(custSystemCoreClock); // periodic timers
-
-  i2c_init(I2C, custSystemCoreClock, 100000u);
 	
 	soft_I2C_init();
 }
