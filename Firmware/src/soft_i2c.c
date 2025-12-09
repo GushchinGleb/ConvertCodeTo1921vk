@@ -112,11 +112,11 @@ static void init_com_I2C(void) {
   COM_GPIOSDA->DRIVEMODE_bit.COM_SDA_PIN = 0x2; // 10 - low power, high speed [213]
   COM_GPIOSCL->DRIVEMODE_bit.COM_SCL_PIN = 0x2; // 10 - low power, high speed [213]
   
-  COM_GPIOSDA->INTENSET_bit.COM_SDA_PIN   = 0x1; // enable SDA iinterrup [page 219]
+  COM_GPIOSDA->INTENSET_bit.COM_SDA_PIN   = 0x1; // enable SDA interrupt [page 219]
   COM_GPIOSDA->INTTYPESET_bit.COM_SDA_PIN = 0x1; // by front [page 220]
   COM_GPIOSDA->INTEDGESET_bit.COM_SDA_PIN = 0x1; // by both raise and fall [page 222]
   
-  COM_GPIOSCL->INTENSET_bit.COM_SCL_PIN   = 0x1; // enable SCL iinterrup [page 219]
+  COM_GPIOSCL->INTENSET_bit.COM_SCL_PIN   = 0x1; // enable SCL interrupt [page 219]
   COM_GPIOSCL->INTTYPESET_bit.COM_SCL_PIN = 0x1; // by front [page 220]
   COM_GPIOSCL->INTPOLSET_bit.COM_SCL_PIN  = 0x1; // by raise [page 221]
 }
@@ -231,8 +231,8 @@ static void perform_GPIOA_IRQ_int_event(void) {
 
 static void perform_TMR_com_event(void) {
   static bool scl_prev = 1;
-  uint8_t scl = read_com_SCL();
-  uint8_t sda = read_com_SDA();
+  const uint8_t scl = read_com_SCL();
+  const uint8_t sda = read_com_SDA();
 
   // Rising edge of SCL = sample data
   if ((scl_prev == 0) && (scl == 1)) {
@@ -241,7 +241,7 @@ static void perform_TMR_com_event(void) {
       com_current_byte = (com_current_byte << 1) | (sda & 0x01);
       com_bit_count++;
       if (com_bit_count == 8) {
-        uint8_t addr = com_current_byte >> 1;
+        const uint8_t addr = com_current_byte >> 1;
         com_rw_flag = com_current_byte & 0x01;
         if (CHECK_ADDR(addr)) {
           com_I2C_Current_Address = addr;

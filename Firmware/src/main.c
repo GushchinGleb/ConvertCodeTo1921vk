@@ -51,10 +51,6 @@ static void read_in_pins(void);
 //-----------------------------------------------------------------------------
 int main (void) {
   SystemInit();
-  
-    RCU->OSECFG_bit.EN = 1; // enable external clock
-    RCU->OSECFG_bit.XOEN = 1; // enable external clock input
-    RCU->PLLCFG_bit.BYPASS = 1; // enable bypass (use external clock as is)
 
 	periph_init();
 

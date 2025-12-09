@@ -29,6 +29,9 @@ extern "C" {
 #include <stdint.h>
 
 //-- Defines -------------------------------------------------------------------
+#define CKO_OSE
+#define OSECLK_VAL 16000000
+
 #define OSICLK_VAL 8000000
 #ifndef OSECLK_VAL
 #define OSECLK_VAL 0
