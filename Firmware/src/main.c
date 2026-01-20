@@ -57,7 +57,7 @@ int main (void) {
 		"Hello from K1921VK035.\n\r"
 		"Compilation time: " __TIME__ "\n\r"
 		"Core Frequency %u Hz\n\r", SystemCoreClock);
-
+	
 	periph_init();
 
 	Init_variables();
@@ -85,20 +85,18 @@ static void gpio_init(){
 	RCU->HCLKCFG_bit.GPIOBEN = 1;
   RCU->HRSTCFG_bit.GPIOBEN = 1;
 	
-	// Pin LED (B8) OUT
-	#define GPIO_LED GPIOB
+	// Pin LED (A8) OUT
+	#define GPIO_LED GPIOA
 	#define PIN_LED PIN8
 	
-	GPIO_LED->DENSET_bit.PIN_LED  = 0x0; // push pull [page 212]
+	GPIO_LED->DENSET_bit.PIN_LED  = 0x1; // OUT enable [page 210]
 	GPIO_LED->OUTENSET_bit.PIN_LED = 0x1; // [page 51], [page 9]
-	GPIO_LED->DATAOUTCLR_bit.PIN_LED = 1; // [page 51]
 	
 	// Pin TX_DISABLE (A7) IN
 	#define GPIO_TX_DISABLE GPIOA
 	#define TX_DISABLE_PIN PIN7
 	#define TX_DISABLE ((GPIO_TX_DISABLE->DATA_bit.VAL & (1 << 7)) >> 7)
 	
-	GPIO_TX_DISABLE->DENSET_bit.TX_DISABLE_PIN = 0x0; // push pull [page 212]
 	GPIO_TX_DISABLE->INMODE_bit.TX_DISABLE_PIN = 0x1; // [page 51], [page 9]
 	
 	// Pin TX_FAULT (A6) IN
@@ -106,7 +104,6 @@ static void gpio_init(){
 	#define TX_FAULT_PIN PIN6
 	#define TX_FAULT ((GPIO_TX_FAULT->DATA_bit.VAL & (1 << 6)) >> 6)
 	
-	GPIO_TX_FAULT->DENSET_bit.TX_FAULT_PIN = 0x0; // push pull [page 212]
 	GPIO_TX_FAULT->INMODE_bit.TX_FAULT_PIN = 0x1; // [page 51], [page 9]
 	
 	// Pin LOS (A13) IN
@@ -114,7 +111,6 @@ static void gpio_init(){
 	#define LOS_PIN PIN13
 	#define LOS ((GPIO_LOS->DATA_bit.VAL & (1 << 13)) >> 13)
 	
-	GPIO_LOS->DENSET_bit.LOS_PIN = 0x0; // push pull [page 212]
 	GPIO_LOS->INMODE_bit.LOS_PIN = 0x1; // [page 51], [page 9]
 	
 	// Pin RS0 (A12) IN
@@ -122,7 +118,6 @@ static void gpio_init(){
 	#define RS0_PIN PIN12
 	#define RS0 ((GPIO_RS0->DATA_bit.VAL & (1 << 12)) >> 12)
 	
-	GPIO_RS0->DENSET_bit.RS0_PIN = 0x0; // push pull [page 212]
 	GPIO_RS0->INMODE_bit.RS0_PIN = 0x1; // [page 51], [page 9]
 	
 	// Pin RS1 (A14) IN
@@ -131,7 +126,6 @@ static void gpio_init(){
 	#define RS1_EN GPIOAEN
 	#define RS1 ((GPIO_RS1->DATA_bit.VAL & (1 << 14)) >> 14)
 	
-	GPIO_RS1->DENSET_bit.RS1_PIN = 0x0; // push pull [page 212]
 	GPIO_RS1->INMODE_bit.RS1_PIN = 0x1; // [page 51], [page 9]
 	
 	// Pin M_RS0 (A10) OUT
@@ -139,7 +133,7 @@ static void gpio_init(){
 	#define M_RS0_PIN PIN10
 	#define M_RS0 GPIO_M_RS0->DATAOUTCLR_bit.M_RS0_PIN
 	
-	GPIO_M_RS0->DENSET_bit.M_RS0_PIN  = 0x0; // push pull [page 212]
+	GPIO_M_RS0->DENSET_bit.M_RS0_PIN  = 0x1; // push pull [page 212]
 	GPIO_M_RS0->OUTENSET_bit.M_RS0_PIN = 0x1; // [page 51], [page 9]
 	
 	// Pin M_RS1 (A11) OUT
@@ -147,7 +141,7 @@ static void gpio_init(){
 	#define M_RS1_PIN PIN11
 	#define M_RS1 GPIO_M_RS1->DATAOUTCLR_bit.M_RS1_PIN
 	
-	GPIO_M_RS1->DENSET_bit.M_RS1_PIN  = 0x0; // push pull [page 212]
+	GPIO_M_RS1->DENSET_bit.M_RS1_PIN  = 0x1; // push pull [page 212]
 	GPIO_M_RS1->OUTENSET_bit.M_RS1_PIN = 0x1; // [page 51], [page 9]
 }
 
@@ -336,16 +330,18 @@ static void i2c_check(void) {
 	if (int_I2C_write(SLAVE_ADDR, tx_data, 2u) != 0) {
 		/* error handling */
 		printf("i2c_write_buffer failed\n\r");
-		while (1) 
-			GPIO_LED->DATAOUTTGL_bit.PIN_LED = 1; // [page 51];
+		GPIO_LED->DATAOUTSET_bit.PIN_LED = 1; // [page 51];
+		while (1)
+			;
 	}
 
 	/* Read example */
 	if (int_I2C_write(SLAVE_ADDR, rx_data, 4u) != 0) {
 		/* error handling */
 		printf("i2c_read_buffer failed\n\r");
+		GPIO_LED->DATAOUTSET_bit.PIN_LED = 1; // [page 51];
 		while (1)
-			GPIO_LED->DATAOUTTGL_bit.PIN_LED = 1; // [page 51];
+			;
 	}
 
 	printf("i2c_check success\n\r");
