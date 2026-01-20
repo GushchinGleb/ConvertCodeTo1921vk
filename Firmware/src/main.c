@@ -50,13 +50,23 @@ static void read_in_pins(void);
 // Simplicity Launcher and click on "Data Sheet".
 //-----------------------------------------------------------------------------
 int main (void) {
-  SystemInit();
+	SystemCoreClockUpdate();
+	retarget_init();
+	
+	printf(
+		"Hello from K1921VK035.\n\r"
+		"Compilation time: " __TIME__ "\n\r"
+		"Core Frequency %u Hz\n\r", SystemCoreClock);
 
 	periph_init();
 
 	Init_variables();
 		
 	i2c_check(); /** TODO: Remove after testing */
+	
+	printf("\n\rCOMPLETE\n\r");
+		while(1) {
+	}
 
 	Init_MALD_37645();
 	Init_MATA_37644();
@@ -319,11 +329,13 @@ static void i2c_check(void) {
 	const uint8_t SLAVE_ADDR = 0x50u;
 	uint8_t tx_data[2] = {0x00, 0xAB};
 	uint8_t rx_data[4];
+	
+	printf("i2c_check: run test\n\r");
 
 	/* Write example */
 	if (int_I2C_write(SLAVE_ADDR, tx_data, 2u) != 0) {
 		/* error handling */
-		printf("i2c_write_buffer failed\n");
+		printf("i2c_write_buffer failed\n\r");
 		while (1) 
 			GPIO_LED->DATAOUTTGL_bit.PIN_LED = 1; // [page 51];
 	}
@@ -331,12 +343,12 @@ static void i2c_check(void) {
 	/* Read example */
 	if (int_I2C_write(SLAVE_ADDR, rx_data, 4u) != 0) {
 		/* error handling */
-		printf("i2c_read_buffer failed\n");
+		printf("i2c_read_buffer failed\n\r");
 		while (1)
 			GPIO_LED->DATAOUTTGL_bit.PIN_LED = 1; // [page 51];
 	}
 
-	printf("i2c_check success\n");
+	printf("i2c_check success\n\r");
 }
 
 static void Init_variables(void) {
@@ -348,12 +360,9 @@ static void Init_variables(void) {
 }
 
 static void periph_init() {
-	// SystemCoreClockUpdate(); 
-  uint32_t custSystemCoreClock = 16000000; // 8 MHz
-
   gpio_init();
 
-  tick_init(custSystemCoreClock); // periodic timers
+  tick_init(SystemCoreClock); // periodic timers
 	
 	soft_I2C_init();
 }

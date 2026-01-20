@@ -526,9 +526,16 @@ uint8_t int_I2C_read(uint8_t addr, uint8_t *buffer, uint8_t len) {
 uint8_t int_I2C_write(uint8_t addr, const uint8_t *data, uint8_t len) {
 	int_I2C_start_write(addr, data, len);
 	uint8_t status = 0;
+	
+	volatile uint32_t tiks = SystemCoreClock / 4;
+	
 	do {
 		status = int_I2C_write_complete();
-	} while (status == 2); // BUSY
+	} while (status == 2 && tiks--); // BUSY
+	
+	if (status == 2) {
+		printf("Timeout\n\r");
+	}
 	
 	return status == 0 ? 0 : 1;
 }
