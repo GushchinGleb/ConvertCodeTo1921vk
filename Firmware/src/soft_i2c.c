@@ -328,6 +328,11 @@ static void perform_TMR_com_event(void) {
 }
 
 static void perform_TMR_int_event(void) {
+	static int prev_state = 0xFF;
+	if (prev_state != int_i2c.state) {
+		printf("int: %d -> %d\n\r", prev_state, int_i2c.state);
+		prev_state = int_i2c.state;
+	}
   switch (int_i2c.state) {
   case INT_I2C_IDLE:
       return;
@@ -445,6 +450,8 @@ static void perform_TMR_int_event(void) {
 void TMR1_IRQHandler(void) {
   perform_TMR_com_event();
   perform_TMR_int_event();
+	
+	TMR1->INTSTATUS = TMR_INTSTATUS_INT_Msk;
 }
 
 // ==============================================================================
