@@ -61,12 +61,12 @@ int main (void) {
 	periph_init();
 
 	Init_variables();
+		
+	i2c_check(); /** TODO: Remove after testing */
 	
 	printf("\n\rCOMPLETE\n\r");
 		while(1) {
 	}
-		
-	i2c_check(); /** TODO: Remove after testing */
 
 	Init_MALD_37645();
 	Init_MATA_37644();
@@ -336,7 +336,7 @@ static void i2c_check(void) {
 	}
 
 	/* Read example */
-	if (int_I2C_write(SLAVE_ADDR, rx_data, 4u) != 0) {
+	if (int_I2C_read(SLAVE_ADDR, rx_data, 4u) != 0) {
 		/* error handling */
 		printf("i2c_read_buffer failed\n\r");
 		GPIO_LED->DATAOUTSET_bit.PIN_LED = 1; // [page 51];

@@ -10,20 +10,20 @@ extern "C" {
 // I2C communicates with the external computer.
 #define COM_GPIOSDA GPIOA
 #define COM_SDA_PIN PIN1
-#define COM_SDA_PIN_MASK (1 << 5)
+#define COM_SDA_PIN_MASK (1 << 1)
 
 #define COM_GPIOSCL GPIOA
 #define COM_SCL_PIN PIN0
-#define COM_SCL_PIN_MASK (1 << 4)
+#define COM_SCL_PIN_MASK (1 << 0)
 
 // I2C communicates with the internal chips.
 #define INT_GPIOSDA GPIOA
 #define INT_SDA_PIN PIN5
-#define INT_SDA_PIN_MASK (1 << 1)
+#define INT_SDA_PIN_MASK (1 << 5)
 
 #define INT_GPIOSCL GPIOA
 #define INT_SCL_PIN PIN4
-#define INT_SCL_PIN_MASK (1 << 0)
+#define INT_SCL_PIN_MASK (1 << 4)
 
 /**
  * @brief The funstions initialize two software uart instances.

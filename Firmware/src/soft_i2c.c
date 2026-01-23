@@ -109,34 +109,59 @@ static void drive_int_SDA_low(void) {
 }
 
 static void init_com_I2C(void) {
-  COM_GPIOSDA->DRIVEMODE_bit.COM_SDA_PIN = 0x2; // 10 - low power, high speed [213]
-  COM_GPIOSCL->DRIVEMODE_bit.COM_SCL_PIN = 0x2; // 10 - low power, high speed [213]
+  // Configure SDA/SCL pins (A1/A0)
+	COM_GPIOSDA->PULLMODE_bit.COM_SDA_PIN = 0x1; // enable pullup [page 51] [page 212]
+	COM_GPIOSDA->OUTMODE_bit.COM_SDA_PIN = 0x1 ; // open drain [page 51] [page 212]
+	COM_GPIOSDA->OUTENSET_bit.COM_SDA_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
+  COM_GPIOSDA->DATA |= COM_SDA_PIN_MASK;       // SDA high
+	
+	COM_GPIOSDA->DENSET_bit.COM_SDA_PIN = 1; // connect control to the physical port
+	
+	COM_GPIOSCL->PULLMODE_bit.COM_SCL_PIN = 0x1; // enable pullup [page 51] [page 212]
+	COM_GPIOSCL->OUTMODE_bit.COM_SCL_PIN = 0x1;  // open drain [page 51] [page 212]
+	COM_GPIOSCL->OUTENSET_bit.COM_SCL_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
+  COM_GPIOSCL->DATA |= COM_SCL_PIN_MASK;       // SDA high
+	
+	COM_GPIOSCL->DENSET_bit.COM_SCL_PIN = 1; // connect control to the physical port
+	
+	com_i2c_state = I2C_IDLE;
+	
+	// printf("command: sda:%d, scl:%d\n\r", COM_GPIOSDA->DATA >> 1 & 1, COM_GPIOSCL->DATA >> 0 & 1);
   
-  COM_GPIOSDA->INTENSET_bit.COM_SDA_PIN   = 0x1; // enable SDA interrupt [page 219]
-  COM_GPIOSDA->INTTYPESET_bit.COM_SDA_PIN = 0x1; // by front [page 220]
-  COM_GPIOSDA->INTEDGESET_bit.COM_SDA_PIN = 0x1; // by both raise and fall [page 222]
+  // COM_GPIOSDA->INTENSET_bit.COM_SDA_PIN   = 0x1; // enable SDA interrupt [page 219]
+  // COM_GPIOSDA->INTTYPESET_bit.COM_SDA_PIN = 0x1; // by front [page 220]
+  // COM_GPIOSDA->INTEDGESET_bit.COM_SDA_PIN = 0x1; // by both raise and fall [page 222]
   
-  COM_GPIOSCL->INTENSET_bit.COM_SCL_PIN   = 0x1; // enable SCL interrupt [page 219]
-  COM_GPIOSCL->INTTYPESET_bit.COM_SCL_PIN = 0x1; // by front [page 220]
-  COM_GPIOSCL->INTPOLSET_bit.COM_SCL_PIN  = 0x1; // by raise [page 221]
+  // COM_GPIOSCL->INTENSET_bit.COM_SCL_PIN   = 0x1; // enable SCL interrupt [page 219]
+  // COM_GPIOSCL->INTTYPESET_bit.COM_SCL_PIN = 0x1; // by front [page 220]
+  // COM_GPIOSCL->INTPOLSET_bit.COM_SCL_PIN  = 0x1; // by raise [page 221]
 }
 
 static void init_int_I2C(void) {
   // Configure SDA/SCL pins (A5/A4)
-  INT_GPIOSDA->DRIVEMODE_bit.INT_SDA_PIN = 0x2; // low power + high speed
-  INT_GPIOSCL->DRIVEMODE_bit.INT_SCL_PIN = 0x2;
-  
-  release_int_SDA();   // SDA high
-  INT_GPIOSCL->OUTENSET_bit.INT_SCL_PIN = 1;
-  INT_GPIOSCL->DATA |= INT_SCL_PIN_MASK;  // SCL high
+	INT_GPIOSDA->PULLMODE_bit.INT_SDA_PIN = 0x1; // enable pullup [page 51] [page 212]
+	INT_GPIOSDA->OUTMODE_bit.INT_SDA_PIN = 0x1 ; // open drain [page 51] [page 212]
+	INT_GPIOSDA->OUTENSET_bit.INT_SDA_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
+  INT_GPIOSDA->DATA |= INT_SDA_PIN_MASK;       // SDA high
+	
+	INT_GPIOSDA->DENSET_bit.INT_SDA_PIN = 1; // connect control to the physical port
+	
+	INT_GPIOSCL->PULLMODE_bit.INT_SCL_PIN = 0x1; // enable pullup [page 51] [page 212]
+	INT_GPIOSCL->OUTMODE_bit.INT_SCL_PIN = 0x1;  // open drain [page 51] [page 212]
+	INT_GPIOSCL->OUTENSET_bit.INT_SCL_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
+  INT_GPIOSCL->DATA |= INT_SCL_PIN_MASK;       // SDA high
+	
+	INT_GPIOSCL->DENSET_bit.INT_SCL_PIN = 1; // connect control to the physical port
   
   int_i2c.state = INT_I2C_IDLE;
   int_i2c.busy  = 0;
 
 	// Enable SDA raise interrupt to detect the orbitration loss.
-  INT_GPIOSDA->INTENSET_bit.INT_SDA_PIN = 1;
-  COM_GPIOSDA->INTTYPESET_bit.INT_SDA_PIN = 0x1; // by front [page 220]
-  COM_GPIOSCL->INTPOLSET_bit.INT_SDA_PIN  = 0x1; // by raise [page 221]
+  // INT_GPIOSDA->INTENSET_bit.INT_SDA_PIN = 1;
+  // COM_GPIOSDA->INTTYPESET_bit.INT_SDA_PIN = 0x1; // by front [page 220]
+  // COM_GPIOSCL->INTPOLSET_bit.INT_SDA_PIN  = 0x1; // by raise [page 221]
+	
+	// printf("internal: sda:%d, scl:%d\n\r", INT_GPIOSDA->DATA >> 5 & 1, INT_GPIOSCL->DATA >> 4 & 1);
 }
 
 static void release_com_SDA(void) {
