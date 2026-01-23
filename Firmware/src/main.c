@@ -61,12 +61,12 @@ int main (void) {
 	periph_init();
 
 	Init_variables();
-		
-	i2c_check(); /** TODO: Remove after testing */
 	
 	printf("\n\rCOMPLETE\n\r");
 		while(1) {
 	}
+		
+	i2c_check(); /** TODO: Remove after testing */
 
 	Init_MALD_37645();
 	Init_MATA_37644();
