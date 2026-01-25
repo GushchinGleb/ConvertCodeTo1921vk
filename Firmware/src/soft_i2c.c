@@ -526,7 +526,7 @@ static void perform_int_tic3(void) {
   
   switch (int_i2c.state) {
     case INT_I2C_START:
-      int_i2c.bit = 6;
+      int_i2c.bit = 6; // 7 bits for the address
       int_i2c.state = INT_I2C_ADDR;
       break;
     
@@ -609,19 +609,19 @@ static void perform_TMR_int_event(void) {
   //printf("tic:%d\n\r", int_i2c.tic);
   switch (int_i2c.tic) {
   case 0:
-    perform_int_tic0();
+    perform_int_tic0(); // update SDA
     int_i2c.tic++;
     break;
   case 1:
-    perform_int_tic1();
+    perform_int_tic1(); // SCL -> HIGH
     int_i2c.tic++;
     break;
   case 2:
-    perform_int_tic2();
+    perform_int_tic2(); // read data | check stretching
     int_i2c.tic++;
     break;
   case 3:
-    perform_int_tic3();
+    perform_int_tic3(); // SCL -> LOW | update state
     int_i2c.tic = 0;
     break;
   default:
