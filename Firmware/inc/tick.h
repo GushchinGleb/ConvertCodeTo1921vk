@@ -16,5 +16,5 @@ void tick_init(uint32_t sysclk_hz);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-	
+  
 #endif // _TICK_H

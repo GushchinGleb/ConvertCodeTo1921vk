@@ -22,28 +22,67 @@ typedef enum {
 } i2c_st_t; // com i2c state
 
 typedef enum {
-  INT_I2C_IDLE,
-  INT_I2C_START,
-  INT_I2C_SEND_BYTE,
-  INT_I2C_RECV_ACK,
-  INT_I2C_RECV_BYTE,
-  INT_I2C_SEND_ACK,
-  INT_I2C_STOP
+  _INT_I2C_IDLE,
+  _INT_I2C_START,
+  _INT_I2C_SEND_BIT,
+  _INT_I2C_RECV_ACK,
+  _INT_I2C_RECV_BIT,
+  _INT_I2C_SEND_ACK,
+  _INT_I2C_STOP
+} int_st_t_; // internal i2c state
+
+typedef enum {
+  INT_I2C_IDLE,  // idle state
+  INT_I2C_START, // start sequence
+  INT_I2C_ADDR,  // send or receive address
+  INT_I2C_RW,    // read or write bit
+  INT_I2C_RACK,  // read ack from data bus
+  INT_I2C_WACK,  // write acknolage bit {0 - ACK; 1 - NACK}
+  INT_I2C_RDATA, // read data byte from bus
+  INT_I2C_WDATA, // write data byte to the bus
+  INT_I2C_STOP   // stop sequence
 } int_st_t; // internal i2c state
 
-struct int_i2c_state {
-  const uint8_t *tx;
-  uint8_t *rx;
-  uint8_t tx_len;
-  uint8_t rx_len;
-  uint8_t tx_index;
-  uint8_t rx_index;
-  uint8_t current_byte;
-  uint8_t bit_index;
-  uint8_t scl_state; // 0 = SCL low, 1 = high
+typedef struct
+{
+  int_st_t       state;
+
+  const uint8_t *tx_buf;
+  uint8_t       *rx_buf;
+  uint8_t        len;
+  uint8_t        index;
+
+  uint8_t        byte;
+  int8_t         bit;
+  uint8_t        tick;
+
+  uint8_t        busy;
+  uint8_t        error;
+  uint8_t        ack;
+
+  uint8_t        is_read;
+} int_i2c_ctx_t;
+
+typedef struct {
   int_st_t state;
-  uint8_t busy;
-};
+  uint8_t  rw; // 0 - write, !0 - read
+  uint8_t  addr;
+  uint32_t byte;
+  uint8_t  bit; // current bit number of the address or of the byte
+  
+  const uint8_t* tx_buf; // the buffer for the transmition
+  uint32_t   tx_size; // the length of the tx buffer
+  uint32_t   tx_id;   // the id of the sended byte in the tx buffer
+  uint8_t*   rx_buf;  // the buffer for the receiving
+  uint32_t   rx_size; // the size of the availagle receiving buffer (this count of bytes was asked from the slave)
+  uint32_t   rx_id;   // the id of the received byte
+  
+  uint8_t tic; // the number of active substage of the bus
+
+  uint8_t error; // 0 - no error, 1 - ack failed
+  uint8_t ack;   // 0 - ACK, 1 - NACK
+} int_i2c_t;
+  
 
 extern uint8_t* I2C_Data_Pointer; // from soft_i2c_api.c for communication with the external computer
 
@@ -62,10 +101,10 @@ static uint8_t com_I2C_Current_Address = 0; // for communication (COMM)
 */
 static uint8_t com_I2C_Current_Page = 0;
 
-static volatile struct int_i2c_state int_i2c;
+static volatile int_i2c_ctx_t int_i2c_;
+static volatile int_i2c_t int_i2c;
 
 static void drive_com_SDA_low(void);
-static void drive_int_SDA_low(void);
 
 /// @brief To CARL
 /// SLAVE  | SCL - A0 | SDA - A1
@@ -75,16 +114,28 @@ static void init_com_I2C(void);
 /// MASTER | SCL - A4 | SDA - A5 
 static void init_int_I2C(void);
 
+/// @return 0 - not busy, 1 - busy
+static uint8_t is_com_i2c_busy(void);
+
+/// @return 0 - not busy, 1 - busy
+static uint8_t is_int_i2c_busy(void);
+
+static void pulldown_com_SCL(void);
+static void pulldown_com_SDA(void);
+static void pulldown_int_SCL(void);
+static void pulldown_int_SDA(void);
+
 static uint8_t read_com_SDA(void);
 static uint8_t read_com_SCL(void);
 static uint8_t read_int_SDA(void);
 // static uint8_t read_int_SCL(void); don't need for master
 
+static void release_com_SCL(void);
 static void release_com_SDA(void);
+static void release_int_SCL(void);
 static void release_int_SDA(void);
 
 static void reset_com_bus_state(void);
-static void reset_int_bus_state(void);
 
 static void perform_GPIOA_IRQ_com_event(void);
 static void perform_GPIOA_IRQ_int_event(void);
@@ -93,20 +144,22 @@ static void perform_TMR_com_event(void);
 static void perform_TMR_int_event(void);
 
 static void print_int_state(int state) {
-	switch (state) {
-	case INT_I2C_IDLE:      printf("IDLE");      break;
-	case INT_I2C_START:     printf("START");     break;
-	case INT_I2C_SEND_BYTE: printf("SEND_BYTE"); break;
-	case INT_I2C_RECV_ACK:  printf("RECV_ACK");  break;
-	case INT_I2C_RECV_BYTE: printf("RECV_BYTE"); break;
-	case INT_I2C_SEND_ACK:  printf("SEND_ACK");  break;
-	case INT_I2C_STOP:      printf("STOP");      break;
-	default: printf("UNKNOWN(%d)", state); break;
-	}
+  switch (state) {
+  case INT_I2C_IDLE:  printf("IDLE");  break;
+  case INT_I2C_START: printf("START"); break;
+  case INT_I2C_ADDR:  printf("ADDR");  break;
+  case INT_I2C_RW:    printf("RW");    break;
+  case INT_I2C_RACK:  printf("RACK");  break;
+  case INT_I2C_WACK:  printf("WACK");  break;
+  case INT_I2C_RDATA: printf("RDATA"); break;
+  case INT_I2C_WDATA: printf("WDATA"); break;
+  case INT_I2C_STOP:  printf("STOP");  break;
+  default: printf("UNKNOWN(%d)", state); break;
+  }
 }
 
 void soft_I2C_init(void) {
-  init_com_I2C();
+  //init_com_I2C();
   init_int_I2C();
 }
 
@@ -116,30 +169,25 @@ static void drive_com_SDA_low(void) {
   COM_GPIOSDA->OUTENSET_bit.COM_SDA_PIN = 1;  // output enable [page 213]
 }
 
-static void drive_int_SDA_low(void) {
-  INT_GPIOSDA->OUTMODE_bit.INT_SDA_PIN = 0x1; // open drain
-  INT_GPIOSDA->OUTENSET_bit.INT_SDA_PIN = 1;  // enable output
-}
-
 static void init_com_I2C(void) {
   // Configure SDA/SCL pins (A1/A0)
-	COM_GPIOSDA->PULLMODE_bit.COM_SDA_PIN = 0x1; // enable pullup [page 51] [page 212]
-	COM_GPIOSDA->OUTMODE_bit.COM_SDA_PIN = 0x1 ; // open drain [page 51] [page 212]
-	COM_GPIOSDA->OUTENSET_bit.COM_SDA_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
+  COM_GPIOSDA->PULLMODE_bit.COM_SDA_PIN = 0x1; // enable pullup [page 51] [page 212]
+  COM_GPIOSDA->OUTMODE_bit.COM_SDA_PIN = 0x1 ; // open drain [page 51] [page 212]
+  COM_GPIOSDA->OUTENSET_bit.COM_SDA_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
   COM_GPIOSDA->DATA |= COM_SDA_PIN_MASK;       // SDA high
-	
-	COM_GPIOSDA->DENSET_bit.COM_SDA_PIN = 1; // connect control to the physical port
-	
-	COM_GPIOSCL->PULLMODE_bit.COM_SCL_PIN = 0x1; // enable pullup [page 51] [page 212]
-	COM_GPIOSCL->OUTMODE_bit.COM_SCL_PIN = 0x1;  // open drain [page 51] [page 212]
-	COM_GPIOSCL->OUTENSET_bit.COM_SCL_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
+  
+  COM_GPIOSDA->DENSET_bit.COM_SDA_PIN = 1; // connect control to the physical port
+  
+  COM_GPIOSCL->PULLMODE_bit.COM_SCL_PIN = 0x1; // enable pullup [page 51] [page 212]
+  COM_GPIOSCL->OUTMODE_bit.COM_SCL_PIN = 0x1;  // open drain [page 51] [page 212]
+  COM_GPIOSCL->OUTENSET_bit.COM_SCL_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
   COM_GPIOSCL->DATA |= COM_SCL_PIN_MASK;       // SDA high
-	
-	COM_GPIOSCL->DENSET_bit.COM_SCL_PIN = 1; // connect control to the physical port
-	
-	com_i2c_state = I2C_IDLE;
-	
-	// printf("command: sda:%d, scl:%d\n\r", COM_GPIOSDA->DATA >> 1 & 1, COM_GPIOSCL->DATA >> 0 & 1);
+  
+  COM_GPIOSCL->DENSET_bit.COM_SCL_PIN = 1; // connect control to the physical port
+  
+  com_i2c_state = I2C_IDLE;
+  
+  // printf("command: sda:%d, scl:%d\n\r", COM_GPIOSDA->DATA >> 1 & 1, COM_GPIOSCL->DATA >> 0 & 1);
   
   // COM_GPIOSDA->INTENSET_bit.COM_SDA_PIN   = 0x1; // enable SDA interrupt [page 219]
   // COM_GPIOSDA->INTTYPESET_bit.COM_SDA_PIN = 0x1; // by front [page 220]
@@ -151,65 +199,67 @@ static void init_com_I2C(void) {
 }
 
 static void init_int_I2C(void) {
-	int sda_pullup = 0x1; // [page 215]
-	int scl_pullup = 0x1; // [page 215]
-	#if INT_SDA_PIN_MASK != (1 << 5)
-	#error "check the new pin and remove or update the define"
-	sda_pullup = 0x0; // remove pullup for the testbord the 10k already impletented
-	#endif
-	#if INT_SCL_PIN_MASK != (1 << 4)
-	#error "check the new pin and remove or update the define"
-	scl_pullup = 0x0; // remove pullup for the testbord the 10k already impletented
-	#endif
-	GPIOA->LOCKKEY = 0xADEADBEE; // unlock LOCKSET [page 226]
-	GPIOA->LOCKCLR = (1 << 4) | (1 << 5); // unlock A4 and A5 [page 228]
-	GPIOA->LOCKKEY = 0x00000000; // lock LOCKSET [page 226]
-	GPIOA->ALTFUNCCLR = (1 << 4) | (1 << 5); // clear alternative function for A4 and A5 [page 215]
-	
+  int sda_pullup = 0x1; // [page 215]
+  int scl_pullup = 0x1; // [page 215]
+  #if INT_SDA_PIN_MASK != (1 << 5)
+  #error "check the new pin and remove or update the define"
+  sda_pullup = 0x0; // remove pullup for the testbord the 10k already impletented
+  #endif
+  #if INT_SCL_PIN_MASK != (1 << 4)
+  #error "check the new pin and remove or update the define"
+  scl_pullup = 0x0; // remove pullup for the testbord the 10k already impletented
+  #endif
+  GPIOA->LOCKKEY = 0xADEADBEE; // unlock LOCKSET [page 226]
+  GPIOA->LOCKCLR = (1 << 4) | (1 << 5); // unlock A4 and A5 [page 228]
+  GPIOA->LOCKKEY = 0x00000000; // lock LOCKSET [page 226]
+  GPIOA->ALTFUNCCLR = (1 << 4) | (1 << 5); // clear alternative function for A4 and A5 [page 215]
+  
   // now the A4 and A5 are normal reseted pins
-	
+  
   // Configure SDA/SCL pins (A5/A4)
-	INT_GPIOSDA->PULLMODE_bit.INT_SDA_PIN = sda_pullup; // enable pullup [page 51] [page 212]
-	INT_GPIOSDA->OUTMODE_bit.INT_SDA_PIN = 0x1 ; // open drain [page 51] [page 212]
-	INT_GPIOSDA->OUTENSET_bit.INT_SDA_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
+  INT_GPIOSDA->PULLMODE_bit.INT_SDA_PIN = sda_pullup; // enable pullup [page 51] [page 212]
+  INT_GPIOSDA->OUTMODE_bit.INT_SDA_PIN = 0x1 ; // open drain [page 51] [page 212]
+  INT_GPIOSDA->OUTENSET_bit.INT_SDA_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
   INT_GPIOSDA->DATA |= INT_SDA_PIN_MASK;       // SDA high
-	
-	INT_GPIOSDA->DENSET_bit.INT_SDA_PIN = 1; // connect control to the physical port
-	
-	INT_GPIOSCL->PULLMODE_bit.INT_SCL_PIN = scl_pullup; // enable pullup [page 51] [page 212]
-	INT_GPIOSCL->OUTMODE_bit.INT_SCL_PIN = 0x1;  // open drain [page 51] [page 212]
-	INT_GPIOSCL->OUTENSET_bit.INT_SCL_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
+  
+  INT_GPIOSDA->DENSET_bit.INT_SDA_PIN = 1; // connect control to the physical port
+  
+  INT_GPIOSCL->PULLMODE_bit.INT_SCL_PIN = scl_pullup; // enable pullup [page 51] [page 212]
+  INT_GPIOSCL->OUTMODE_bit.INT_SCL_PIN = 0x1;  // open drain [page 51] [page 212]
+  INT_GPIOSCL->OUTENSET_bit.INT_SCL_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
   INT_GPIOSCL->DATA |= INT_SCL_PIN_MASK;       // SDA high
-	
-	INT_GPIOSCL->DENSET_bit.INT_SCL_PIN = 1; // connect control to the physical port
+  
+  INT_GPIOSCL->DENSET_bit.INT_SCL_PIN = 1; // connect control to the physical port
   
   int_i2c.state = INT_I2C_IDLE;
-  int_i2c.busy  = 0;
+  
 
-	// Enable SDA raise interrupt to detect the orbitration loss.
+  // Enable SDA raise interrupt to detect the orbitration loss.
   // INT_GPIOSDA->INTENSET_bit.INT_SDA_PIN = 1;
   // COM_GPIOSDA->INTTYPESET_bit.INT_SDA_PIN = 0x1; // by front [page 220]
   // COM_GPIOSCL->INTPOLSET_bit.INT_SDA_PIN  = 0x1; // by raise [page 221]
-	
-	// printf("internal: sda:%d, scl:%d\n\r", INT_GPIOSDA->DATA >> 5 & 1, INT_GPIOSCL->DATA >> 4 & 1);
+  
+  // printf("internal: sda:%d, scl:%d\n\r", INT_GPIOSDA->DATA >> 5 & 1, INT_GPIOSCL->DATA >> 4 & 1);
 }
 
-static void release_com_SDA(void) {
+static void pulldown_com_SCL(void) {
   /* input/floating */
-  COM_GPIOSDA->DATAOUTSET_bit.COM_SDA_PIN = 1; // Z-state [page 213]
-}
-
-static void release_int_SDA(void) {
-  INT_GPIOSDA->DATAOUTSET_bit.INT_SDA_PIN = 1; // Z-state
+  COM_GPIOSCL->DATAOUTCLR = COM_SCL_PIN_MASK; // pull to GND [page 213]
 }
 
 static void pulldown_com_SDA(void) {
   /* input/floating */
-  COM_GPIOSDA->DATAOUTSET_bit.COM_SDA_PIN = 0; // pull to GND [page 213]
+  COM_GPIOSDA->DATAOUTCLR = COM_SDA_PIN_MASK; // pull to GND [page 213]
+}
+
+static void pulldown_int_SCL(void) {
+  //printf("scl0\n\r");
+  INT_GPIOSCL->DATAOUTCLR = INT_SCL_PIN_MASK; // pull to GND
 }
 
 static void pulldown_int_SDA(void) {
-  INT_GPIOSDA->DATAOUTSET_bit.INT_SDA_PIN = 0; // pull to GND
+  //printf("sda0\n\r");
+  INT_GPIOSDA->DATAOUTCLR = INT_SDA_PIN_MASK; // pull to GND
 }
 
 static uint8_t read_com_SDA(void) {
@@ -224,22 +274,39 @@ static uint8_t read_int_SDA(void) {
   return !!(INT_GPIOSDA->DATA & INT_SDA_PIN_MASK);
 }
 
+static void release_com_SDA(void) {
+  /* input/floating */
+  COM_GPIOSDA->DATAOUTSET_bit.COM_SDA_PIN = 1; // Z-state [page 213]
+}
+
+static void release_int_SCL(void) {
+  //printf("scl1\n\r");
+  INT_GPIOSCL->DATAOUTSET_bit.INT_SCL_PIN = 1; // Z-state
+}
+
+static void release_int_SDA(void) {
+  //printf("sda1\n\r");
+  INT_GPIOSDA->DATAOUTSET_bit.INT_SDA_PIN = 1; // Z-state
+}
+
 // don't need for master
 // static uint8_t read_int_SCL(void) {
 //   return !!(INT_GPIOSCL->DATA & INT_SCL_PIN_MASK);
 // }
 
+static uint8_t is_com_i2c_busy(void) {
+  return 0;
+  // return int_i2c.state != I2C_IDLE;
+}
+
+static uint8_t is_int_i2c_busy(void) {
+  return int_i2c.state != INT_I2C_IDLE;
+}
+
 static void reset_com_bus_state(void) {
   com_i2c_state = I2C_IDLE;
   com_bit_count = 0;
   com_current_byte = 0;
-}
-
-static void reset_int_bus_state(void) {
-  int_i2c.state = INT_I2C_IDLE;
-  int_i2c.busy = 0;
-  release_int_SDA();
-  INT_GPIOSCL->DATA |= INT_SCL_PIN_MASK;
 }
 
 /* ========================
@@ -282,7 +349,7 @@ static void perform_GPIOA_IRQ_int_event(void) {
   if (int_i2c.state != INT_I2C_IDLE &&
       INT_GPIOSDA->OUTENSET_bit.INT_SDA_PIN == 1
   ) {
-      reset_int_bus_state();
+      //reset_int_bus_state();
   }
 
   INT_GPIOSDA->INTSTATUS = INT_GPIOSDA->INTSTATUS; // reset irq if needed [page 223]
@@ -387,229 +454,280 @@ static void perform_TMR_com_event(void) {
   scl_prev = scl;
 }
 
-static void perform_TMR_int_event(void) {
-	static int prev_state = 0xFF;
-	if (prev_state != int_i2c.state) {
-		printf("int: ");
-		print_int_state(prev_state);
-		printf(" -> ");
-		print_int_state(int_i2c.state);
-		printf("\n\r");
-		
-		prev_state = int_i2c.state;
-	}
+static void perform_int_tic0(void) {
   switch (int_i2c.state) {
-  case INT_I2C_IDLE:
-      return;
-
-  /* ---------------- START CONDITION ---------------- */
-  case INT_I2C_START:
+    case INT_I2C_START:
+      pulldown_int_SDA();      
+      break;
+    case INT_I2C_ADDR:
+      (int_i2c.addr >> int_i2c.bit) & 1 ? release_int_SDA() : pulldown_int_SDA();
+      break;
+    case INT_I2C_RW:
+      int_i2c.rw ? release_int_SDA() : pulldown_int_SDA();
+      break;
+    case INT_I2C_RACK:
+      release_int_SDA(); // release sda for ack and wait for an ack
+      break;
+    case INT_I2C_WACK:
+      pulldown_int_SDA(); // send ack
+      break;
+    case INT_I2C_RDATA:
       release_int_SDA();
-      INT_GPIOSCL->DATA |= INT_SCL_PIN_MASK; // SCL high
-      // SDA high ? low while SCL high
-      if (read_int_SDA() == 1) {
-          drive_int_SDA_low();
-          int_i2c.state = INT_I2C_SEND_BYTE;
-      }
       break;
-
-  /* ---------------- SEND 8 BITS ---------------- */
-  case INT_I2C_SEND_BYTE:
-      // SCL low ? drive bit
-      INT_GPIOSCL->DATA &= ~INT_SCL_PIN_MASK;
-
-      if (int_i2c.current_byte & (1 << int_i2c.bit_index))
-          release_int_SDA();
-      else
-          drive_int_SDA_low();
-
-      // SCL high ? master must let slave sample
-      INT_GPIOSCL->DATA |= INT_SCL_PIN_MASK;
-
-      if (int_i2c.bit_index == 0) {
-          int_i2c.state = INT_I2C_RECV_ACK;
-          release_int_SDA();     // SDA released for ACK
-      } else {
-          int_i2c.bit_index--;
-      }
+    case INT_I2C_WDATA:
+      ((int_i2c.byte >> int_i2c.bit) & 1) ? release_int_SDA() : pulldown_int_SDA();
       break;
-
-  /* ---------------- EXPECT ACK ---------------- */
-  case INT_I2C_RECV_ACK:
-      INT_GPIOSCL->DATA &= ~INT_SCL_PIN_MASK;
-      INT_GPIOSCL->DATA |= INT_SCL_PIN_MASK; // rising
-
-      if (read_int_SDA() != 0) {
-          // NACK ? STOP immediately
-          int_i2c.state = INT_I2C_STOP;
-          break;
-      }
-
-      // ACK OK:
-      if (int_i2c.tx_index < int_i2c.tx_len) {
-          int_i2c.current_byte = int_i2c.tx[int_i2c.tx_index++];
-          int_i2c.bit_index = 7;
-          int_i2c.state = INT_I2C_SEND_BYTE;
-      }
-      else if (int_i2c.rx_len > 0) {
-          int_i2c.bit_index = 7;
-          int_i2c.current_byte = 0;
-          int_i2c.state = INT_I2C_RECV_BYTE;
-      }
-      else {
-          int_i2c.state = INT_I2C_STOP;
-      }
-      break;
-
-  /* ---------------- RECEIVE 8 BITS ---------------- */
-  case INT_I2C_RECV_BYTE:
-      INT_GPIOSCL->DATA &= ~INT_SCL_PIN_MASK;
-      release_int_SDA(); // input mode
-      INT_GPIOSCL->DATA |= INT_SCL_PIN_MASK; // rising
-
-      int_i2c.current_byte =
-          (int_i2c.current_byte << 1) | read_int_SDA();
-
-      if (int_i2c.bit_index == 0) {
-          int_i2c.rx[int_i2c.rx_index++] = int_i2c.current_byte;
-          int_i2c.state = INT_I2C_SEND_ACK;
-      } else {
-          int_i2c.bit_index--;
-      }
-      break;
-
-  /* ---------------- SEND ACK/NACK ---------------- */
-  case INT_I2C_SEND_ACK:
-      INT_GPIOSCL->DATA &= ~INT_SCL_PIN_MASK;
-
-      if (int_i2c.rx_index < int_i2c.rx_len)
-          drive_int_SDA_low();   // ACK
-      else
-          release_int_SDA();     // NACK
-
-      INT_GPIOSCL->DATA |= INT_SCL_PIN_MASK;
-
-      release_int_SDA();
-      if (int_i2c.rx_index < int_i2c.rx_len) {
-          int_i2c.bit_index = 7;
-          int_i2c.current_byte = 0;
-          int_i2c.state = INT_I2C_RECV_BYTE;
-      } else {
-          int_i2c.state = INT_I2C_STOP;
-      }
-      break;
-
-  /* ---------------- STOP CONDITION ---------------- */
-  case INT_I2C_STOP:
-      INT_GPIOSCL->DATA &= ~INT_SCL_PIN_MASK;
-      drive_int_SDA_low();
-      INT_GPIOSCL->DATA |= INT_SCL_PIN_MASK;
-      release_int_SDA(); // SDA low ? high while SCL high
-      reset_int_bus_state();
+    case INT_I2C_STOP:
+      release_int_SDA(); // stop, set sda to high state
+    default:
       break;
   }
 }
 
-/** @brief ~200 kHz (every 5 us). Configured in tick.c
+static void perform_int_tic1(void) {
+  if (int_i2c.state != INT_I2C_IDLE && int_i2c.state != INT_I2C_START) {
+    release_int_SCL();
+  }
+}
+
+static void perform_int_tic2(void) {
+  switch (int_i2c.state) {
+    case INT_I2C_RACK:
+      int_i2c.ack = read_int_SDA();
+      break;
+    case INT_I2C_RDATA:
+      int_i2c.byte |= read_int_SDA() << int_i2c.bit;
+      break;
+    default:
+      break;
+  }
+}
+
+static void perform_int_tic3(void) {
+  if (int_i2c.state != INT_I2C_IDLE && int_i2c.state != INT_I2C_STOP) {
+    pulldown_int_SCL();
+  }
+  
+  switch (int_i2c.state) {
+    case INT_I2C_START:
+      int_i2c.bit = 6;
+      int_i2c.state = INT_I2C_ADDR;
+      break;
+    
+    case INT_I2C_ADDR:
+      if (int_i2c.bit > 0) {
+        int_i2c.bit--;
+        break;
+      }
+      int_i2c.state = INT_I2C_RW;
+      break;
+      
+    case INT_I2C_RW:
+      int_i2c.state = INT_I2C_RACK;
+      break;
+    
+    case INT_I2C_RACK:
+      if (int_i2c.ack) {
+        int_i2c.error = 1;
+        int_i2c.state = INT_I2C_STOP;
+        break;
+      }
+      if (int_i2c.tx_id >= int_i2c.tx_size) { // nothing to transmit
+        if (int_i2c.rx_id >= int_i2c.rx_size) { // not waiting for bytes
+          int_i2c.state = INT_I2C_STOP;
+          break;
+        }
+        int_i2c.bit = 7;
+        int_i2c.byte = 0;
+        int_i2c.state = INT_I2C_RDATA;
+        break;
+      }
+      int_i2c.bit = 7;
+      int_i2c.byte = int_i2c.tx_buf[int_i2c.tx_id];
+      int_i2c.state = INT_I2C_WDATA;
+      break;
+      
+    case INT_I2C_WACK:
+      if (int_i2c.rx_id >= int_i2c.rx_size) { // not waiting for bytes
+        int_i2c.state = INT_I2C_STOP;
+        break;
+      }
+      int_i2c.bit = 7;
+      int_i2c.byte = 0;
+      int_i2c.state = INT_I2C_RDATA;
+      break;
+      
+    case INT_I2C_RDATA:
+      if (int_i2c.bit > 0) {
+        int_i2c.bit--;
+        break;
+      }
+      int_i2c.rx_buf[int_i2c.rx_id] = int_i2c.byte;
+      int_i2c.rx_id++;
+      int_i2c.state = INT_I2C_WACK;
+      break;
+      
+    case INT_I2C_WDATA:
+      if (int_i2c.bit > 0) {
+        int_i2c.bit--;
+        break;
+      }
+      int_i2c.tx_id++;
+      int_i2c.state = INT_I2C_RACK;
+      break;
+      
+    case INT_I2C_STOP:
+      int_i2c.state = INT_I2C_IDLE;
+      break;
+    
+    default:
+      break;
+  }
+}
+
+static void perform_TMR_int_event(void) {
+  if (int_i2c.state == INT_I2C_IDLE) {
+    return;
+  }
+
+  //printf("tic:%d\n\r", int_i2c.tic);
+  switch (int_i2c.tic) {
+  case 0:
+    perform_int_tic0();
+    int_i2c.tic++;
+    break;
+  case 1:
+    perform_int_tic1();
+    int_i2c.tic++;
+    break;
+  case 2:
+    perform_int_tic2();
+    int_i2c.tic++;
+    break;
+  case 3:
+    perform_int_tic3();
+    int_i2c.tic = 0;
+    break;
+  default:
+    int_i2c.tic = 0;
+    break;
+  }
+}
+
+/** @brief ~400 kHz (every 2.5 us). Configured in tick.c
  */
 void TMR1_IRQHandler(void) {
-  perform_TMR_com_event();
+  //perform_TMR_com_event();
   perform_TMR_int_event();
-	
-	TMR1->INTSTATUS = TMR_INTSTATUS_INT_Msk;
+  
+  TMR1->INTSTATUS = TMR_INTSTATUS_INT_Msk;
 }
 
 // ==============================================================================
 // INTERNAL I2C API
 // ==============================================================================
 
-void int_I2C_start_read(uint8_t addr, uint8_t *buffer, uint8_t len) {
-    if (int_i2c.busy) {
-			return;
-		}
+void int_I2C_start_read(uint8_t addr, const uint8_t* wr_data, uint32_t wr_data_size, uint8_t *buffer, uint32_t size) {
+  if (is_int_i2c_busy()) return;
 
-    int_i2c.rx = buffer;
-    int_i2c.rx_len = len;
-    int_i2c.rx_index = 0;
-    int_i2c.tx_len = 0;
-    int_i2c.busy = 1;
+  int_i2c.addr = addr;
+  int_i2c.rw = 1; // read
+    
+  int_i2c.tx_buf = wr_data;
+  int_i2c.tx_size = wr_data_size;
+  int_i2c.tx_id = 0;
 
-    int_i2c.current_byte = (addr << 1) | 1; // R
-    int_i2c.bit_index = 7;
+  int_i2c.rx_buf = buffer;
+  int_i2c.rx_size = size;
+  int_i2c.tx_id = 0;
 
-    int_i2c.state = INT_I2C_START;
+  int_i2c.ack = 1; // no ack
+  int_i2c.error = 0; // no error
+  
+  int_i2c.state = INT_I2C_START;
 }
 
 void int_I2C_start_write(uint8_t addr, const uint8_t *data, uint8_t len) {
-    if (int_i2c.busy) {
-      return;
-    }
+  if (is_int_i2c_busy()) return;
 
-    int_i2c.tx = data;
-    int_i2c.tx_len = len;
-    int_i2c.tx_index = 0;
-    int_i2c.rx = (void*)0x0;
-    int_i2c.rx_len = 0;
-    int_i2c.busy = 1;
+  int_i2c.addr = addr;
+  int_i2c.rw = 0; // write
+    
+  int_i2c.tx_buf = data;
+  int_i2c.tx_size = len;
+  int_i2c.tx_id = 0;
 
-    // Load first byte (address << 1) | W
-    int_i2c.current_byte = (addr << 1) | 0;
-    int_i2c.bit_index = 7;
+  int_i2c.rx_buf = 0x0;
+  int_i2c.rx_size = 0;
+  int_i2c.tx_id = 0;
 
-    int_i2c.state = INT_I2C_START;
+  int_i2c.ack = 1; // no ack
+  int_i2c.error = 0; // no error
+  
+  int_i2c.state = INT_I2C_START;
 }
 
 uint8_t int_I2C_read_complete(void) {
-    if (int_i2c.busy) {
+    if (is_int_i2c_busy()) {
         return 2; // BUSY
-		}
+    }
+    
+    // check read after write operation
+    if (!int_i2c.rw) {
+      return 1; // ERROR
+    }
 
     /* If not busy, but no read was in progress return ERROR */
-    if (int_i2c.rx_len == 0) {
+    if (int_i2c.error) {
         return 1; // ERROR
-		}
+    }
 
     return 0; // SUCCESS
 }
 
 uint8_t int_I2C_write_complete(void) {
-    if (int_i2c.busy) {
+    if (is_int_i2c_busy()) {
         return 2; // BUSY
-		}
+    }
+    
+    // check wtire after read operation
+    if (int_i2c.rw) {
+      return 1; // ERROR
+    }
 
     /* If not busy, but no write was in progress return ERROR */
-    if (int_i2c.tx_len == 0) {
+    if (int_i2c.error) {
         return 1; // ERROR
-		}
+    }
 
     return 0; // SUCCESS
 }
 
 uint8_t int_I2C_read(uint8_t addr, uint8_t *buffer, uint8_t len) {
-	int_I2C_start_read(addr, buffer, len);
-	uint8_t status = 0;
-	do {
-		status = int_I2C_read_complete();
-	} while (status == 2); // BUSY
-	
-	return status == 0 ? 0 : 1;
+  int_I2C_start_read(addr, 0x0, 0, buffer, len);
+  uint8_t status = 0;
+  do {
+    status = int_I2C_read_complete();
+  } while (status == 2); // BUSY
+  
+  return status == 0 ? 0 : 1;
 }
 
 uint8_t int_I2C_write(uint8_t addr, const uint8_t *data, uint8_t len) {
-	int_I2C_start_write(addr, data, len);
-	uint8_t status = 0;
-	
-	volatile uint32_t tiks = SystemCoreClock / 4;
-	
-	do {
-		status = int_I2C_write_complete();
-	} while (status == 2 && tiks--); // BUSY
-	
-	if (status == 2) {
-		printf("Timeout\n\r");
-	}
-	
-	return status == 0 ? 0 : 1;
+  int_I2C_start_write(addr, data, len);
+  uint8_t status = 0;
+  
+  volatile uint32_t tiks = SystemCoreClock / 4;
+  
+  do {
+    status = int_I2C_write_complete();
+  } while (status == 2 && tiks--); // BUSY
+  
+  if (status == 2) {
+    printf("Timeout\n\r");
+  }
+  
+  return status == 0 ? 0 : 1;
 }
 
 #ifdef __cplusplus

@@ -4561,8 +4561,8 @@ typedef struct {
 
 /* Bit field enums: */
 typedef enum {
-  GPIO_LOCKKEY_VAL_LOCK                      = -286331154,  			   /*!< 0xEEEEEEEE, key to lock registers */
-  GPIO_LOCKKEY_VAL_UNLOCK                    = -1377117202, 			   /*!< 0xADEADBEE, key to unlock registers */
+  GPIO_LOCKKEY_VAL_LOCK                      = -286331154,           /*!< 0xEEEEEEEE, key to lock registers */
+  GPIO_LOCKKEY_VAL_UNLOCK                    = -1377117202,          /*!< 0xADEADBEE, key to unlock registers */
 } GPIO_LOCKKEY_VAL_Enum;
 
 /*--  LOCKSTAT: LOCKSET/LOCKCLR write enable status register --------------------------------------------------*/

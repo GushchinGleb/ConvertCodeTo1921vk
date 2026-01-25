@@ -169,10 +169,10 @@ FILE __stdin;
 int fputc(int c, FILE *f) {
 #ifdef __DBG_ITM
     ITM_SendChar(c);
-	  return 0;
-#else	
+    return 0;
+#else  
   return (retarget_put_char(c));
-#endif	
+#endif  
 }
 
 
@@ -190,9 +190,9 @@ int ferror(FILE *f) {
 void _ttywrch(int c) {
 #ifdef __DBG_ITM
     ITM_SendChar(c);
-#else	
+#else  
   retarget_put_char(c);
-#endif	
+#endif  
 }
 
 

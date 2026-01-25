@@ -61,7 +61,7 @@ void Init_MATA_37644(void) {
   }
   //TEST
 
-	rv = A2Up_Page.var.MATA_cfg.MATA_cfg.CHANNEL_MODE;
+  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.CHANNEL_MODE;
   if(!write_register_to_MATA(MATA_RA_CHANNEL_MODE, rv)) {
     A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
   }
@@ -218,13 +218,13 @@ void Work_with_MATA_ADC(void) {
     A2Up_Page.var.MATA_ADC_RSSI = value;
     break;
   }
-	
+  
   // Increment ADC stage
-	A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG0++;
-	if (A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG0 > 2) {
-		A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG0 = 0;
-	}
-	// Save new stage
+  A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG0++;
+  if (A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG0 > 2) {
+    A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG0 = 0;
+  }
+  // Save new stage
   write_register_to_MATA(MATA_RA_ADC_CONFIG0, A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG0);
 }
 
@@ -237,20 +237,20 @@ void Read_MATA_state(void) {
 
 //Read 'Num' bytes from MATA-37029 beginning from 'RegAddr' to buffer
 bool read_register_from_MATA(uint8_t addr, uint8_t *value) {
-	if (int_I2C_write(MATA_CHIPID, &addr, sizeof(addr)) != 0) {
-		return false;
-	}
-	
+  if (int_I2C_write(MATA_CHIPID, &addr, sizeof(addr)) != 0) {
+    return false;
+  }
+  
   return int_I2C_read(MATA_CHIPID, value, sizeof(*value)) == 0; //add additional byte because of last byte always read as 0xFF
 }
 
 //Write 'Num' bytes to MATA-37029 beginning from 'RegAddr' from buffer
 bool write_register_to_MATA(uint8_t addr, uint8_t value) {
-	static uint8_t send_buff[2];
+  static uint8_t send_buff[2];
   send_buff[0] = addr;
   send_buff[1] = value;
-	
-	return int_I2C_write(MATA_CHIPID, send_buff, sizeof(send_buff)) == 0;
+  
+  return int_I2C_write(MATA_CHIPID, send_buff, sizeof(send_buff)) == 0;
 }
 
 #ifdef __cplusplus

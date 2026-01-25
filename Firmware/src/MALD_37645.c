@@ -278,10 +278,10 @@ void Read_MALD_state(void)
 
 //Read 'Num' bytes from MASC-37029 beginning from 'RegAddr' to buffer
 bool read_register_from_MALD(uint8_t addr, uint8_t *value) {
-	if (int_I2C_write(MALD_CHIPID, &addr, sizeof(addr)) != 0) {
-		return false;
-	}
-	
+  if (int_I2C_write(MALD_CHIPID, &addr, sizeof(addr)) != 0) {
+    return false;
+  }
+  
   return int_I2C_read(MALD_CHIPID, value, sizeof(*value)) == 0; //add additional byte because of last byte always read as 0xFF
 }
 
@@ -290,8 +290,8 @@ bool write_register_to_MALD(uint8_t addr, uint8_t value) {
   static uint8_t send_buff[2];
   send_buff[0] = addr;
   send_buff[1] = value;
-	
-	return int_I2C_write(MALD_CHIPID, send_buff, sizeof(send_buff)) == 0;
+  
+  return int_I2C_write(MALD_CHIPID, send_buff, sizeof(send_buff)) == 0;
 }
 
 #ifdef __cplusplus

@@ -61,11 +61,14 @@ uint8_t* com_I2C_Decode_page_address(uint8_t Address, uint8_t I2C_Current_Page);
 void int_I2C_start_write(uint8_t addr, const uint8_t *data, uint8_t len);
 
 /**
- * @brief The function performs non-blocking read of data over internal I2C.
+ * @brief The function sends additional data and performs non-blocking read of data over internal I2C.
  * @param addr[IN] destinations address
- * @param data[IN] data for transfer the buffer must containt the data untill the transaction ended
+ * @param wr_data[IN] additional data for the adders (can be NULL)
+ * @param we_data_size[IN] the length of the additional data
+ * @param buffer[OUT] data from the transfer
+ * @param size[IN] count of the bytes in the requested data
  */
-void int_I2C_start_read(uint8_t addr, uint8_t *buffer, uint8_t len);
+void int_I2C_start_read(uint8_t addr, const uint8_t* wr_data, uint32_t wr_data_size, uint8_t *buffer, uint32_t size);
 
 /**
  * @brief The fuction checks the status of the last opetation.

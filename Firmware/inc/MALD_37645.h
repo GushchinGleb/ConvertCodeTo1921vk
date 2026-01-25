@@ -50,36 +50,36 @@ extern "C" {
 #pragma pack(push,1)
 typedef struct {
   uint8_t CHIPID           ; // 152
-	uint8_t REVID            ;
-	uint8_t RESET            ;
-	uint8_t IO_CTRL          ;
-	uint8_t CDRCTRL          ;
-	uint8_t I2C_ADDRESS_MODE ;
-	uint8_t CHANNEL_MODE     ;
-	uint8_t LOCKPHASE        ;
-	uint8_t LOS_LOL_TX_FAULT ; // 160
-	uint8_t LOS_LOL_TX_ALARM ;
-	uint8_t IGNORE_TX_FAULT  ;
-	uint8_t LOS_THRSH_AUTO_SQ;
-	uint8_t CTLE_X           ;
-	uint8_t OUTPUT_MUTE_SLEW ;
-	uint8_t LBIAS            ;
-	uint8_t LMOD             ;
-	uint8_t PREFALL          ;
-	uint8_t TDE              ;
-	uint8_t CROSSING_ADJ     ; // 170
-	uint8_t LBUMIN           ;
-	uint8_t BUMIN_ENABLE     ;
-	uint8_t ADC_CONFIG0      ; // 173
-	uint8_t ADC_CONFIG2      ;
-	uint8_t ADC_OUT0_MSBS    ;
-	uint8_t ADC_OUT0_LSBS    ;
-	uint8_t ADC_TX_SELECT    ; // 177
+  uint8_t REVID            ;
+  uint8_t RESET            ;
+  uint8_t IO_CTRL          ;
+  uint8_t CDRCTRL          ;
+  uint8_t I2C_ADDRESS_MODE ;
+  uint8_t CHANNEL_MODE     ;
+  uint8_t LOCKPHASE        ;
+  uint8_t LOS_LOL_TX_FAULT ; // 160
+  uint8_t LOS_LOL_TX_ALARM ;
+  uint8_t IGNORE_TX_FAULT  ;
+  uint8_t LOS_THRSH_AUTO_SQ;
+  uint8_t CTLE_X           ;
+  uint8_t OUTPUT_MUTE_SLEW ;
+  uint8_t LBIAS            ;
+  uint8_t LMOD             ;
+  uint8_t PREFALL          ;
+  uint8_t TDE              ;
+  uint8_t CROSSING_ADJ     ; // 170
+  uint8_t LBUMIN           ;
+  uint8_t BUMIN_ENABLE     ;
+  uint8_t ADC_CONFIG0      ; // 173
+  uint8_t ADC_CONFIG2      ;
+  uint8_t ADC_OUT0_MSBS    ;
+  uint8_t ADC_OUT0_LSBS    ;
+  uint8_t ADC_TX_SELECT    ; // 177
 } MALD_37645_cfg_struct_t; // size 26 bytes
 
 typedef struct {
   MALD_37645_cfg_struct_t MALD_cfg; // Config of MASC-37029
-	uint8_t reserved[1];              // reserved
+  uint8_t reserved[1];              // reserved
   uint8_t  Global_TX_En;            // Global Tx Enable
   uint16_t TxPwr_calibration;       // Constant for conversion from ADC value to Tx power
 } MALD_cfg_t; // size 30 bytes
