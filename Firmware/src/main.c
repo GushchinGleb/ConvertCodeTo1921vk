@@ -57,6 +57,7 @@ int main (void) {
 		"Hello from K1921VK035.\n\r"
 		"Compilation time: " __TIME__ "\n\r"
 		"Core Frequency %u Hz\n\r", SystemCoreClock);
+	//while (1);
 	
 	periph_init();
 

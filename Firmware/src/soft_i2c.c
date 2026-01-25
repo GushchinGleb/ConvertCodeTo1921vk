@@ -92,6 +92,19 @@ static void perform_GPIOA_IRQ_int_event(void);
 static void perform_TMR_com_event(void);
 static void perform_TMR_int_event(void);
 
+static void print_int_state(int state) {
+	switch (state) {
+	case INT_I2C_IDLE:      printf("IDLE");      break;
+	case INT_I2C_START:     printf("START");     break;
+	case INT_I2C_SEND_BYTE: printf("SEND_BYTE"); break;
+	case INT_I2C_RECV_ACK:  printf("RECV_ACK");  break;
+	case INT_I2C_RECV_BYTE: printf("RECV_BYTE"); break;
+	case INT_I2C_SEND_ACK:  printf("SEND_ACK");  break;
+	case INT_I2C_STOP:      printf("STOP");      break;
+	default: printf("UNKNOWN(%d)", state); break;
+	}
+}
+
 void soft_I2C_init(void) {
   init_com_I2C();
   init_int_I2C();
@@ -138,15 +151,32 @@ static void init_com_I2C(void) {
 }
 
 static void init_int_I2C(void) {
+	int sda_pullup = 0x1; // [page 215]
+	int scl_pullup = 0x1; // [page 215]
+	#if INT_SDA_PIN_MASK != (1 << 5)
+	#error "check the new pin and remove or update the define"
+	sda_pullup = 0x0; // remove pullup for the testbord the 10k already impletented
+	#endif
+	#if INT_SCL_PIN_MASK != (1 << 4)
+	#error "check the new pin and remove or update the define"
+	scl_pullup = 0x0; // remove pullup for the testbord the 10k already impletented
+	#endif
+	GPIOA->LOCKKEY = 0xADEADBEE; // unlock LOCKSET [page 226]
+	GPIOA->LOCKCLR = (1 << 4) | (1 << 5); // unlock A4 and A5 [page 228]
+	GPIOA->LOCKKEY = 0x00000000; // lock LOCKSET [page 226]
+	GPIOA->ALTFUNCCLR = (1 << 4) | (1 << 5); // clear alternative function for A4 and A5 [page 215]
+	
+  // now the A4 and A5 are normal reseted pins
+	
   // Configure SDA/SCL pins (A5/A4)
-	INT_GPIOSDA->PULLMODE_bit.INT_SDA_PIN = 0x1; // enable pullup [page 51] [page 212]
+	INT_GPIOSDA->PULLMODE_bit.INT_SDA_PIN = sda_pullup; // enable pullup [page 51] [page 212]
 	INT_GPIOSDA->OUTMODE_bit.INT_SDA_PIN = 0x1 ; // open drain [page 51] [page 212]
 	INT_GPIOSDA->OUTENSET_bit.INT_SDA_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
   INT_GPIOSDA->DATA |= INT_SDA_PIN_MASK;       // SDA high
 	
 	INT_GPIOSDA->DENSET_bit.INT_SDA_PIN = 1; // connect control to the physical port
 	
-	INT_GPIOSCL->PULLMODE_bit.INT_SCL_PIN = 0x1; // enable pullup [page 51] [page 212]
+	INT_GPIOSCL->PULLMODE_bit.INT_SCL_PIN = scl_pullup; // enable pullup [page 51] [page 212]
 	INT_GPIOSCL->OUTMODE_bit.INT_SCL_PIN = 0x1;  // open drain [page 51] [page 212]
 	INT_GPIOSCL->OUTENSET_bit.INT_SCL_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
   INT_GPIOSCL->DATA |= INT_SCL_PIN_MASK;       // SDA high
@@ -166,15 +196,20 @@ static void init_int_I2C(void) {
 
 static void release_com_SDA(void) {
   /* input/floating */
-  COM_GPIOSDA->OUTENSET_bit.COM_SDA_PIN = 0; // output disable, Z-state [page 213]
-  COM_GPIOSDA->DENSET_bit.COM_SDA_PIN = 0x0; // push pull [page 212]
-  COM_GPIOSDA->INMODE_bit.COM_SDA_PIN = 0x0; // Schmit trigger [page 51], [page 9], [page 211]
+  COM_GPIOSDA->DATAOUTSET_bit.COM_SDA_PIN = 1; // Z-state [page 213]
 }
 
 static void release_int_SDA(void) {
-  INT_GPIOSDA->OUTENSET_bit.INT_SDA_PIN = 0; // disable output
-  INT_GPIOSDA->DENSET_bit.INT_SDA_PIN = 0x0; // push-pull disabled
-  INT_GPIOSDA->INMODE_bit.INT_SDA_PIN = 0x0; // input, schmitt
+  INT_GPIOSDA->DATAOUTSET_bit.INT_SDA_PIN = 1; // Z-state
+}
+
+static void pulldown_com_SDA(void) {
+  /* input/floating */
+  COM_GPIOSDA->DATAOUTSET_bit.COM_SDA_PIN = 0; // pull to GND [page 213]
+}
+
+static void pulldown_int_SDA(void) {
+  INT_GPIOSDA->DATAOUTSET_bit.INT_SDA_PIN = 0; // pull to GND
 }
 
 static uint8_t read_com_SDA(void) {
@@ -355,7 +390,12 @@ static void perform_TMR_com_event(void) {
 static void perform_TMR_int_event(void) {
 	static int prev_state = 0xFF;
 	if (prev_state != int_i2c.state) {
-		printf("int: %d -> %d\n\r", prev_state, int_i2c.state);
+		printf("int: ");
+		print_int_state(prev_state);
+		printf(" -> ");
+		print_int_state(int_i2c.state);
+		printf("\n\r");
+		
 		prev_state = int_i2c.state;
 	}
   switch (int_i2c.state) {
