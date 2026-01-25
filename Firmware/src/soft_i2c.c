@@ -78,6 +78,7 @@ typedef struct {
   uint32_t   rx_id;   // the id of the received byte
   
   uint8_t tic; // the number of active substage of the bus
+	uint8_t stretch; // 1 - stretched, 0 - normal use
 
   uint8_t error; // 0 - no error, 1 - ack failed
   uint8_t ack;   // 0 - ACK, 1 - NACK
@@ -272,6 +273,10 @@ static uint8_t read_com_SCL(void) {
 
 static uint8_t read_int_SDA(void) {
   return !!(INT_GPIOSDA->DATA & INT_SDA_PIN_MASK);
+}
+
+static uint8_t read_int_SCL(void) {
+  return !!(INT_GPIOSCL->DATA & INT_SCL_PIN_MASK);
 }
 
 static void release_com_SDA(void) {
@@ -477,8 +482,6 @@ static void perform_int_tic0(void) {
     case INT_I2C_WDATA:
       ((int_i2c.byte >> int_i2c.bit) & 1) ? release_int_SDA() : pulldown_int_SDA();
       break;
-    case INT_I2C_STOP:
-      release_int_SDA(); // stop, set sda to high state
     default:
       break;
   }
@@ -491,6 +494,11 @@ static void perform_int_tic1(void) {
 }
 
 static void perform_int_tic2(void) {
+	if (!read_int_SCL()) {
+		int_i2c.stretch = 1;
+		return;
+	}
+	
   switch (int_i2c.state) {
     case INT_I2C_RACK:
       int_i2c.ack = read_int_SDA();
@@ -504,9 +512,17 @@ static void perform_int_tic2(void) {
 }
 
 static void perform_int_tic3(void) {
+	if (int_i2c.stretch) {
+		int_i2c.stretch = 0;
+		return; // hold the state
+	}
+
   if (int_i2c.state != INT_I2C_IDLE && int_i2c.state != INT_I2C_STOP) {
     pulldown_int_SCL();
   }
+	else if (int_i2c.state == INT_I2C_STOP) {
+	  release_int_SDA(); // stop, set sda to high state
+	}
   
   switch (int_i2c.state) {
     case INT_I2C_START:
@@ -527,7 +543,7 @@ static void perform_int_tic3(void) {
       break;
     
     case INT_I2C_RACK:
-      if (int_i2c.ack) {
+      if (0 && int_i2c.ack) {
         int_i2c.error = 1;
         int_i2c.state = INT_I2C_STOP;
         break;
@@ -643,6 +659,7 @@ void int_I2C_start_read(uint8_t addr, const uint8_t* wr_data, uint32_t wr_data_s
 
   int_i2c.ack = 1; // no ack
   int_i2c.error = 0; // no error
+	int_i2c.stretch = 0; // normal mode
   
   int_i2c.state = INT_I2C_START;
 }
@@ -663,6 +680,7 @@ void int_I2C_start_write(uint8_t addr, const uint8_t *data, uint8_t len) {
 
   int_i2c.ack = 1; // no ack
   int_i2c.error = 0; // no error
+	int_i2c.stretch = 0; // normal mode
   
   int_i2c.state = INT_I2C_START;
 }

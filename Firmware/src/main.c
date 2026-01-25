@@ -322,13 +322,16 @@ static void Check_register_action(void) {
 
 static void i2c_check(void) {
   const uint8_t SLAVE_ADDR = 0x51;
-  uint8_t tx_data[2] = {0x00, 0xAB};
+  // uint8_t tx_data[2] = {0x00, 0xAB};
+  const uint8_t tx_data[] = "Hello from K1921vk!\n\r";
+    
   uint8_t rx_data[4];
+  memset(rx_data, 0, sizeof(rx_data));
   
   printf("i2c_check: run test\n\r");
 
   /* Write example */
-  if (int_I2C_write(SLAVE_ADDR, tx_data, 2u) != 0) {
+  if (int_I2C_write(SLAVE_ADDR, tx_data, sizeof(tx_data)) != 0) {
     /* error handling */
     printf("i2c_write_buffer failed\n\r");
     GPIO_LED->DATAOUTSET_bit.PIN_LED = 1; // [page 51];
@@ -337,13 +340,14 @@ static void i2c_check(void) {
   }
 
   /* Read example */
-  if (int_I2C_read(SLAVE_ADDR, rx_data, 4u) != 0) {
+  if (int_I2C_read(SLAVE_ADDR, rx_data, 1u) != 0) {
     /* error handling */
     printf("i2c_read_buffer failed\n\r");
     GPIO_LED->DATAOUTSET_bit.PIN_LED = 1; // [page 51];
     while (1)
       ;
   }
+  printf("Read from a slave: 0x%02X\n\r", rx_data[0]);
 
   printf("i2c_check success\n\r");
 }
