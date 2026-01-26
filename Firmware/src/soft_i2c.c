@@ -12,24 +12,22 @@ extern "C" {
 #define CHECK_ADDR(addr) ((addr & 0xFC) == 0xA0) // addr=[0xA0;0xA3]
 #define GET_PAGE(addr)   (addr & 0xFE) //  addr=[0xA0;0xA3] -> page={0xA0;0xA2}
 
-typedef enum {
-  I2C_IDLE,
-  I2C_RECEIVING_ADDR,
-  I2C_RECEIVING_DATA,
-  I2C_SENDING_DATA,
-  I2C_ACK_PHASE,
-  I2C_STOP
-} i2c_st_t; // com i2c state
+#define CHECK_COM_I2C
+#ifdef CHECK_COM_I2C
+uint8_t i2c_debug_buff[16] = "";
+#endif // CHECK_COM_I2C
 
 typedef enum {
-  _INT_I2C_IDLE,
-  _INT_I2C_START,
-  _INT_I2C_SEND_BIT,
-  _INT_I2C_RECV_ACK,
-  _INT_I2C_RECV_BIT,
-  _INT_I2C_SEND_ACK,
-  _INT_I2C_STOP
-} int_st_t_; // internal i2c state
+  COM_I2C_IDLE,
+  COM_I2C_START,
+  COM_I2C_ADDR,  // sample address
+  COM_I2C_RW,    // sample mode: 0 - read from master, 1 - write to master
+  COM_I2C_RACK,  // read ack
+  COM_I2C_WACK,  // write ack
+  COM_I2C_RDATA, // read data from master
+  COM_I2C_WDATA, // wtite data to the master
+  COM_I2C_STOP
+} com_st_t;
 
 typedef enum {
   INT_I2C_IDLE,  // idle state
@@ -43,25 +41,29 @@ typedef enum {
   INT_I2C_STOP   // stop sequence
 } int_st_t; // internal i2c state
 
-typedef struct
-{
-  int_st_t       state;
+typedef struct {
+  uint8_t  sda; // state of the sda: 0 - pulldown, !0 - release
+  uint8_t  scl; // state of the scl: 0 - pulldown, !0 - release
 
-  const uint8_t *tx_buf;
-  uint8_t       *rx_buf;
-  uint8_t        len;
-  uint8_t        index;
+  com_st_t state;
+  uint8_t  rw; // 0 - read from master, !0 - write to master
+  uint8_t  addr;
+  uint32_t byte;
+  uint8_t  bit; // current bit number of the address or of the byte
+  
+  const uint8_t* tx_buf; // the buffer for the transmition to the master
+  uint32_t   tx_size; // the length of the tx buffer
+  uint32_t   tx_id;   // the id of the sended byte in the tx buffer
+  uint8_t*   rx_buf;  // the buffer for the receiving from the master
+  uint32_t   rx_size; // the size of the availagle receiving buffer (this count of bytes was asked from the slave)
+  uint32_t   rx_id;   // the id of the received byte
+  
+  uint8_t tic; // the number of active substage of the bus
+  uint8_t stretch; // 1 - stretched, 0 - normal use
 
-  uint8_t        byte;
-  int8_t         bit;
-  uint8_t        tick;
-
-  uint8_t        busy;
-  uint8_t        error;
-  uint8_t        ack;
-
-  uint8_t        is_read;
-} int_i2c_ctx_t;
+  uint8_t error; // 0 - no error, 1 - ack failed
+  uint8_t ack;   // 0 - ACK, 1 - NACK
+} com_i2c_t;
 
 typedef struct {
   int_st_t state;
@@ -78,7 +80,7 @@ typedef struct {
   uint32_t   rx_id;   // the id of the received byte
   
   uint8_t tic; // the number of active substage of the bus
-	uint8_t stretch; // 1 - stretched, 0 - normal use
+  uint8_t stretch; // 1 - stretched, 0 - normal use
 
   uint8_t error; // 0 - no error, 1 - ack failed
   uint8_t ack;   // 0 - ACK, 1 - NACK
@@ -86,11 +88,6 @@ typedef struct {
   
 
 extern uint8_t* I2C_Data_Pointer; // from soft_i2c_api.c for communication with the external computer
-
-static volatile i2c_st_t com_i2c_state = I2C_IDLE;
-static volatile uint8_t  com_bit_count = 0;
-static volatile uint8_t  com_current_byte = 0;
-static volatile bool     com_rw_flag = false; // 0 = slave write, 1 = slave read
 
 /*
  The controller accept all incomming data for any destination address.
@@ -102,10 +99,11 @@ static uint8_t com_I2C_Current_Address = 0; // for communication (COMM)
 */
 static uint8_t com_I2C_Current_Page = 0;
 
-static volatile int_i2c_ctx_t int_i2c_;
-static volatile int_i2c_t int_i2c;
+static volatile com_i2c_t com_i2c; // slave | external computer
+static volatile int_i2c_t int_i2c; // master | internal communitation
 
-static void drive_com_SDA_low(void);
+static void com_i2c_addres_clear(void);
+static void com_i2c_addres_set(void);
 
 /// @brief To CARL
 /// SLAVE  | SCL - A0 | SDA - A1
@@ -116,12 +114,12 @@ static void init_com_I2C(void);
 static void init_int_I2C(void);
 
 /// @return 0 - not busy, 1 - busy
-static uint8_t is_com_i2c_busy(void);
+//static uint8_t is_com_i2c_busy(void);
 
 /// @return 0 - not busy, 1 - busy
 static uint8_t is_int_i2c_busy(void);
 
-static void pulldown_com_SCL(void);
+//static void pulldown_com_SCL(void); // set stretch
 static void pulldown_com_SDA(void);
 static void pulldown_int_SCL(void);
 static void pulldown_int_SDA(void);
@@ -131,43 +129,84 @@ static uint8_t read_com_SCL(void);
 static uint8_t read_int_SDA(void);
 // static uint8_t read_int_SCL(void); don't need for master
 
-static void release_com_SCL(void);
+// static void release_com_SCL(void); // release stretch
 static void release_com_SDA(void);
 static void release_int_SCL(void);
 static void release_int_SDA(void);
 
-static void reset_com_bus_state(void);
-
 static void perform_GPIOA_IRQ_com_event(void);
-static void perform_GPIOA_IRQ_int_event(void);
+// static void perform_GPIOA_IRQ_int_event(void);
 
-static void perform_TMR_com_event(void);
+static void perform_SCL_fall_action(void); // write data to the master
+static void perform_SCL_raise_action(void); // read data from the master
+
 static void perform_TMR_int_event(void);
+
+static void print_com_state(int state) {
+  switch (state) {
+  case COM_I2C_IDLE:  printf("I");  break;
+  case COM_I2C_START: printf("S"); break;
+  case COM_I2C_ADDR:  printf("A");  break;
+  case COM_I2C_RW:    printf("RW");    break;
+  case COM_I2C_RACK:  printf("RA");  break;
+  case COM_I2C_WACK:  printf("WA");  break;
+  case COM_I2C_RDATA: printf("RD"); break;
+  case COM_I2C_WDATA: printf("WD"); break;
+  case COM_I2C_STOP:  printf("ST");  break;
+  default: printf("U(%d)", state); break;
+  }
+}
 
 static void print_int_state(int state) {
   switch (state) {
-  case INT_I2C_IDLE:  printf("IDLE");  break;
-  case INT_I2C_START: printf("START"); break;
-  case INT_I2C_ADDR:  printf("ADDR");  break;
+  case INT_I2C_IDLE:  printf("I");  break;
+  case INT_I2C_START: printf("S"); break;
+  case INT_I2C_ADDR:  printf("A");  break;
   case INT_I2C_RW:    printf("RW");    break;
-  case INT_I2C_RACK:  printf("RACK");  break;
-  case INT_I2C_WACK:  printf("WACK");  break;
-  case INT_I2C_RDATA: printf("RDATA"); break;
-  case INT_I2C_WDATA: printf("WDATA"); break;
-  case INT_I2C_STOP:  printf("STOP");  break;
-  default: printf("UNKNOWN(%d)", state); break;
+  case INT_I2C_RACK:  printf("RA");  break;
+  case INT_I2C_WACK:  printf("WA");  break;
+  case INT_I2C_RDATA: printf("RD"); break;
+  case INT_I2C_WDATA: printf("WD"); break;
+  case INT_I2C_STOP:  printf("ST");  break;
+  default: printf("U(%d)", state); break;
   }
 }
 
 void soft_I2C_init(void) {
-  //init_com_I2C();
+  init_com_I2C();
   init_int_I2C();
 }
 
-static void drive_com_SDA_low(void) {
-  /* open-drain output */
-  COM_GPIOSDA->OUTMODE_bit.COM_SDA_PIN = 0x1; // Open Drain [page 212]
-  COM_GPIOSDA->OUTENSET_bit.COM_SDA_PIN = 1;  // output enable [page 213]
+static void com_i2c_addres_clear(void) {
+  com_I2C_Current_Page = 0x0;
+  I2C_Data_Pointer = 0x0;
+  com_i2c.rx_buf = 0x0;
+  com_i2c.rx_id = 0;
+  com_i2c.rx_size = 0;
+  com_i2c.tx_buf = 0x0;
+  com_i2c.tx_id = 0;
+  com_i2c.tx_size = 0;
+}
+
+static void com_i2c_addres_set(void) {
+
+#ifdef CHECK_COM_I2C
+  com_i2c.rx_buf = i2c_debug_buff;
+  com_i2c.rx_id = 0;
+  com_i2c.rx_size = 16;
+  com_i2c.tx_buf = i2c_debug_buff;
+  com_i2c.tx_id = 0;
+  com_i2c.tx_size = 16;
+#else // CHECK_COM_I2C
+  com_I2C_Current_Page = GET_PAGE(com_I2C_Current_Address);
+  I2C_Data_Pointer = com_I2C_Decode_page_address(com_I2C_Current_Address, com_I2C_Current_Page);
+  com_i2c.rx_buf = I2C_Data_Pointer;
+  com_i2c.rx_id = 0;
+  com_i2c.rx_size = 128;
+  com_i2c.tx_buf = I2C_Data_Pointer;
+  com_i2c.tx_id = 0;
+  com_i2c.tx_size = 128;
+#endif // CHECK_COM_I2C
 }
 
 static void init_com_I2C(void) {
@@ -186,17 +225,30 @@ static void init_com_I2C(void) {
   
   COM_GPIOSCL->DENSET_bit.COM_SCL_PIN = 1; // connect control to the physical port
   
-  com_i2c_state = I2C_IDLE;
+  com_i2c.state = COM_I2C_IDLE;
+  com_i2c.sda = read_com_SDA();
+  com_i2c.scl = read_com_SCL();
+  
+  COM_GPIOSDA->SYNCSET_bit.COM_SDA_PIN = 1;  // enable resenhronisation [page 215]
+  COM_GPIOSDA->QUALSET_bit.COM_SDA_PIN = 1;  // enable input filter [page 216]
+  COM_GPIOSDA->QUALMODESET_bit.COM_SDA_PIN = 1; // enable 6 counts in row [page 217]
+  
+  COM_GPIOSDA->INTTYPESET_bit.COM_SDA_PIN = 0x1; // by front [page 220]
+  COM_GPIOSDA->INTEDGESET_bit.COM_SDA_PIN = 0x1; // by both raise and fall [page 222]
+  COM_GPIOSDA->INTENSET_bit.COM_SDA_PIN   = 0x1; // enable SDA interrupt [page 219]
+  
+  COM_GPIOSCL->INTTYPESET_bit.COM_SCL_PIN = 0x1; // by front [page 220]
+  COM_GPIOSCL->INTEDGESET_bit.COM_SCL_PIN  = 0x1; // by both raise and fall [page 222]
+  COM_GPIOSCL->INTENSET_bit.COM_SCL_PIN   = 0x1; // enable SCL interrupt [page 219]
+  
+  #if defined(COM_SDA_GPIOB) || defined(COM_SCL_GPIOB) || defined(INT_SDA_GPIOB) || defined(INT_SCL_GPIOB)
+  #error "Reconfigure the interrupt setup and logic of the handlers. Then update to check abowe."
+  #endif
+  NVIC_SetPriority(GPIOA_IRQn, (1UL << __NVIC_PRIO_BITS) + 2UL); // I2C master pins. High priority.
+  GPIOA->INTSTATUS = GPIOA->INTSTATUS;
+  NVIC_EnableIRQ(GPIOA_IRQn);
   
   // printf("command: sda:%d, scl:%d\n\r", COM_GPIOSDA->DATA >> 1 & 1, COM_GPIOSCL->DATA >> 0 & 1);
-  
-  // COM_GPIOSDA->INTENSET_bit.COM_SDA_PIN   = 0x1; // enable SDA interrupt [page 219]
-  // COM_GPIOSDA->INTTYPESET_bit.COM_SDA_PIN = 0x1; // by front [page 220]
-  // COM_GPIOSDA->INTEDGESET_bit.COM_SDA_PIN = 0x1; // by both raise and fall [page 222]
-  
-  // COM_GPIOSCL->INTENSET_bit.COM_SCL_PIN   = 0x1; // enable SCL interrupt [page 219]
-  // COM_GPIOSCL->INTTYPESET_bit.COM_SCL_PIN = 0x1; // by front [page 220]
-  // COM_GPIOSCL->INTPOLSET_bit.COM_SCL_PIN  = 0x1; // by raise [page 221]
 }
 
 static void init_int_I2C(void) {
@@ -204,10 +256,12 @@ static void init_int_I2C(void) {
   int scl_pullup = 0x1; // [page 215]
   #if INT_SDA_PIN_MASK != (1 << 5)
   #error "check the new pin and remove or update the define"
+  #else
   sda_pullup = 0x0; // remove pullup for the testbord the 10k already impletented
   #endif
   #if INT_SCL_PIN_MASK != (1 << 4)
   #error "check the new pin and remove or update the define"
+  #else
   scl_pullup = 0x0; // remove pullup for the testbord the 10k already impletented
   #endif
   GPIOA->LOCKKEY = 0xADEADBEE; // unlock LOCKSET [page 226]
@@ -234,19 +288,15 @@ static void init_int_I2C(void) {
   
   int_i2c.state = INT_I2C_IDLE;
   
-
-  // Enable SDA raise interrupt to detect the orbitration loss.
-  // INT_GPIOSDA->INTENSET_bit.INT_SDA_PIN = 1;
-  // COM_GPIOSDA->INTTYPESET_bit.INT_SDA_PIN = 0x1; // by front [page 220]
-  // COM_GPIOSCL->INTPOLSET_bit.INT_SDA_PIN  = 0x1; // by raise [page 221]
-  
   // printf("internal: sda:%d, scl:%d\n\r", INT_GPIOSDA->DATA >> 5 & 1, INT_GPIOSCL->DATA >> 4 & 1);
 }
 
+#if 0
 static void pulldown_com_SCL(void) {
   /* input/floating */
   COM_GPIOSCL->DATAOUTCLR = COM_SCL_PIN_MASK; // pull to GND [page 213]
 }
+#endif // 0
 
 static void pulldown_com_SDA(void) {
   /* input/floating */
@@ -294,24 +344,12 @@ static void release_int_SDA(void) {
   INT_GPIOSDA->DATAOUTSET_bit.INT_SDA_PIN = 1; // Z-state
 }
 
-// don't need for master
 // static uint8_t read_int_SCL(void) {
 //   return !!(INT_GPIOSCL->DATA & INT_SCL_PIN_MASK);
 // }
 
-static uint8_t is_com_i2c_busy(void) {
-  return 0;
-  // return int_i2c.state != I2C_IDLE;
-}
-
 static uint8_t is_int_i2c_busy(void) {
   return int_i2c.state != INT_I2C_IDLE;
-}
-
-static void reset_com_bus_state(void) {
-  com_i2c_state = I2C_IDLE;
-  com_bit_count = 0;
-  com_current_byte = 0;
 }
 
 /* ========================
@@ -319,34 +357,53 @@ static void reset_com_bus_state(void) {
    ======================== */
 // Triggered on rising/falling edges of SDA or SCL
 void GPIOA_IRQHandler(void) {
-  perform_GPIOA_IRQ_com_event();
-  perform_GPIOA_IRQ_int_event();
+  perform_GPIOA_IRQ_com_event(); // communication
+  // perform_GPIOA_IRQ_int_event(); // arbitration loss
 }
 
 static void perform_GPIOA_IRQ_com_event(void) {
-  uint8_t scl = read_com_SCL();
-  uint8_t sda = read_com_SDA();
+  const uint8_t scl = read_com_SCL();
+  const uint8_t sda = read_com_SDA();
 
-  // START condition: SDA falls while SCL high
-  if ((scl == 1) && (sda == 0)) {
-    reset_com_bus_state();
-    com_i2c_state = I2C_RECEIVING_ADDR;
-    
-    COM_GPIOSDA->INTSTATUS = COM_GPIOSDA->INTSTATUS; // reset irq if needed [page 223]
-    COM_GPIOSCL->INTSTATUS = COM_GPIOSCL->INTSTATUS; // reset irq if needed [page 223]
+  if (!com_i2c.sda && sda) { // sda raise
+    if (com_i2c.scl) { // sda raising while scl high
+      com_i2c_addres_clear(); // unlink FLASH page
+      com_i2c.state = COM_I2C_IDLE;
+    }
+    com_i2c.sda = 1;
+    COM_GPIOSDA->INTSTATUS = COM_SDA_PIN_MASK; // reset irq if needed [page 223]
     return;
   }
 
-  // STOP condition: SDA rises while SCL high
-  if ((scl == 1) && (sda == 1)) {
-    reset_com_bus_state();
-    
-    COM_GPIOSDA->INTSTATUS = COM_GPIOSDA->INTSTATUS; // reset irq if needed [page 223]
-    COM_GPIOSCL->INTSTATUS = COM_GPIOSCL->INTSTATUS; // reset irq if needed [page 223]
+  if (com_i2c.sda && !sda) { // sda fall
+    if (com_i2c.state != COM_I2C_IDLE) {
+      com_i2c.sda = 0;
+      return; // ignore fall on non idle state
+    }
+    if (com_i2c.scl) { // sda falling while scl high
+      com_i2c.state = COM_I2C_START;
+    }
+    com_i2c.sda = 0;
+    COM_GPIOSDA->INTSTATUS = COM_SDA_PIN_MASK; // reset irq if needed [page 223]
     return;
   }
+  if (com_i2c.scl && !scl) { // scl fall
+    com_i2c.scl = 0;
+    perform_SCL_fall_action(); // write data to the master
+    COM_GPIOSCL->INTSTATUS = COM_SCL_PIN_MASK; // reset irq if needed [page 223]
+    return;
+  }
+  if (!com_i2c.scl && scl) { // scl raise
+    com_i2c.scl = 1;
+    perform_SCL_raise_action(); // read data from the master
+    COM_GPIOSDA->INTSTATUS = COM_SCL_PIN_MASK; // reset irq if needed [page 223]
+    return;
+  }
+  
+  GPIOA->INTSTATUS = GPIOA->INTSTATUS; // some unhandled interupt. Resel all of them.
 }
 
+#if 0
   // Ddetect arbitration loss
 static void perform_GPIOA_IRQ_int_event(void) {
 
@@ -360,103 +417,107 @@ static void perform_GPIOA_IRQ_int_event(void) {
   INT_GPIOSDA->INTSTATUS = INT_GPIOSDA->INTSTATUS; // reset irq if needed [page 223]
   INT_GPIOSCL->INTSTATUS = INT_GPIOSCL->INTSTATUS; // reset irq if needed [page 223]
 }
+#endif // 0
 
-static void perform_TMR_com_event(void) {
-  static bool scl_prev = 1;
-  const uint8_t scl = read_com_SCL();
-  const uint8_t sda = read_com_SDA();
+static void perform_SCL_fall_action(void) {
+  switch (com_i2c.state) {
+  case COM_I2C_WDATA:
+    ((com_i2c.byte >> com_i2c.bit) & 1) ? release_com_SDA() : pulldown_com_SDA();
+    break;
 
-  // Rising edge of SCL = sample data
-  if ((scl_prev == 0) && (scl == 1)) {
-    switch (com_i2c_state) {
-    case I2C_RECEIVING_ADDR:
-      com_current_byte = (com_current_byte << 1) | (sda & 0x01);
-      com_bit_count++;
-      if (com_bit_count == 8) {
-        const uint8_t addr = com_current_byte >> 1;
-        com_rw_flag = com_current_byte & 0x01;
-        if (CHECK_ADDR(addr)) {
-          com_I2C_Current_Address = addr;
-          com_I2C_Current_Page = GET_PAGE(addr);
-          I2C_Data_Pointer = com_I2C_Decode_page_address(com_I2C_Current_Address, com_I2C_Current_Page);
-          com_i2c_state = I2C_ACK_PHASE;
-        } else {
-          reset_com_bus_state(); // Not our address
-        }
-        com_bit_count = 0;
-        com_current_byte = 0;
-      }
-      break;
+  case COM_I2C_WACK:
+    pulldown_com_SDA();
+    break;
 
-    case I2C_RECEIVING_DATA:
-      com_current_byte = (com_current_byte << 1) | (sda & 0x01);
-      com_bit_count++;
-      if (com_bit_count == 8) {
-        // Store received byte
-        com_I2C_Write_data(com_current_byte, com_I2C_Current_Address);
-        com_i2c_state = I2C_ACK_PHASE;
-        com_bit_count = 0;
-        com_current_byte = 0;
-      }
-      break;
+  default:
+    release_com_SDA();
+    break;
+  }
+}
 
-    case I2C_SENDING_DATA:
-      // Master ACK/NACK after 8 data bits
-      if (com_bit_count == 8) {
-        if (sda == 1) {
-          // NACK from master -> stop sending
-          reset_com_bus_state();
-        } else {
-          // ACK -> prepare next byte
-          com_current_byte = com_I2C_Read_data(com_I2C_Current_Address);
-          com_bit_count = 0;
-          com_i2c_state = I2C_SENDING_DATA;
-        }
-      }
-      break;
-
-    default:
+static void perform_SCL_raise_action(void) {
+  switch (com_i2c.state) {
+  case COM_I2C_START:
+    com_i2c.bit = 6;
+    com_i2c.addr = 0;
+    com_i2c.state = COM_I2C_ADDR;
+  case COM_I2C_ADDR:
+    com_i2c.addr |= read_com_SDA() << com_i2c.bit;
+    if (com_i2c.bit > 0) {
+      com_i2c.bit--;
       break;
     }
-  }
-
-  // Falling edge of SCL = drive data if sending
-  if ((scl_prev == 1) && (scl == 0)) {
-    switch (com_i2c_state) {
-    case I2C_SENDING_DATA:
-      if (com_bit_count < 8) {
-        if (com_current_byte & (0x80 >> com_bit_count)) {
-          release_com_SDA();
-        } else {
-          drive_com_SDA_low();
-        }
-        com_bit_count++;
-      } else {
-        release_com_SDA(); // release SDA for ACK/NACK bit
-      }
-      break;
-
-    case I2C_ACK_PHASE:
-      if (com_rw_flag) {
-        // Master read -> load first byte to send
-        com_current_byte = com_I2C_Read_data(com_I2C_Current_Address);
-        com_bit_count = 0;
-        com_i2c_state = I2C_SENDING_DATA;
-      } else {
-        // Master write -> send ACK
-        drive_com_SDA_low();
-        // Will be released automatically on next SCL falling edge
-        release_com_SDA();
-        com_i2c_state = I2C_RECEIVING_DATA;
-      }
-      break;
-
-    default:
+    com_I2C_Current_Address = com_i2c.addr << 1;
+    if (!CHECK_ADDR(com_I2C_Current_Address)) { // wrong address
+      com_i2c.state = COM_I2C_IDLE;
       break;
     }
-  }
+    com_i2c_addres_set(); // ling FLASH page
+    com_i2c.state = COM_I2C_RW;
+    break;
 
-  scl_prev = scl;
+  case COM_I2C_RW:
+    com_i2c.rw = read_com_SDA();
+    com_i2c.state = COM_I2C_WACK;
+    break;
+  
+  case COM_I2C_WACK:
+    pulldown_com_SDA();
+    com_i2c.bit = 7;
+    if (com_i2c.rw) { // write enable
+      com_i2c.byte = com_i2c.tx_buf[com_i2c.tx_id];
+      com_i2c.tx_id++;
+      com_i2c.state = COM_I2C_WDATA;
+    }
+    else { // read enable
+      com_i2c.byte = 0;
+      com_i2c.state = COM_I2C_RDATA;
+    }
+    break;
+    
+  case COM_I2C_RACK:
+    com_i2c.ack = read_com_SDA();
+    if (com_i2c.ack) {
+      com_i2c.state = COM_I2C_IDLE;
+      break;
+    }
+    com_i2c.bit = 7;
+    if (com_i2c.tx_id >= com_i2c.tx_size) {
+      com_i2c.byte = 0;
+    }
+    else {
+      com_i2c.byte = com_i2c.tx_buf[com_i2c.tx_id];
+      com_i2c.tx_id++;
+    }
+    com_i2c.state = COM_I2C_WDATA;
+    break;
+  
+  case COM_I2C_WDATA:
+    if (com_i2c.bit > 0) {
+      com_i2c.bit--;
+      break;
+    }
+    com_i2c.state = COM_I2C_RACK;
+    break;
+  
+  case COM_I2C_RDATA:
+    com_i2c.byte |= read_com_SDA() << com_i2c.bit;
+    if (com_i2c.bit > 0) {
+      com_i2c.bit--;
+      break;
+    }
+    if (com_i2c.rx_id >= com_i2c.rx_size) {
+      com_i2c.state = COM_I2C_WACK;
+      break;
+    }
+    com_i2c.rx_buf[com_i2c.rx_id] = com_i2c.byte;
+    com_i2c.rx_id++;
+    com_i2c.state = COM_I2C_WACK;
+    break;
+  
+  default:
+    break;
+  }
 }
 
 static void perform_int_tic0(void) {
@@ -494,11 +555,11 @@ static void perform_int_tic1(void) {
 }
 
 static void perform_int_tic2(void) {
-	if (!read_int_SCL()) {
-		int_i2c.stretch = 1;
-		return;
-	}
-	
+  if (!read_int_SCL()) {
+    int_i2c.stretch = 1;
+    return;
+  }
+  
   switch (int_i2c.state) {
     case INT_I2C_RACK:
       int_i2c.ack = read_int_SDA();
@@ -512,17 +573,17 @@ static void perform_int_tic2(void) {
 }
 
 static void perform_int_tic3(void) {
-	if (int_i2c.stretch) {
-		int_i2c.stretch = 0;
-		return; // hold the state
-	}
+  if (int_i2c.stretch) {
+    int_i2c.stretch = 0;
+    return; // hold the state
+  }
 
   if (int_i2c.state != INT_I2C_IDLE && int_i2c.state != INT_I2C_STOP) {
     pulldown_int_SCL();
   }
-	else if (int_i2c.state == INT_I2C_STOP) {
-	  release_int_SDA(); // stop, set sda to high state
-	}
+  else if (int_i2c.state == INT_I2C_STOP) {
+    release_int_SDA(); // stop, set sda to high state
+  }
   
   switch (int_i2c.state) {
     case INT_I2C_START:
@@ -633,7 +694,6 @@ static void perform_TMR_int_event(void) {
 /** @brief ~400 kHz (every 2.5 us). Configured in tick.c
  */
 void TMR1_IRQHandler(void) {
-  //perform_TMR_com_event();
   perform_TMR_int_event();
   
   TMR1->INTSTATUS = TMR_INTSTATUS_INT_Msk;
@@ -659,7 +719,7 @@ void int_I2C_start_read(uint8_t addr, const uint8_t* wr_data, uint32_t wr_data_s
 
   int_i2c.ack = 1; // no ack
   int_i2c.error = 0; // no error
-	int_i2c.stretch = 0; // normal mode
+  int_i2c.stretch = 0; // normal mode
   
   int_i2c.state = INT_I2C_START;
 }
@@ -680,7 +740,7 @@ void int_I2C_start_write(uint8_t addr, const uint8_t *data, uint8_t len) {
 
   int_i2c.ack = 1; // no ack
   int_i2c.error = 0; // no error
-	int_i2c.stretch = 0; // normal mode
+  int_i2c.stretch = 0; // normal mode
   
   int_i2c.state = INT_I2C_START;
 }

@@ -22,10 +22,14 @@ extern "C" {
 
 #include "../Retarget/retarget_conf.h" // printf
 
+#define CHECK_INT_I2C // perform internal I2C check
+
 extern uint8_t Time_flags;
 extern A0_Page_t A0_Page; // from eeprom_a0a2.c
 extern A2_Page_t A2_Page; // from eeprom_a0a2.c
 extern A2Up_Page_t A2Up_Page; // from eeprom_a0a2.c
+
+extern uint8_t i2c_debug_buff[16];
 
 static void gpio_init(void);
 static uint8_t Check_CC_BASE_and_CC_EXT(const uint8_t *A0Low_ptr);
@@ -66,7 +70,15 @@ int main (void) {
   i2c_check(); /** TODO: Remove after testing */
   
   printf("\n\rCOMPLETE\n\r");
-    while(1) {
+
+  while(1) {
+    if (Time_flags & TIME_1SEC_FLAG) {
+      Time_flags &= ~TIME_1SEC_FLAG;
+      for (int i = 0; i < 16; i++) {
+        printf("0x%02X ", i2c_debug_buff[i]);
+      }
+      printf("\n\r");
+    }
   }
 
   Init_MALD_37645();
@@ -320,12 +332,13 @@ static void Check_register_action(void) {
   }
 }
 
-static void i2c_check(void) {
+static void i2c_check(void) {  
+#ifdef CHECK_INT_I2C
   const uint8_t SLAVE_ADDR = 0x51;
   // uint8_t tx_data[2] = {0x00, 0xAB};
-  const uint8_t tx_data[] = "Hello from K1921vk!\n\r";
+  const uint8_t tx_data[] = "Hel1o from K1921vk!\n\r";
     
-  uint8_t rx_data[4];
+  uint8_t rx_data[18];
   memset(rx_data, 0, sizeof(rx_data));
   
   printf("i2c_check: run test\n\r");
@@ -340,16 +353,21 @@ static void i2c_check(void) {
   }
 
   /* Read example */
-  if (int_I2C_read(SLAVE_ADDR, rx_data, 1u) != 0) {
+  if (int_I2C_read(SLAVE_ADDR, rx_data, sizeof(rx_data)) != 0) {
     /* error handling */
     printf("i2c_read_buffer failed\n\r");
     GPIO_LED->DATAOUTSET_bit.PIN_LED = 1; // [page 51];
     while (1)
       ;
   }
-  printf("Read from a slave: 0x%02X\n\r", rx_data[0]);
+  printf("Read from a slave:\n\r");
+  for (uint32_t i = 0; i < sizeof(rx_data); i++) {
+    printf(" 0x%02X", rx_data[i]);
+  }
+  printf("\n\r");
 
   printf("i2c_check success\n\r");
+#endif // CHECK_INT_I2C
 }
 
 static void Init_variables(void) {

@@ -7,23 +7,72 @@ extern "C" {
 
 #include <stdint.h>
 
-// I2C communicates with the external computer.
-#define COM_GPIOSDA GPIOA
+// *** CONFIGURATION BEGIN *** //
+
+#define COM_SDA_GPIOA
+// #define COM_SDA_GPIOA
+#define COM_SCL_GPIOA
+// #define COM_SCL_GPIOB
+#define INT_SDA_GPIOA
+// #define INT_SDA_GPIOB
+#define INT_SCL_GPIOA
+// #define INT_SCL_GPIOB
+
 #define COM_SDA_PIN PIN1
 #define COM_SDA_PIN_MASK (1 << 1)
-
-#define COM_GPIOSCL GPIOA
 #define COM_SCL_PIN PIN0
 #define COM_SCL_PIN_MASK (1 << 0)
-
-// I2C communicates with the internal chips.
-#define INT_GPIOSDA GPIOA
 #define INT_SDA_PIN PIN5
 #define INT_SDA_PIN_MASK (1 << 5)
-
-#define INT_GPIOSCL GPIOA
 #define INT_SCL_PIN PIN4
 #define INT_SCL_PIN_MASK (1 << 4)
+
+// ***  CONFIGURATION END  *** //
+
+#if defined(COM_SDA_GPIOA) && defined(COM_SDA_GPIOB)
+#error "multiple GPIO for the com_sda pin are defined"
+#endif
+#if defined(COM_SCL_GPIOA) && defined(COM_SCL_GPIOB)
+#error "multiple GPIO for the com_scl pin are defined"
+#endif
+#if defined(INT_SDA_GPIOA) && defined(INT_SDA_GPIOB)
+#error "multiple GPIO for the int_sda pin are defined"
+#endif
+#if defined(INT_SCL_GPIOA) && defined(INT_SCL_GPIOB)
+#error "multiple GPIO for the int_scl pin are defined"
+#endif
+
+// I2C communicates with the external computer.
+#ifdef COM_SDA_GPIOA
+#define COM_GPIOSDA GPIOA
+#endif // COM_SDA_GPIOA
+#ifdef COM_SDA_GPIOB
+#define COM_GPIOSDA GPIOB
+#endif // COM_SDA_GPIOB
+
+#ifdef COM_SCL_GPIOA
+#define COM_GPIOSCL GPIOA
+#endif // COM_SDA_GPIOA
+#ifdef COM_SCL_GPIOB
+#define COM_GPIOSCL GPIOB
+#endif // COM_SDA_GPIOB
+
+// I2C communicates with the internal chips.
+#ifdef COM_SDA_GPIOA
+#define COM_GPIOSDA GPIOA
+#endif // COM_SDA_GPIOA
+#ifdef COM_SDA_GPIOB
+#define COM_GPIOSDA GPIOB
+#endif // COM_SDA_GPIOB
+#define INT_GPIOSDA GPIOA
+
+#ifdef COM_SCL_GPIOA
+#define COM_GPIOSCL GPIOA
+#endif // COM_SDA_GPIOA
+#ifdef COM_SCL_GPIOB
+#define COM_GPIOSCL GPIOB
+#endif // COM_SDA_GPIOB
+#define INT_GPIOSCL GPIOA
 
 /**
  * @brief The funstions initialize two software uart instances.

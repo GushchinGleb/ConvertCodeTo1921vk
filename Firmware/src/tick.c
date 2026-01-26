@@ -22,7 +22,7 @@ void tick_init(uint32_t sysclk_hz){
   TMR0->LOAD = delay_tiks;  // [page 56]
   TMR0->VALUE = 0L;         // [page 56]
 
-  NVIC_SetPriority(TMR0_IRQn, (1UL << __NVIC_PRIO_BITS) + 2UL); /* set Priority for Systick Interrupt */
+  NVIC_SetPriority(TMR0_IRQn, (1UL << __NVIC_PRIO_BITS) + 10UL); // internal scheduler clock. Low priority.
   NVIC_EnableIRQ(TMR0_IRQn);
   
   TMR0->CTRL = TMR_CTRL_ON_Msk | TMR_CTRL_INTEN_Msk;
@@ -34,7 +34,7 @@ void tick_init(uint32_t sysclk_hz){
   TMR1->LOAD = delay_tiks;  // [page 56]
   TMR1->VALUE = 0L;         // [page 56]
   
-  NVIC_SetPriority(TMR1_IRQn, (1UL << __NVIC_PRIO_BITS) + 1UL); /* set Priority for Systick Interrupt */
+  NVIC_SetPriority(TMR1_IRQn, (1UL << __NVIC_PRIO_BITS) + 5UL); // I2C clock. Midle priority.
   NVIC_EnableIRQ(TMR1_IRQn);
   
   TMR1->CTRL = TMR_CTRL_ON_Msk | TMR_CTRL_INTEN_Msk;
