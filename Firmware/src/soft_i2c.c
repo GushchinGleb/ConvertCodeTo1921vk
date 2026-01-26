@@ -535,6 +535,10 @@ static void perform_int_tic0(void) {
       release_int_SDA(); // release sda for ack and wait for an ack
       break;
     case INT_I2C_WACK:
+      if (int_i2c.rx_id >= int_i2c.rx_size) { // not waiting for bytes
+        release_int_SDA(); // send nack. the buffer is full
+        break;
+      }
       pulldown_int_SDA(); // send ack
       break;
     case INT_I2C_RDATA:

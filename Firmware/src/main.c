@@ -75,9 +75,9 @@ int main (void) {
     if (Time_flags & TIME_1SEC_FLAG) {
       Time_flags &= ~TIME_1SEC_FLAG;
       for (int i = 0; i < 16; i++) {
-        printf("0x%02X ", i2c_debug_buff[i]);
+        //printf("0x%02X ", i2c_debug_buff[i]);
       }
-      printf("\n\r");
+      //printf("\n\r");
     }
   }
 
@@ -338,7 +338,7 @@ static void i2c_check(void) {
   // uint8_t tx_data[2] = {0x00, 0xAB};
   const uint8_t tx_data[] = "Hel1o from K1921vk!\n\r";
     
-  uint8_t rx_data[18];
+  uint8_t rx_data[2];
   memset(rx_data, 0, sizeof(rx_data));
   
   printf("i2c_check: run test\n\r");
