@@ -67,19 +67,23 @@ int main (void) {
 
   Init_variables();
     
-  i2c_check(); /** TODO: Remove after testing */
-  
-  printf("\n\rCOMPLETE\n\r");
+//  i2c_check(); /** TODO: Remove after testing */
+//  
+//  printf("\n\rCOMPLETE\n\r");
 
-  while(1) {
-    if (Time_flags & TIME_1SEC_FLAG) {
-      Time_flags &= ~TIME_1SEC_FLAG;
-      for (int i = 0; i < 16; i++) {
-        //printf("0x%02X ", i2c_debug_buff[i]);
-      }
-      //printf("\n\r");
-    }
-  }
+//  while(0) {
+//    if (0 && Time_flags & TIME_1SEC_FLAG) {
+//      Time_flags &= ~TIME_1SEC_FLAG;
+//      for (int i = 0; i < 4; i++) {
+//        printf("0x%02X ", A2_Page.var.PassEntry[i]);
+//      }
+//      printf("| 0x%02X | ", A2_Page.var.TableSelect);
+//      for (int i = 0; i < 8; i++) {
+//        printf("0x%02X ", A2Up_Page.var.Reserved206[i]);
+//      }
+//      printf("\n\r");
+//    }
+//  }
 
   Init_MALD_37645();
   Init_MATA_37644();
@@ -214,14 +218,14 @@ void Check_timer_interval() {
 
     read_in_pins();
     
-    Work_with_MATA_ADC();
-    Work_with_MALD_ADC();
+//    Work_with_MATA_ADC();
+//    Work_with_MALD_ADC();
   }
   if(Time_flags & TIME_500MS_FLAG) { // 500 ms
     Time_flags &= ~TIME_500MS_FLAG;
 
-    Read_MALD_state();
-    Read_MATA_state();
+//    Read_MALD_state();
+//    Read_MATA_state();
 
   }
   if(Time_flags & TIME_1SEC_FLAG) { // 1 s
@@ -237,9 +241,10 @@ void Check_timer_interval() {
 }
 
 static void Check_register_action(void) {
-  uint8_t Temp_page_data[128];
+  static uint8_t Temp_page_data[128];
   
   if(A2Up_Page.var.GrpCommand != 0) {
+    //printf("grp com: %d\n\r", A2Up_Page.var.GrpCommand);
     //There is active group command
     A2Up_Page.var.GrpCmdResult = 0xFF;
     if(A2Up_Page.var.GrpCommand == GRP_CMD_MASC_DATA_RD) {
@@ -285,7 +290,7 @@ static void Check_register_action(void) {
         if(A2Up_Page.var.GrpAddress == FLASH_UPD_A0_LOW) {
           //Update A0 Low Page -> Check CC_BASE and CC_EXT
           uint8_t Temp_u8 = Check_CC_BASE_and_CC_EXT(Temp_page_data);
-          if(Temp_u8 == 0) {
+          if(1 || Temp_u8 == 0) {
             //Correct values for CC_BASE and CC_EXT
             //Copy data to A0 Low Page in RAM
             memcpy(&A0_Page.Bytes[0], Temp_page_data, 128);
@@ -336,33 +341,100 @@ static void i2c_check(void) {
 #ifdef CHECK_INT_I2C
   const uint8_t SLAVE_ADDR = 0x51;
   // uint8_t tx_data[2] = {0x00, 0xAB};
-  const uint8_t tx_data[] = "Hel1o from K1921vk!\n\r";
-    
+  const uint8_t tx_data1[] = {123, 0xA3, 0x25, 0xA0, 0x6F};
+  const uint8_t tx_data2[] = {127, 0x80};
+  const uint8_t tx_data3[] = {208, 0x01, 0x02, 0x03, 0x55};
+  const uint8_t tx_data4[] = {208};
+  uint8_t rx_data4[4];
+  
+  uint8_t tx_databuf[33] = {0};
+  tx_databuf[0] = 224;
+  tx_databuf[6] = 1;
+  uint8_t tx_com1_buf[] = {218, 0x03};
+  uint8_t tx_com2_buf[] = {218, 0x04};
+  uint8_t tx_com3_buf[] = {218, 0x05};
+  uint8_t tx_com31_buf[] = {219, 0x01}; // a0 low
+  uint8_t tx_com32_buf[] = {222, 0x00, 0x04}; // crc
+  uint8_t tx_com4_buf[] = {218, 0x06};
+  
+  uint8_t res_addr = 221;
+  uint8_t res_data = 0;
+  
+
   uint8_t rx_data[2];
   memset(rx_data, 0, sizeof(rx_data));
   
   printf("i2c_check: run test\n\r");
+  volatile int i = 0;
 
   /* Write example */
-  if (int_I2C_write(SLAVE_ADDR, tx_data, sizeof(tx_data)) != 0) {
+  if (int_I2C_write(SLAVE_ADDR, tx_data1, sizeof(tx_data1)) != 0) {
     /* error handling */
-    printf("i2c_write_buffer failed\n\r");
+    printf("i2c_write_buffer1 failed\n\r");
     GPIO_LED->DATAOUTSET_bit.PIN_LED = 1; // [page 51];
     while (1)
       ;
+  }
+  int_I2C_write(SLAVE_ADDR, tx_data2, sizeof(tx_data2));
+  int_I2C_write(SLAVE_ADDR, tx_data3, sizeof(tx_data3));
+  
+  int_I2C_start_read(SLAVE_ADDR, tx_data4, 1, rx_data4, sizeof(rx_data4));
+  uint8_t status = 0;
+  do {
+    status = int_I2C_read_complete();
+  } while (status == 2); // BUSY
+  if (status) {
+    /* error handling */
+    printf("int_I2C_start_read4 failed\n\r");
+    GPIO_LED->DATAOUTSET_bit.PIN_LED = 1; // [page 51];
+    while (1)
+      ;
+  }
+  
+  printf("data from slave:\n\r");
+  for (uint32_t i = 0; i < sizeof(rx_data4); ++i) {
+    printf("0x%02X ", rx_data4[i]);
   }
 
-  /* Read example */
-  if (int_I2C_read(SLAVE_ADDR, rx_data, sizeof(rx_data)) != 0) {
-    /* error handling */
-    printf("i2c_read_buffer failed\n\r");
-    GPIO_LED->DATAOUTSET_bit.PIN_LED = 1; // [page 51];
-    while (1)
-      ;
+  printf("\n\r");
+  
+  for (int i = 0; i < 4; i++) {
+    printf("0x%02X ", A2_Page.var.PassEntry[i]);
   }
-  printf("Read from a slave:\n\r");
-  for (uint32_t i = 0; i < sizeof(rx_data); i++) {
-    printf(" 0x%02X", rx_data[i]);
+  printf("| 0x%02X | ", A2_Page.var.TableSelect);
+  for (int i = 0; i < 8; i++) {
+    printf("0x%02X ", A2Up_Page.var.Reserved206[i]);
+  }
+  printf("\n\r");
+  
+  int_I2C_write(SLAVE_ADDR, tx_databuf, sizeof(tx_databuf));
+  Check_register_action();
+  int_I2C_write(SLAVE_ADDR, tx_com1_buf, sizeof(tx_com1_buf));
+  Check_register_action();
+  int_I2C_write(SLAVE_ADDR, tx_com2_buf, sizeof(tx_com2_buf));
+  Check_register_action();
+  int_I2C_write(SLAVE_ADDR, tx_com3_buf, sizeof(tx_com3_buf));
+  Check_register_action();
+  int_I2C_write(SLAVE_ADDR, tx_com31_buf, sizeof(tx_com31_buf));
+  Check_register_action();
+  int_I2C_write(SLAVE_ADDR, tx_com32_buf, sizeof(tx_com32_buf));
+  Check_register_action();
+  int_I2C_write(SLAVE_ADDR, tx_com4_buf, sizeof(tx_com4_buf));
+  Check_register_action();
+  
+  while (!(Time_flags & TIME_100MS_FLAG)) {
+    Time_flags &= ~TIME_100MS_FLAG;
+  }
+  while (!(Time_flags & TIME_100MS_FLAG)) {
+    Time_flags &= ~TIME_100MS_FLAG;
+  }
+  
+  int_I2C_start_read(SLAVE_ADDR, &res_addr, 1, &res_data, 1);
+  while (int_I2C_read_complete() == 2); // BUSY
+  
+  printf("result: %d\n\r", res_data);
+  for (uint32_t i = 0; i < 128; ++i) {
+    printf("%02X ", A0_Page.Bytes[i]);
   }
   printf("\n\r");
 
@@ -376,6 +448,12 @@ static void Init_variables(void) {
   memset(&A2Up_Page, 0, 128);
 
   a0a2_pages_init_from_flash();
+  
+//  printf("A0:\n\r");
+//  for (uint32_t i = 0; i < 128; ++i) {
+//    printf("%02X ", A0_Page.Bytes[i]);
+//  }
+//  printf("\n\r");
 }
 
 static void periph_init() {

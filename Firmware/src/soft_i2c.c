@@ -24,6 +24,7 @@ typedef enum {
   COM_I2C_RW,    // sample mode: 0 - read from master, 1 - write to master
   COM_I2C_RACK,  // read ack
   COM_I2C_WACK,  // write ack
+  COM_I2C_RADDR, // read the local address of the data in the page
   COM_I2C_RDATA, // read data from master
   COM_I2C_WDATA, // wtite data to the master
   COM_I2C_STOP
@@ -51,13 +52,10 @@ typedef struct {
   uint32_t byte;
   uint8_t  bit; // current bit number of the address or of the byte
   
-  const uint8_t* tx_buf; // the buffer for the transmition to the master
-  uint32_t   tx_size; // the length of the tx buffer
-  uint32_t   tx_id;   // the id of the sended byte in the tx buffer
-  uint8_t*   rx_buf;  // the buffer for the receiving from the master
-  uint32_t   rx_size; // the size of the availagle receiving buffer (this count of bytes was asked from the slave)
-  uint32_t   rx_id;   // the id of the received byte
-  
+  uint8_t    p_id;    // the index of the page {0xA0; 0xA1}
+  uint8_t    l_addr;  // the local address of data in the selected page
+  uint8_t    f_raddr;  // flag 0 - perform read / write operation; 1 - read the local address 
+
   uint8_t tic; // the number of active substage of the bus
   uint8_t stretch; // 1 - stretched, 0 - normal use
 
@@ -72,6 +70,8 @@ typedef struct {
   uint32_t byte;
   uint8_t  bit; // current bit number of the address or of the byte
   
+  uint8_t    p_id;    // the index of the page {0x50 (A0); 0x51 (A2)}
+  
   const uint8_t* tx_buf; // the buffer for the transmition
   uint32_t   tx_size; // the length of the tx buffer
   uint32_t   tx_id;   // the id of the sended byte in the tx buffer
@@ -85,19 +85,8 @@ typedef struct {
   uint8_t error; // 0 - no error, 1 - ack failed
   uint8_t ack;   // 0 - ACK, 1 - NACK
 } int_i2c_t;
-  
-
+ 
 extern uint8_t* I2C_Data_Pointer; // from soft_i2c_api.c for communication with the external computer
-
-/*
- The controller accept all incomming data for any destination address.
- It saves the addres for future use in I2C_Write_data or I2C_Read_data API funtions.
-*/
-static uint8_t com_I2C_Current_Address = 0; // for communication (COMM)
-/*
- The number of the page. 0xA0 is for A0 page structure, same for 0xA2.
-*/
-static uint8_t com_I2C_Current_Page = 0;
 
 static volatile com_i2c_t com_i2c; // slave | external computer
 static volatile int_i2c_t int_i2c; // master | internal communitation
@@ -145,14 +134,15 @@ static void perform_TMR_int_event(void);
 static void print_com_state(int state) {
   switch (state) {
   case COM_I2C_IDLE:  printf("I");  break;
-  case COM_I2C_START: printf("S"); break;
+  case COM_I2C_START: printf("S");  break;
   case COM_I2C_ADDR:  printf("A");  break;
-  case COM_I2C_RW:    printf("RW");    break;
-  case COM_I2C_RACK:  printf("RA");  break;
-  case COM_I2C_WACK:  printf("WA");  break;
+  case COM_I2C_RADDR: printf("RR"); break;
+  case COM_I2C_RW:    printf("RW"); break;
+  case COM_I2C_RACK:  printf("RA"); break;
+  case COM_I2C_WACK:  printf("WA"); break;
   case COM_I2C_RDATA: printf("RD"); break;
   case COM_I2C_WDATA: printf("WD"); break;
-  case COM_I2C_STOP:  printf("ST");  break;
+  case COM_I2C_STOP:  printf("ST"); break;
   default: printf("U(%d)", state); break;
   }
 }
@@ -178,35 +168,11 @@ void soft_I2C_init(void) {
 }
 
 static void com_i2c_addres_clear(void) {
-  com_I2C_Current_Page = 0x0;
   I2C_Data_Pointer = 0x0;
-  com_i2c.rx_buf = 0x0;
-  com_i2c.rx_id = 0;
-  com_i2c.rx_size = 0;
-  com_i2c.tx_buf = 0x0;
-  com_i2c.tx_id = 0;
-  com_i2c.tx_size = 0;
 }
 
 static void com_i2c_addres_set(void) {
-
-#ifdef CHECK_COM_I2C
-  com_i2c.rx_buf = i2c_debug_buff;
-  com_i2c.rx_id = 0;
-  com_i2c.rx_size = 16;
-  com_i2c.tx_buf = i2c_debug_buff;
-  com_i2c.tx_id = 0;
-  com_i2c.tx_size = 16;
-#else // CHECK_COM_I2C
-  com_I2C_Current_Page = GET_PAGE(com_I2C_Current_Address);
-  I2C_Data_Pointer = com_I2C_Decode_page_address(com_I2C_Current_Address, com_I2C_Current_Page);
-  com_i2c.rx_buf = I2C_Data_Pointer;
-  com_i2c.rx_id = 0;
-  com_i2c.rx_size = 128;
-  com_i2c.tx_buf = I2C_Data_Pointer;
-  com_i2c.tx_id = 0;
-  com_i2c.tx_size = 128;
-#endif // CHECK_COM_I2C
+  I2C_Data_Pointer = com_I2C_Decode_page_address(com_i2c.l_addr, com_i2c.p_id);
 }
 
 static void init_com_I2C(void) {
@@ -364,6 +330,9 @@ void GPIOA_IRQHandler(void) {
 static void perform_GPIOA_IRQ_com_event(void) {
   const uint8_t scl = read_com_SCL();
   const uint8_t sda = read_com_SDA();
+  
+//  print_com_state(com_i2c.state);
+//  printf(" A:%hhu L:%hhu\n\r", sda, scl);
 
   if (!com_i2c.sda && sda) { // sda raise
     if (com_i2c.scl) { // sda raising while scl high
@@ -447,12 +416,13 @@ static void perform_SCL_raise_action(void) {
       com_i2c.bit--;
       break;
     }
-    com_I2C_Current_Address = com_i2c.addr << 1;
-    if (!CHECK_ADDR(com_I2C_Current_Address)) { // wrong address
+    com_i2c.p_id = com_i2c.addr << 1; // set the index of the page
+    if (!CHECK_ADDR(com_i2c.p_id)) { // wrong address ( not 0x50 (A0) or 0x51 (A2) )
       com_i2c.state = COM_I2C_IDLE;
       break;
     }
-    com_i2c_addres_set(); // ling FLASH page
+    com_i2c.l_addr = 0;
+    com_i2c.f_raddr = 1; // read the local address in the selected page
     com_i2c.state = COM_I2C_RW;
     break;
 
@@ -464,9 +434,15 @@ static void perform_SCL_raise_action(void) {
   case COM_I2C_WACK:
     pulldown_com_SDA();
     com_i2c.bit = 7;
+    if (com_i2c.f_raddr) {
+      com_i2c.f_raddr = 0;
+      com_i2c.state = COM_I2C_RADDR;
+      break;
+    }
     if (com_i2c.rw) { // write enable
-      com_i2c.byte = com_i2c.tx_buf[com_i2c.tx_id];
-      com_i2c.tx_id++;
+      com_i2c.l_addr &= 0x7F;
+      com_i2c.byte = com_I2C_Read_data(com_i2c.l_addr);
+      com_i2c.l_addr = (com_i2c.l_addr + 1) & 0x7F; // same overlap logic
       com_i2c.state = COM_I2C_WDATA;
     }
     else { // read enable
@@ -482,13 +458,9 @@ static void perform_SCL_raise_action(void) {
       break;
     }
     com_i2c.bit = 7;
-    if (com_i2c.tx_id >= com_i2c.tx_size) {
-      com_i2c.byte = 0;
-    }
-    else {
-      com_i2c.byte = com_i2c.tx_buf[com_i2c.tx_id];
-      com_i2c.tx_id++;
-    }
+    com_i2c.l_addr &= 0x7F;
+    com_i2c.byte = com_I2C_Read_data(com_i2c.l_addr);
+    com_i2c.l_addr = (com_i2c.l_addr + 1) & 0x7F; // same overlap logic
     com_i2c.state = COM_I2C_WDATA;
     break;
   
@@ -499,6 +471,16 @@ static void perform_SCL_raise_action(void) {
     }
     com_i2c.state = COM_I2C_RACK;
     break;
+
+  case COM_I2C_RADDR:
+    com_i2c.l_addr |= read_com_SDA() << com_i2c.bit;
+    if (com_i2c.bit > 0) {
+      com_i2c.bit--;
+      break;
+    }
+    com_i2c_addres_set();
+    com_i2c.state = COM_I2C_WACK;
+    break;
   
   case COM_I2C_RDATA:
     com_i2c.byte |= read_com_SDA() << com_i2c.bit;
@@ -506,12 +488,9 @@ static void perform_SCL_raise_action(void) {
       com_i2c.bit--;
       break;
     }
-    if (com_i2c.rx_id >= com_i2c.rx_size) {
-      com_i2c.state = COM_I2C_WACK;
-      break;
-    }
-    com_i2c.rx_buf[com_i2c.rx_id] = com_i2c.byte;
-    com_i2c.rx_id++;
+    com_i2c.l_addr &= 0x7F;
+    com_I2C_Write_data(com_i2c.byte, com_i2c.l_addr);
+    com_i2c.l_addr = (com_i2c.l_addr + 1) & 0x7F; // same overlap logic
     com_i2c.state = COM_I2C_WACK;
     break;
   
@@ -546,6 +525,9 @@ static void perform_int_tic0(void) {
       break;
     case INT_I2C_WDATA:
       ((int_i2c.byte >> int_i2c.bit) & 1) ? release_int_SDA() : pulldown_int_SDA();
+      break;
+    case INT_I2C_STOP:
+      pulldown_int_SDA(); // perform stop sequence
       break;
     default:
       break;
@@ -608,7 +590,7 @@ static void perform_int_tic3(void) {
       break;
     
     case INT_I2C_RACK:
-      if (0 && int_i2c.ack) {
+      if (int_i2c.ack) {
         int_i2c.error = 1;
         int_i2c.state = INT_I2C_STOP;
         break;

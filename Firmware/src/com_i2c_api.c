@@ -15,19 +15,24 @@ extern A0_Page_t A0_Page;
 extern A2_Page_t A2_Page;
 extern A2Up_Page_t A2Up_Page;
 
+#define offsetof(struc, field) ((uint8_t*)&(struc.field) - (uint8_t*)&struc)
+
 /**
  * @brief Write byte received from master it current address is allowed for writing
  * @param Byte[IN] - byte received from master
  * @param I2C_Current_Address[IN] the master send the byte to this address
  */
 void com_I2C_Write_data(uint8_t Byte, uint8_t I2C_Current_Address) {
+//  printf("W: %d %d\n\r", Byte, I2C_Current_Address);
   // Check address for write capability
   if(I2C_Data_Pointer == (uint8_t *)&A0_Page) {
     //Work with A0 low page -> no available addresses
 
   } else if(I2C_Data_Pointer == (uint8_t *)&A2_Page) {
     //Work with A2 low page -> check writable address ranges
-    if((I2C_Current_Address >= 120) && (I2C_Current_Address <= 127)) {
+    if(
+      ((I2C_Current_Address >= offsetof(A2_Page.var, PassEntry[0])) && (I2C_Current_Address <= offsetof(A2_Page.var, PassEntry[3]))) ||
+      (I2C_Current_Address == offsetof(A2_Page.var, TableSelect))) {
       A2_Page.Bytes[I2C_Current_Address] = Byte;
       //Create password value
       if((A2_Page.var.PassEntry[0] == PASS_CONST_B0) && (A2_Page.var.PassEntry[1] == PASS_CONST_B1) &&
@@ -51,6 +56,7 @@ void com_I2C_Write_data(uint8_t Byte, uint8_t I2C_Current_Address) {
  * @param I2C_Current_Address[IN] the master send the byte to this address
  */
 uint8_t com_I2C_Read_data(uint8_t I2C_Current_Address) {
+//  printf("R: %d\n\r", I2C_Current_Address);
   uint8_t RdByte;
   // Check address for write capability
   if(I2C_Data_Pointer == (uint8_t *)&A2Up_Page) {
@@ -64,7 +70,7 @@ uint8_t com_I2C_Read_data(uint8_t I2C_Current_Address) {
     }
   } else if(I2C_Data_Pointer == (uint8_t *)&A2_Page) {
     //A2 low page -> check password area
-    if((I2C_Current_Address >= 123) && (I2C_Current_Address <= 126)) {
+    if((I2C_Current_Address >= offsetof(A2_Page.var, PassEntry[0])) && (I2C_Current_Address <= offsetof(A2_Page.var, PassEntry[3]))) {
       //Password variables is write only -> return zero
       RdByte = 0;
     } else {
@@ -91,6 +97,7 @@ uint8_t* com_I2C_Decode_page_address(uint8_t Address, uint8_t I2C_Current_Page) 
     //Lower address -> check current page
     if(I2C_Current_Page == 0xA2)
       Pointer = (uint8_t *)&A2_Page;
+      //printf("\n\rA2\n\r");
   }
 
   return Pointer;
