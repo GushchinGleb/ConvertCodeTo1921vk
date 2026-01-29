@@ -137,20 +137,35 @@ uint8_t int_I2C_write_complete(void);
 /**
  * @brief The function performs blocking write of data over internal I2C.
  * @param addr[IN] destinations address
- * @param data[IN] data for transfer the buffer must containt the data untill the transaction ended
+ * @param tx_buff[IN] data to a device
+ * @param tx_len[IN] count of the transmited bytes
  * @retunr 0 -- the last operation complete
  * @return 1 -- the last operation failed
  */
-uint8_t int_I2C_write(uint8_t addr, const uint8_t *data, uint8_t len);
+uint8_t int_I2C_write(uint8_t addr, const uint8_t *tx_buff, uint8_t tx_len);
 
 /**
  * @brief The function performs blocking read of data over internal I2C.
- * @param addr[IN] destinations address
- * @param data[IN] data for transfer the buffer must containt the data untill the transaction ended
+ * @param addr[IN] source address
+ * @param rx_buff[OUT] data from a device
+ * @param rx_len[IN] count of the requested bytes
+ * @return 0 -- the last operation complete
+ * @return 1 -- the last operation failed
+ */
+uint8_t int_I2C_read(uint8_t addr, uint8_t *rx_buff, uint8_t rx_len);
+
+/**
+ * @brief The function performs bloking request.
+ * The function sends a request and perform start-without-stop reading operation.
+ * @param addr[IN] address of the device (target address)
+ * @param tx_buff[IN] data or request to the target
+ * @param tx_len[IN] count of the transmited bytes
+ * @param rx_buff[OUT] data from the target
+ * @param rx_len[IN] count of the requested bytes
  * @retunr 0 -- the last operation complete
  * @return 1 -- the last operation failed
  */
-uint8_t int_I2C_read(uint8_t addr, uint8_t *buffer, uint8_t len);
+uint8_t int_I2C_request(uint8_t addr, const uint8_t* tx_buff, uint8_t tx_len, uint8_t* rx_buff, uint8_t rx_len);
 
 #ifdef __cplusplus
 }

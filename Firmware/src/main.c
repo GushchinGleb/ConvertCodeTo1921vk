@@ -290,7 +290,7 @@ static void Check_register_action(void) {
         if(A2Up_Page.var.GrpAddress == FLASH_UPD_A0_LOW) {
           //Update A0 Low Page -> Check CC_BASE and CC_EXT
           uint8_t Temp_u8 = Check_CC_BASE_and_CC_EXT(Temp_page_data);
-          if(1 || Temp_u8 == 0) {
+          if(Temp_u8 == 0) {
             //Correct values for CC_BASE and CC_EXT
             //Copy data to A0 Low Page in RAM
             memcpy(&A0_Page.Bytes[0], Temp_page_data, 128);
@@ -378,18 +378,9 @@ static void i2c_check(void) {
   int_I2C_write(SLAVE_ADDR, tx_data2, sizeof(tx_data2));
   int_I2C_write(SLAVE_ADDR, tx_data3, sizeof(tx_data3));
   
-  int_I2C_start_read(SLAVE_ADDR, tx_data4, 1, rx_data4, sizeof(rx_data4));
-  uint8_t status = 0;
-  do {
-    status = int_I2C_read_complete();
-  } while (status == 2); // BUSY
-  if (status) {
-    /* error handling */
-    printf("int_I2C_start_read4 failed\n\r");
-    GPIO_LED->DATAOUTSET_bit.PIN_LED = 1; // [page 51];
-    while (1)
-      ;
-  }
+  //int_I2C_write(SLAVE_ADDR, tx_data4, 1);
+  //int_I2C_read(SLAVE_ADDR, rx_data4, sizeof(rx_data4));
+  int_I2C_request(SLAVE_ADDR, tx_data4, 1, rx_data4, sizeof(rx_data4));
   
   printf("data from slave:\n\r");
   for (uint32_t i = 0; i < sizeof(rx_data4); ++i) {
@@ -422,15 +413,9 @@ static void i2c_check(void) {
   int_I2C_write(SLAVE_ADDR, tx_com4_buf, sizeof(tx_com4_buf));
   Check_register_action();
   
-  while (!(Time_flags & TIME_100MS_FLAG)) {
-    Time_flags &= ~TIME_100MS_FLAG;
-  }
-  while (!(Time_flags & TIME_100MS_FLAG)) {
-    Time_flags &= ~TIME_100MS_FLAG;
-  }
+  printf("Request result\n\r");
   
-  int_I2C_start_read(SLAVE_ADDR, &res_addr, 1, &res_data, 1);
-  while (int_I2C_read_complete() == 2); // BUSY
+  int_I2C_request(SLAVE_ADDR,&res_addr, 1, &res_data, 1);
   
   printf("result: %d\n\r", res_data);
   for (uint32_t i = 0; i < 128; ++i) {
