@@ -178,15 +178,20 @@ static void com_i2c_addres_set(void) {
 }
 
 static void init_com_I2C(void) {
+  // 10K resistor already implemented
+  // set both to 0x1 if the wires not pulled to the 3V3
+  int sda_pullup = 0x0; // [page 215]
+  int scl_pullup = 0x0; // [page 215]
+  
   // Configure SDA/SCL pins (A1/A0)
-  COM_GPIOSDA->PULLMODE_bit.COM_SDA_PIN = 0x1; // enable pullup [page 51] [page 212]
+  COM_GPIOSDA->PULLMODE_bit.COM_SDA_PIN = sda_pullup; // enable pullup [page 51] [page 212]
   COM_GPIOSDA->OUTMODE_bit.COM_SDA_PIN = 0x1 ; // open drain [page 51] [page 212]
   COM_GPIOSDA->OUTENSET_bit.COM_SDA_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
   COM_GPIOSDA->DATA |= COM_SDA_PIN_MASK;       // SDA high
   
   COM_GPIOSDA->DENSET_bit.COM_SDA_PIN = 1; // connect control to the physical port
   
-  COM_GPIOSCL->PULLMODE_bit.COM_SCL_PIN = 0x1; // enable pullup [page 51] [page 212]
+  COM_GPIOSCL->PULLMODE_bit.COM_SCL_PIN = scl_pullup; // enable pullup [page 51] [page 212]
   COM_GPIOSCL->OUTMODE_bit.COM_SCL_PIN = 0x1;  // open drain [page 51] [page 212]
   COM_GPIOSCL->OUTENSET_bit.COM_SCL_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
   COM_GPIOSCL->DATA |= COM_SCL_PIN_MASK;       // SDA high
@@ -221,17 +226,15 @@ static void init_com_I2C(void) {
 }
 
 static void init_int_I2C(void) {
+  // Set both to 0x0
+  // if the wires is pulled to the 3V3
   int sda_pullup = 0x1; // [page 215]
   int scl_pullup = 0x1; // [page 215]
   #if INT_SDA_PIN_MASK != (1 << 5)
   #error "check the new pin and remove or update the define"
-  #else
-  sda_pullup = 0x0; // remove pullup for the testbord the 10k already impletented
   #endif
   #if INT_SCL_PIN_MASK != (1 << 4)
   #error "check the new pin and remove or update the define"
-  #else
-  scl_pullup = 0x0; // remove pullup for the testbord the 10k already impletented
   #endif
   GPIOA->LOCKKEY = 0xADEADBEE; // unlock LOCKSET [page 226]
   GPIOA->LOCKCLR = (1 << 4) | (1 << 5); // unlock A4 and A5 [page 228]
