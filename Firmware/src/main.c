@@ -29,7 +29,10 @@ extern A0_Page_t A0_Page; // from eeprom_a0a2.c
 extern A2_Page_t A2_Page; // from eeprom_a0a2.c
 extern A2Up_Page_t A2Up_Page; // from eeprom_a0a2.c
 
-extern uint8_t i2c_debug_buff[16];
+extern uint8_t i2c_dbg_rd[128];
+extern uint8_t i2c_dbg_wr[128];
+extern uint8_t i2c_dbg_rdp;
+extern uint8_t i2c_dbg_wrp;
 
 static void gpio_init(void);
 static uint8_t Check_CC_BASE_and_CC_EXT(const uint8_t *A0Low_ptr);
@@ -71,19 +74,20 @@ int main (void) {
 //  
 //  printf("\n\rCOMPLETE\n\r");
 
-//  while(0) {
-//    if (0 && Time_flags & TIME_1SEC_FLAG) {
-//      Time_flags &= ~TIME_1SEC_FLAG;
-//      for (int i = 0; i < 4; i++) {
-//        printf("0x%02X ", A2_Page.var.PassEntry[i]);
-//      }
-//      printf("| 0x%02X | ", A2_Page.var.TableSelect);
-//      for (int i = 0; i < 8; i++) {
-//        printf("0x%02X ", A2Up_Page.var.Reserved206[i]);
-//      }
-//      printf("\n\r");
-//    }
-//  }
+  while(1) {
+    if (Time_flags & TIME_1SEC_FLAG) {
+      Time_flags &= ~TIME_1SEC_FLAG;
+			printf("R: | ");
+      for (int r = 0; r < i2c_dbg_rdp; r += 2) {
+        printf("a:0x%02X v:0x%02X |", i2c_dbg_rd[r], i2c_dbg_rd[r + 1]);
+      }
+			printf("\n\rW: | ");
+      for (int w = 0; w < i2c_dbg_wrp; w += 2) {
+        printf("a:0x%02X v:0x%02X |", i2c_dbg_wr[w], i2c_dbg_wr[w + 1]);
+      }
+			printf("\n\r");
+    }
+  }
 
   Init_MALD_37645();
   Init_MATA_37644();
@@ -218,14 +222,14 @@ void Check_timer_interval() {
 
     read_in_pins();
     
-//    Work_with_MATA_ADC();
-//    Work_with_MALD_ADC();
+    Work_with_MATA_ADC();
+    Work_with_MALD_ADC();
   }
   if(Time_flags & TIME_500MS_FLAG) { // 500 ms
     Time_flags &= ~TIME_500MS_FLAG;
 
-//    Read_MALD_state();
-//    Read_MATA_state();
+    Read_MALD_state();
+    Read_MATA_state();
 
   }
   if(Time_flags & TIME_1SEC_FLAG) { // 1 s

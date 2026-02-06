@@ -17,12 +17,25 @@ extern A2Up_Page_t A2Up_Page;
 
 #define offsetof(struc, field) ((uint8_t*)&(struc.field) - (uint8_t*)&struc)
 
+
+uint8_t i2c_dbg_rd[128] = {0};
+uint8_t i2c_dbg_wr[128] = {0};
+uint8_t i2c_dbg_rdp = 0;
+uint8_t i2c_dbg_wrp = 0;
+
 /**
  * @brief Write byte received from master it current address is allowed for writing
  * @param Byte[IN] - byte received from master
  * @param I2C_Current_Address[IN] the master send the byte to this address
  */
 void com_I2C_Write_data(uint8_t Byte, uint8_t I2C_Current_Address) {
+	i2c_dbg_rd[i2c_dbg_rdp] = I2C_Current_Address;
+	i2c_dbg_rd[i2c_dbg_rdp + 1] = Byte;
+	i2c_dbg_rdp += 2;
+	if (i2c_dbg_rdp >= 127) {
+		i2c_dbg_rdp = 126;
+	}
+
 //  printf("W: %d %d\n\r", Byte, I2C_Current_Address);
   // Check address for write capability
   if(I2C_Data_Pointer == (uint8_t *)&A0_Page) {
@@ -55,7 +68,7 @@ void com_I2C_Write_data(uint8_t Byte, uint8_t I2C_Current_Address) {
  * @brief Read byte from current address of selected page
  * @param I2C_Current_Address[IN] the master send the byte to this address
  */
-uint8_t com_I2C_Read_data(uint8_t I2C_Current_Address) {
+uint8_t com_I2C_Read_data(uint8_t I2C_Current_Address) {	
 //  printf("R: %d\n\r", I2C_Current_Address);
   uint8_t RdByte;
   // Check address for write capability
@@ -80,6 +93,13 @@ uint8_t com_I2C_Read_data(uint8_t I2C_Current_Address) {
     //Password is not used for other pages -> read data
     RdByte = I2C_Data_Pointer[I2C_Current_Address];
   }
+	
+	i2c_dbg_rd[i2c_dbg_rdp] = I2C_Current_Address;
+	i2c_dbg_rd[i2c_dbg_rdp + 1] = RdByte;
+	i2c_dbg_rdp += 2;
+	if (i2c_dbg_rdp >= 127) {
+		i2c_dbg_rdp = 126;
+	}
   return RdByte;
 }
 
