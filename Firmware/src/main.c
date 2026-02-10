@@ -78,12 +78,12 @@ int main (void) {
     if (Time_flags & TIME_1SEC_FLAG) {
       Time_flags &= ~TIME_1SEC_FLAG;
 			printf("R: | ");
-      for (int r = 0; r < i2c_dbg_rdp; r += 2) {
-        printf("a:0x%02X v:0x%02X |", i2c_dbg_rd[r], i2c_dbg_rd[r + 1]);
+      for (int r = 0; r < i2c_dbg_rdp; r += 3) {
+        printf("addr:0x%02X reg:0x%02X val:0x%02X |", i2c_dbg_rd[r], i2c_dbg_rd[r + 1], i2c_dbg_rd[r + 2]);
       }
 			printf("\n\rW: | ");
-      for (int w = 0; w < i2c_dbg_wrp; w += 2) {
-        printf("a:0x%02X v:0x%02X |", i2c_dbg_wr[w], i2c_dbg_wr[w + 1]);
+      for (int w = 0; w < i2c_dbg_wrp; w += 3) {
+        printf("addr:0x%02X reg:0%02X val:0x%02X |", i2c_dbg_wr[w], i2c_dbg_wr[w + 1], i2c_dbg_wr[w + 2]);
       }
 			printf("\n\r");
     }

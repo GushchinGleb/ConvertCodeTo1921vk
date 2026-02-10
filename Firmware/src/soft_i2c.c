@@ -405,7 +405,7 @@ static void perform_SCL_raise_action(void) {
       break;
     }
     com_i2c.p_id = com_i2c.addr << 1; // set the index of the page
-    if (!CHECK_ADDR(com_i2c.p_id)) { // wrong address ( not 0x50 (A0) or 0x51 (A2) )
+    if (0 && !CHECK_ADDR(com_i2c.p_id)) { // (ignore) wrong address ( not 0x50 (A0) or 0x51 (A2) )
       com_i2c.state = COM_I2C_IDLE;
       break;
     }
@@ -462,7 +462,7 @@ static void perform_SCL_raise_action(void) {
     com_i2c.state = COM_I2C_RACK;
     break;
 
-  case COM_I2C_RADDR:
+  case COM_I2C_RADDR: // address of a register
     com_i2c.l_addr |= read_com_SDA() << com_i2c.bit;
     if (com_i2c.bit > 0) {
       com_i2c.bit--;
