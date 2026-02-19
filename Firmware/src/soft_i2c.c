@@ -430,9 +430,8 @@ static void perform_SCL_raise_action(void) {
       break;
     }
     if (com_i2c.rw) { // write enable
-      com_i2c.l_addr &= 0x7F;
       com_i2c.byte = com_I2C_Read_data(com_i2c.l_addr);
-      com_i2c.l_addr = (com_i2c.l_addr + 1) & 0x7F; // same overlap logic
+      com_i2c.l_addr++;
       com_i2c.state = COM_I2C_WDATA;
     }
     else { // read enable
@@ -448,9 +447,8 @@ static void perform_SCL_raise_action(void) {
       break;
     }
     com_i2c.bit = 7;
-    com_i2c.l_addr &= 0x7F;
     com_i2c.byte = com_I2C_Read_data(com_i2c.l_addr);
-    com_i2c.l_addr = (com_i2c.l_addr + 1) & 0x7F; // same overlap logic
+    com_i2c.l_addr++; // same overlap logic
     com_i2c.state = COM_I2C_WDATA;
     break;
   
@@ -478,9 +476,8 @@ static void perform_SCL_raise_action(void) {
       com_i2c.bit--;
       break;
     }
-    com_i2c.l_addr &= 0x7F;
     com_I2C_Write_data(com_i2c.byte, com_i2c.l_addr);
-    com_i2c.l_addr = (com_i2c.l_addr + 1) & 0x7F; // same overlap logic
+    com_i2c.l_addr++; // same overlap logic
     com_i2c.state = COM_I2C_WACK;
     break;
   
