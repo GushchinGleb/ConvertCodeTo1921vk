@@ -409,7 +409,7 @@ static void perform_SCL_raise_action(void) {
       break;
     }
     com_i2c.p_id = com_i2c.addr << 1; // set the index of the page
-    if (0 && !CHECK_ADDR(com_i2c.p_id)) { // (ignore) wrong address ( not 0x50 (A0) or 0x51 (A2) )
+    if (!CHECK_ADDR(com_i2c.p_id)) { // (ignore) wrong address ( not 0x50 (A0) or 0x51 (A2) )
       com_i2c.state = COM_I2C_IDLE;
       break;
     }
