@@ -91,7 +91,6 @@ extern uint8_t* I2C_Data_Pointer; // from soft_i2c_api.c for communication with 
 static volatile com_i2c_t com_i2c; // slave | external computer
 static volatile int_i2c_t int_i2c; // master | internal communitation
 
-static void com_i2c_addres_clear(void);
 static void com_i2c_addres_set(void);
 
 /// @brief To CARL
@@ -133,6 +132,8 @@ static void perform_SDA_STOP(void); // sda raise while the scl is LOW
 
 static void perform_TMR_int_event(void);
 
+#if 0
+
 static void print_com_state(int state) {
   switch (state) {
   case COM_I2C_IDLE:  printf("I");  break;
@@ -164,13 +165,16 @@ static void print_int_state(int state) {
   }
 }
 
+#else
+
+#define print_com_state(state) {}
+#define print_int_state(state) {}
+
+#endif // 0
+
 void soft_I2C_init(void) {
   init_com_I2C();
   init_int_I2C();
-}
-
-static void com_i2c_addres_clear(void) {
-  I2C_Data_Pointer = 0x0;
 }
 
 static void com_i2c_addres_set(void) {
@@ -797,10 +801,6 @@ uint8_t int_I2C_write(uint8_t addr, const uint8_t *tx_buff, uint8_t tx_len) {
   do {
     status = int_I2C_write_complete();
   } while (status == 2 && tiks--); // BUSY
-  
-  if (status == 2) {
-    printf("Timeout\n\r");
-  }
   
   return status == 0 ? 0 : 1;
 }
