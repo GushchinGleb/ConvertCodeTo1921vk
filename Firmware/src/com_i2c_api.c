@@ -37,8 +37,10 @@ void com_I2C_Write_data(uint8_t Byte, uint8_t I2C_Current_Address) {
 	if (i2c_dbg_wrp >= 512 - 2) {
 		i2c_dbg_wrp = 512 - 3;
 	}
+	
+	I2C_Current_Address &= 0x7F; // truncate address
 
-//  printf("W: %d %d\n\r", Byte, I2C_Current_Address);
+  //  printf("W: %d %d\n\r", Byte, I2C_Current_Address);
   // Check address for write capability
   if(I2C_Data_Pointer == (uint8_t *)&A0_Page) {
     //Work with A0 low page -> no available addresses
@@ -70,8 +72,11 @@ void com_I2C_Write_data(uint8_t Byte, uint8_t I2C_Current_Address) {
  * @brief Read byte from current address of selected page
  * @param I2C_Current_Address[IN] the master send the byte to this address
  */
-uint8_t com_I2C_Read_data(uint8_t I2C_Current_Address) {	
-//  printf("R: %d\n\r", I2C_Current_Address);
+uint8_t com_I2C_Read_data(uint8_t I2C_Current_Address) {
+	const uint8_t dbg_I2C_Current_Address = I2C_Current_Address;
+	I2C_Current_Address &= 0x7F; // truncate address
+
+  // printf("R: %d\n\r", I2C_Current_Address);
   uint8_t RdByte;
   // Check address for write capability
   if(I2C_Data_Pointer == (uint8_t *)&A2Up_Page) {
@@ -97,7 +102,7 @@ uint8_t com_I2C_Read_data(uint8_t I2C_Current_Address) {
   }
 	
 	i2c_dbg_rd[i2c_dbg_rdp + 0] = sel_addr;
-	i2c_dbg_rd[i2c_dbg_rdp + 1] = I2C_Current_Address;
+	i2c_dbg_rd[i2c_dbg_rdp + 1] = dbg_I2C_Current_Address;
 	i2c_dbg_rd[i2c_dbg_rdp + 2] = RdByte;
 	i2c_dbg_rdp += 3;
 	if (i2c_dbg_rdp >= 512 - 2) {
@@ -107,29 +112,16 @@ uint8_t com_I2C_Read_data(uint8_t I2C_Current_Address) {
 }
 
 uint8_t* com_I2C_Decode_page_address(uint8_t Address, uint8_t I2C_Current_Page) {
-	sel_addr = I2C_Current_Page;
-  //Default address is A0 page
-  uint8_t *Pointer = (uint8_t *)&A0_Page;
-	
-	if (I2C_Current_Page != 0xA0 && I2C_Current_Page != 0xA2) {
-      Pointer = (uint8_t *)&A2Up_Page;
+	sel_addr = I2C_Current_Page; // for debug
+
+	if (I2C_Current_Page == 0xA0) {
+		return (uint8_t*)&A0_Page;
 	}
-
-  if(Address & 0x80) {
-    //Upper address -> check current page and table select variable
-    if((I2C_Current_Page == 0xA2) && (A2_Page.var.TableSelect == 0x80)) {
-      //A2 page and table select is 0x80 -> select A2 Up page
-      Pointer = (uint8_t *)&A2Up_Page;
-    }
-  }
-	else {
-    //Lower address -> check current page
-    if(I2C_Current_Page == 0xA2)
-      Pointer = (uint8_t *)&A2_Page;
-      //printf("\n\rA2\n\r");
-  } 
-
-  return Pointer;
+	if (I2C_Current_Page == 0xA2) {
+		return Address < 128 ? (uint8_t*)&A2_Page : (uint8_t*)&A2Up_Page;
+	}
+	
+	return (uint8_t*)&A2Up_Page;
 }
 
 #ifdef __cplusplus
