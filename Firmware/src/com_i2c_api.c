@@ -19,10 +19,10 @@ extern A2Up_Page_t A2Up_Page;
 
 
 static uint8_t sel_addr = 0x0;
-uint8_t i2c_dbg_rd[256] = {0};
-uint8_t i2c_dbg_wr[256] = {0};
-uint8_t i2c_dbg_rdp = 0;
-uint8_t i2c_dbg_wrp = 0;
+uint8_t i2c_dbg_rd[512] = {0};
+uint8_t i2c_dbg_wr[512] = {0};
+uint16_t i2c_dbg_rdp = 0;
+uint16_t i2c_dbg_wrp = 0;
 
 /**
  * @brief Write byte received from master it current address is allowed for writing
@@ -30,12 +30,12 @@ uint8_t i2c_dbg_wrp = 0;
  * @param I2C_Current_Address[IN] the master send the byte to this address
  */
 void com_I2C_Write_data(uint8_t Byte, uint8_t I2C_Current_Address) {
-	i2c_dbg_rd[i2c_dbg_rdp + 0] = sel_addr;
-	i2c_dbg_rd[i2c_dbg_rdp + 1] = I2C_Current_Address;
-	i2c_dbg_rd[i2c_dbg_rdp + 2] = Byte;
-	i2c_dbg_rdp += 3;
-	if (i2c_dbg_rdp >= 256 - 2) {
-		i2c_dbg_rdp = 256 - 3;
+	i2c_dbg_wr[i2c_dbg_rdp + 0] = sel_addr;
+	i2c_dbg_wr[i2c_dbg_rdp + 1] = I2C_Current_Address;
+	i2c_dbg_wr[i2c_dbg_rdp + 2] = Byte;
+	i2c_dbg_wrp += 3;
+	if (i2c_dbg_wrp >= 512 - 2) {
+		i2c_dbg_wrp = 512 - 3;
 	}
 
 //  printf("W: %d %d\n\r", Byte, I2C_Current_Address);
@@ -100,8 +100,8 @@ uint8_t com_I2C_Read_data(uint8_t I2C_Current_Address) {
 	i2c_dbg_rd[i2c_dbg_rdp + 1] = I2C_Current_Address;
 	i2c_dbg_rd[i2c_dbg_rdp + 2] = RdByte;
 	i2c_dbg_rdp += 3;
-	if (i2c_dbg_rdp >= 256 - 2) {
-		i2c_dbg_rdp = 256 - 3;
+	if (i2c_dbg_rdp >= 512 - 2) {
+		i2c_dbg_rdp = 512 - 3;
 	}
   return RdByte;
 }
