@@ -123,14 +123,16 @@ typedef union A2_Page_Un {
 
 #define  GRP_CMD_MATA_DATA_RD        0x01 // command to read group of registers of MATA
 #define  GRP_CMD_MATA_DATA_WR        0x02 // command to write group of registers of MATA
-#define  GRP_CMD_UPD_TX_CFG          0x03 // command to update Tx part of config
-#define  GRP_CMD_UPD_GLB_RX_CFG      0x04 // command to update Global and Rx part of config
-#define  GRP_CMD_WRITE_1ST_QUARTER   0x05 // command to write 1st quarter of Page to write to flash
-#define  GRP_CMD_WRITE_2ND_QUARTER   0x06 // command to write 2nd quarter of Page to write to flash
-#define  GRP_CMD_WRITE_3RD_QUARTER   0x07 // command to write 3rd quarter of Page to write to flash
-#define  GRP_CMD_WR_4TH_Q_AND_UPDATE 0x08 // command to write 4th quarter of Page and update page in flash
-#define  GRP_CMD_Tx_CALIBR_UPDATE    0x09 // command to update Tx calibration coefs
-#define  GRP_CMD_Rx_CALIBR_UPDATE    0x0A // command to update Rx calibration coefs
+#define  GRP_CMD_MALD_DATA_RD        0x03 // command to read group of registers of MALD
+#define  GRP_CMD_MALD_DATA_WR        0x04 // command to write group of registers of MALD
+#define  GRP_CMD_UPD_TX_CFG          0x11 // command to update Tx part of config
+#define  GRP_CMD_UPD_GLB_RX_CFG      0x12 // command to update Global and Rx part of config
+#define  GRP_CMD_WRITE_1ST_QUARTER   0x21 // command to write 1st quarter of Page to write to flash
+#define  GRP_CMD_WRITE_2ND_QUARTER   0x22 // command to write 2nd quarter of Page to write to flash
+#define  GRP_CMD_WRITE_3RD_QUARTER   0x23 // command to write 3rd quarter of Page to write to flash
+#define  GRP_CMD_WR_4TH_Q_AND_UPDATE 0x24 // command to write 4th quarter of Page and update page in flash
+#define  GRP_CMD_Tx_CALIBR_UPDATE    0x31 // command to update Tx calibration coefs
+#define  GRP_CMD_Rx_CALIBR_UPDATE    0x32 // command to update Rx calibration coefs
 
 #define  GRP_CMD_RESULT_OK           0x00 // command executed successfully
 #define  GRP_CMD_RESULT_ERR          0x01 // command failed

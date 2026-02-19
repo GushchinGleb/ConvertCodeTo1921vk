@@ -253,8 +253,8 @@ void Check_timer_interval() {
 
 static uint8_t Temp_page_data[128];
 
-static void cmd_read_data_from_internal_chips(void);
-static void cmd_write_data_to_internal_chips(void);
+static void cmd_read_data_from(uint8_t slave_addr);
+static void cmd_write_data_to(uint8_t slave_addr);
 static void cmd_write_data_to_flash_pages(void);
 
 static void Check_register_action(void) {
@@ -266,11 +266,17 @@ static void Check_register_action(void) {
   A2Up_Page.var.GrpCmdResult = 0xFF;
 
   switch (A2Up_Page.var.GrpCommand) {
-  case GRP_CMD_MASC_DATA_RD:
-    cmd_read_data_from_internal_chips();
+  case GRP_CMD_MATA_DATA_RD:
+    cmd_read_data_from(MATA_CHIPID);
     break;
-  case GRP_CMD_MASC_DATA_WR:
-    cmd_write_data_to_internal_chips();
+  case GRP_CMD_MATA_DATA_WR:
+    cmd_write_data_to(MATA_CHIPID);
+    break;
+  case GRP_CMD_MALD_DATA_RD:
+    cmd_read_data_from(MALD_CHIPID);
+    break;
+  case GRP_CMD_MALD_DATA_WR:
+    cmd_write_data_to(MALD_CHIPID);
     break;
   case GRP_CMD_WRITE_1ST_QUARTER:
     //Group command to write 1st quarter (32 bytes) of page data
@@ -297,24 +303,28 @@ static void Check_register_action(void) {
   A2Up_Page.var.GrpCommand = 0;  //Command is handled -> Clear it
 }
 
-static void cmd_read_data_from_internal_chips(void) {
+static void cmd_read_data_from(uint8_t slave_addr) {
   //Group command to read data from MASC chip (max 15 bytes)
-  if(A2Up_Page.var.GrpSize > SMB_IN_BUF_SIZE)
+  if(A2Up_Page.var.GrpSize > SMB_IN_BUF_SIZE) {
     A2Up_Page.var.GrpSize = SMB_IN_BUF_SIZE;
-  if(int_I2C_read(A2Up_Page.var.GrpAddress, A2Up_Page.var.GrpBuffer, A2Up_Page.var.GrpSize) == 0)
-    A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_OK;  //success
-  else
-    A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_ERR;  //error
+	}
+
+	const uint8_t result = int_I2C_request(slave_addr, &A2Up_Page.var.GrpAddress, 1,  A2Up_Page.var.GrpBuffer, A2Up_Page.var.GrpSize);
+	A2Up_Page.var.GrpCmdResult = result == 0 ? GRP_CMD_RESULT_OK : GRP_CMD_RESULT_ERR;
 }
 
-static void cmd_write_data_to_internal_chips(void) {
-    //Group command to write data to MASC chip (max 16 bytes)
-    if(A2Up_Page.var.GrpSize > SMB_OUT_BUF_SIZE)
-      A2Up_Page.var.GrpSize = SMB_OUT_BUF_SIZE;
-    if(int_I2C_write(A2Up_Page.var.GrpAddress, A2Up_Page.var.GrpBuffer, A2Up_Page.var.GrpSize) == 0)
-      A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_OK;  //success
-    else
-      A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_ERR;  //error
+static void cmd_write_data_to(uint8_t slave_addr) {
+	//Group command to write data to MASC chip (max 16 bytes)
+	if(A2Up_Page.var.GrpSize > SMB_OUT_BUF_SIZE) {
+		A2Up_Page.var.GrpSize = SMB_OUT_BUF_SIZE;
+	}
+
+	uint8_t wr_buff[SMB_OUT_BUF_SIZE + 1];
+	wr_buff[0] = slave_addr;
+	memcpy(wr_buff + 1, A2Up_Page.var.GrpBuffer, A2Up_Page.var.GrpSize);
+
+	const uint8_t result = int_I2C_write(slave_addr, wr_buff, A2Up_Page.var.GrpSize + 1);
+	A2Up_Page.var.GrpCmdResult = result == 0 ? GRP_CMD_RESULT_OK : GRP_CMD_RESULT_ERR;
 }
 
 static void cmd_write_data_to_flash_pages(void) {
