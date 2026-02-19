@@ -14,120 +14,71 @@
 
 //-----------------------------------------------------------------------------
 //Module constants
-#define SFP28_MODULE_SW_ID    0xA3    // Constant for this software
-#define SOFTWARE_VERSION    0x0001    // Soft version (0xABCD -> AB.CD)
-#define PASS_CONST_B0      0xA3    // Constant for byte0 of password entry
-#define PASS_CONST_B1      0x25    // Constant for byte1 of password entry
-#define PASS_CONST_B2      0xA0    // Constant for byte2 of password entry
-#define PASS_CONST_B3      0x6F    // Constant for byte3 of password entry
+#define SFP28_MODULE_SW_ID 0xA3   // Constant for this software
+#define SOFTWARE_VERSION   0x0001 // Soft version (0xABCD -> AB.CD)
+#define PASS_CONST_B0      0xA3   // Constant for byte0 of password entry
+#define PASS_CONST_B1      0x25   // Constant for byte1 of password entry
+#define PASS_CONST_B2      0xA0   // Constant for byte2 of password entry
+#define PASS_CONST_B3      0x6F   // Constant for byte3 of password entry
 //-----------------------------------------------------------------------------
 
-//-----------------------------------------------------------------------------
-//Flash memory map (for F392)
-//0x3E00 - 0x3FFF - Lock Byte page
-//0x3C00 - 0x3EFF - temp page for work with flash memory
-//0x3A00 - 0x3BFF - pages for storage of SFP28 memory blocks (1 page)
-#define FLASH_A0_LOW_PAGE_ADDR    0x3A00L    // 128 bytes of A0 Low Page data
-#define FLASH_A0_HI_PAGE_ADDR    0x3A80L    // 128 bytes of A0 Hi Page data
-#define FLASH_A2_LOW_PAGE_ADDR    0x3B00L    // 128 bytes of A2 Low Page data
-#define FLASH_A2_HI_PAGE_ADDR    0x3B80L    // 128 bytes of A2 Hi Page data
 
-//-----------------------------------------------------------------------------
-// Pin Definitions
-//-----------------------------------------------------------------------------
-
-// CONSTANTS
-#define SYSCLK_FREQ   49000000  // SYSCLK = 24,5 MHz
-#define SMB_FREQ      100000    // SMB frequency = 100kHz
-
-#define I2C_MASC_ADDR      0x9E    // 1001111x - I2C address of MASC-37029/37028
-
-// Status vector - top 4 bits only
-//For slave
-#define  SMB_SRADD      0x20           // (SR) slave address received (also could be a lost arbitration)
-#define  SMB_SRSTO      0x10           // (SR) STOP detected while SR or ST, or lost arbitration
-#define  SMB_SRDB       0x00           // (SR) data byte received, or lost arbitration
-#define  SMB_STDB       0x40           // (ST) data byte transmitted
-#define  SMB_STSTO      0x50           // (ST) STOP detected during a transaction; bus error
-//For master
-#define  SMB_MTSTA        0xE0 // (MT) start transmitted
-#define  SMB_MTDB        0xC0 // (MT) data byte transmitted
-#define  SMB_MRDB        0x80 // (MR) data byte received
-// End status vector definition
-
-#define  WRITE          0x00 // SMBus WRITE command
-#define  READ          0x01 // SMBus READ command
-
-#define  SMB_OUT_BUF_SIZE    16 // Size of SMB Tx buffer
-#define  SMB_IN_BUF_SIZE    16 // Size of SMB Rx buffer
-
-//I2C slave definitions
-#define  I2C_STATUS_VECTOR_MASK  0x0F   // NACK, START, STOP, WR, RD
-// I2C States
-#define  I2C_ADDR_RD    0x09      // Valid Slave Address + Master Read Request
-#define  I2C_ADDR_WR    0x0A      // Valid Slave Address + Master Write Request
-#define  I2C_RD_DATA    0x01      // Transfer data from Slave (Also can check B4 to see what ACK we just received from master)
-#define  I2C_WR_DATA    0x02      // Write data to Slave (Also can check B4 to see what ACK(ACK/NACK) we just sent)
-#define  I2C_STA        0x08
-#define  I2C_STO        0x04
-#define  I2C_STOSTA     0x0C
-#define  I2C_STOSTARD   0x0D
+#define  SMB_OUT_BUF_SIZE 16 // Size of SMB Tx buffer
+#define  SMB_IN_BUF_SIZE  16 // Size of SMB Rx buffer
 
 // Time_flags definitions
-#define  TIME_100MS_FLAG    0x01 // bit0 - 100ms flag
-#define  TIME_500MS_FLAG    0x02 // bit1 - 500ms flag
-#define  TIME_1SEC_FLAG      0x04 // bit2 - 1 second flag
-
+#define  TIME_100MS_FLAG 0x01 // bit0 - 100ms flag
+#define  TIME_500MS_FLAG 0x02 // bit1 - 500ms flag
+#define  TIME_1SEC_FLAG  0x04 // bit2 - 1 second flag
 
 // Stat_Control (from A2 page) bits definitions
-#define  ST_DATA_NOT_READY_FLAG    0x01 // bit0
-#define  ST_RX_LOS_STATE_FLAG    0x02 // bit1
-#define  ST_TX_FAULT_STATE_FLAG    0x04 // bit2
-#define  ST_SOFT_RS0_FLAG      0x08 // bit3
-#define  ST_RS0_STATE_FLAG      0x10 // bit4
-#define  ST_RS1_STATE_FLAG      0x20 // bit5
+#define  ST_DATA_NOT_READY_FLAG   0x01 // bit0
+#define  ST_RX_LOS_STATE_FLAG     0x02 // bit1
+#define  ST_TX_FAULT_STATE_FLAG   0x04 // bit2
+#define  ST_SOFT_RS0_FLAG         0x08 // bit3
+#define  ST_RS0_STATE_FLAG        0x10 // bit4
+#define  ST_RS1_STATE_FLAG        0x20 // bit5
 #define  ST_SOFT_TX_DISABLE_FLAG  0x40 // bit6
-#define  ST_TX_DISABLE_STATE_FLAG  0x80 // bit7
+#define  ST_TX_DISABLE_STATE_FLAG 0x80 // bit7
 
 //=========== Structure definitions ===========
 
-
-#define  CC_BASE_START        (0) //Position of first byte of CC_BASE
-#define  CC_BASE_POS        (63) //Position of CC_BASE
-#define  CC_EXT_START        (64) //Position of first byte of CC_EXT
-#define  CC_EXT_POS          (95) //Position of CC_EXT
+#define  CC_BASE_START (0) //Position of first byte of CC_BASE
+#define  CC_BASE_POS  (63) //Position of CC_BASE
+#define  CC_EXT_START (64) //Position of first byte of CC_EXT
+#define  CC_EXT_POS   (95) //Position of CC_EXT
 
 //--------------
 //Bytes definition is from SFF-8472 Rev 12.4
 typedef struct A0_Page_TypeDef {
-  uint8_t ID;                 //0
+  uint8_t ID;                //0
   uint8_t ExtID;             //1
   uint8_t Connector;         //2
   uint8_t TransceiverCod[8]; //3..10 - Code for electronic or optical compatibility
-  uint8_t Encoding;           //11
+  uint8_t Encoding;          //11
   uint8_t SigRate_Nominal;   //12
-  uint8_t RateID;             //13
-  uint8_t LengthCodes[6];     //14..19 - different link length
-  uint8_t VendorName[16];     //20..35 - SFP vendor name (ASCII)
+  uint8_t RateID;            //13
+  uint8_t LengthCodes[6];    //14..19 - different link length
+  uint8_t VendorName[16];    //20..35 - SFP vendor name (ASCII)
   uint8_t Transceiver;       //36
-  uint8_t VendorOUI[3];       //37..39 - SFP vendor IEEE company ID
-  uint8_t VendorPN[16];       //40..55 - Part number provided by SFP vendor (ASCII)
-  uint8_t VendorRev[4];       //56..59 - Revision level for part number provided by vendor (ASCII)
+  uint8_t VendorOUI[3];      //37..39 - SFP vendor IEEE company ID
+  uint8_t VendorPN[16];      //40..55 - Part number provided by SFP vendor (ASCII)
+  uint8_t VendorRev[4];      //56..59 - Revision level for part number provided by vendor (ASCII)
   uint8_t Wavelength[2];     //60..61 - Laser wavelength
-  uint8_t FC_Speed_2;         //62
+  uint8_t FC_Speed_2;        //62
   uint8_t CC_BASE;           //63 - Check code for Base ID Fields (addresses 0 to 62)
     //Extended ID
-  uint8_t Options[2];      //64..65
+  uint8_t Options[2];     //64..65
   uint8_t SigRate_max;    //66
   uint8_t SigRate_min;    //67
-  uint8_t VendorSN[16];    //68..83 - Serial number provided by vendor (ASCII)
+  uint8_t VendorSN[16];   //68..83 - Serial number provided by vendor (ASCII)
   uint8_t DateCode[8];    //84..91 -
-  uint8_t DiagMon_Type;    //92
+  uint8_t DiagMon_Type;   //92
   uint8_t Enh_options;    //93
   uint8_t SFF_Compliance; //94
-  uint8_t CC_EXT;          //95 - Check code for the Extended ID Fields (addresses 64 to 94)
+  uint8_t CC_EXT;         //95 - Check code for the Extended ID Fields (addresses 64 to 94)
     //Vendor specific
-  uint8_t VendorSpec[32];    //96..127 -
+  uint8_t VendorSpec[32]; //96..127 -
 } A0_Page_TypeDef;
 
 typedef union A0_Page_Un {
@@ -141,28 +92,28 @@ typedef union A0_Page_Un {
 //--------------
 //Bytes definition is from SFF-8472 Rev 12.4
 typedef struct A2_Page_TypeDef {
-  uint8_t Al_Warn_Thr[40];  //0..39 - Diagnostic Flag Alarm and Warning Thresholds
-  uint8_t Opt_AW_Thr[16];    //40..55 - Thresholds for optional Laser Temperature and TEC Current alarms and  warnings
-  uint8_t CalibrConst[36];  //56..91 - Diagnostic calibration constants for optional External Calibration
-  uint8_t Reserved[3];    //92..94 -
-  uint8_t CC_DMI;        //95 - Check code for Base Diagnostic Fields (addresses 0 to 94)
+  uint8_t Al_Warn_Thr[40]; //0..39 - Diagnostic Flag Alarm and Warning Thresholds
+  uint8_t Opt_AW_Thr[16];  //40..55 - Thresholds for optional Laser Temperature and TEC Current alarms and  warnings
+  uint8_t CalibrConst[36]; //56..91 - Diagnostic calibration constants for optional External Calibration
+  uint8_t Reserved[3];     //92..94 -
+  uint8_t CC_DMI;          //95 - Check code for Base Diagnostic Fields (addresses 0 to 94)
   //96..105 - Diagnostics
-  uint8_t Temperature[2];    //96..97 - Internally measured module temperature (1st - MSB, 2nd - LSB)
-  uint8_t Vcc[2];        //98..99 - Internally measured supply voltage in transceiver (1st - MSB, 2nd - LSB)
-  uint8_t TxBias[2];      //100..101 - Internally measured TX Bias Current (1st - MSB, 2nd - LSB)
+  uint8_t Temperature[2];  //96..97 - Internally measured module temperature (1st - MSB, 2nd - LSB)
+  uint8_t Vcc[2];          //98..99 - Internally measured supply voltage in transceiver (1st - MSB, 2nd - LSB)
+  uint8_t TxBias[2];       //100..101 - Internally measured TX Bias Current (1st - MSB, 2nd - LSB)
   uint8_t TxPower[2];      //102..103 - Measured TX output power (1st - MSB, 2nd - LSB)
   uint8_t RxPower[2];      //104..105 - Measured RX input power (1st - MSB, 2nd - LSB)
-  uint8_t Opt_Diag[4];    //106..109 - Optional diagnostic of Laser Temperature and TEC Current
+  uint8_t Opt_Diag[4];     //106..109 - Optional diagnostic of Laser Temperature and TEC Current
   uint8_t Stat_Control;    //110
   uint8_t Reserved_1;      //111
-  uint8_t AlarmFlags[2];    //112..113 - Diagnostic Alarm Flag Status Bits
+  uint8_t AlarmFlags[2];   //112..113 - Diagnostic Alarm Flag Status Bits
   uint8_t TxIn_Eq_Ctrl;    //114
   uint8_t RxOut_Emph;      //115
-  uint8_t WarningFlags[2];  //116..117 -
-  uint8_t Ext_StatCtrl[2];  //118..119 -
-  uint8_t VendorSpec[3];    //120..122 -
+  uint8_t WarningFlags[2]; //116..117 -
+  uint8_t Ext_StatCtrl[2]; //118..119 -
+  uint8_t VendorSpec[3];   //120..122 -
   uint8_t PassEntry[4];    //123..126 - Optional Password Entry
-  uint8_t TableSelect;    //127 - page select
+  uint8_t TableSelect;     //127 - page select
 } A2_Page_TypeDef;
 
 typedef union A2_Page_Un {
@@ -170,93 +121,29 @@ typedef union A2_Page_Un {
   A2_Page_TypeDef var;
 } A2_Page_t; // 128 = 0x80
 
-//--------------
-//typedef struct UpPage03_TypeDef {
-//  int16_t Temp_HiAlarm;    //128..129 - Temperature High Alarm (1st-MSB, 2nd-LSB)
-//  int16_t Temp_LoAlarm;    //130..131 - Temperature Low Alarm (1st-MSB, 2nd-LSB)
-//  int16_t Temp_HiWarn;    //132..133 - Temperature Hi Alarm (1st-MSB, 2nd-LSB)
-//  int16_t Temp_LoWarn;    //134..135 - Temperature Hi Alarm (1st-MSB, 2nd-LSB)
-//  uint8_t Reserved1[8];    //136..143 - reserved
-//  uint16_t Vcc_HiAlarm;    //144..145 - Vcc High Alarm (1st-MSB, 2nd-LSB)
-//  uint16_t Vcc_LoAlarm;    //146..147 - Vcc Low Alarm (1st-MSB, 2nd-LSB)
-//  uint16_t Vcc_HiWarn;    //148..149 - Vcc Hi Alarm (1st-MSB, 2nd-LSB)
-//  uint16_t Vcc_LoWarn;    //150..151 - Vcc Hi Alarm (1st-MSB, 2nd-LSB)
-//  uint8_t Reserved2[8];    //152..159 - reserved
-//  uint8_t VendorSpec1[16];  //160..175 - reserved (vendor specific)
-//  uint16_t RxPwr_HiAlarm;    //176..177 - Rx Power High Alarm (1st-MSB, 2nd-LSB)
-//  uint16_t RxPwr_LoAlarm;    //178..179 - Rx Power Low Alarm (1st-MSB, 2nd-LSB)
-//  uint16_t RxPwr_HiWarn;    //180..181 - Rx Power Hi Alarm (1st-MSB, 2nd-LSB)
-//  uint16_t RxPwr_LoWarn;    //182..183 - Rx Power Hi Alarm (1st-MSB, 2nd-LSB)
-//  uint16_t TxBias_HiAlarm;  //184..185 - Tx Bias High Alarm (1st-MSB, 2nd-LSB)
-//  uint16_t TxBias_LoAlarm;  //186..187 - Tx Bias Low Alarm (1st-MSB, 2nd-LSB)
-//  uint16_t TxBias_HiWarn;    //188..189 - Tx Bias Hi Alarm (1st-MSB, 2nd-LSB)
-//  uint16_t TxBias_LoWarn;    //190..191 - Tx Bias Hi Alarm (1st-MSB, 2nd-LSB)
-//  uint16_t TxPwr_HiAlarm;    //192..193 - Tx Power High Alarm (1st-MSB, 2nd-LSB)
-//  uint16_t TxPwr_LoAlarm;    //194..195 - Tx Power Low Alarm (1st-MSB, 2nd-LSB)
-//  uint16_t TxPwr_HiWarn;    //196..197 - Tx Power Hi Alarm (1st-MSB, 2nd-LSB)
-//  uint16_t TxPwr_LoWarn;    //198..199 - Tx Power Hi Alarm (1st-MSB, 2nd-LSB)
-//  uint8_t Reserved3[8];    //200..207 - reserved
-//  uint8_t Reserved4[8];    //208..215 - reserved
-//  uint8_t VendorSpec2[8];    //216..223 - reserved (vendor specific)
-//  uint8_t MaxTxEq_RxEmp;    //224 - bits7..4 - max Tx input equalization, bits3..0 - max Rx out emphasis
-//  uint8_t RxOut_Cfg;      //225 - bits7..6 - reserv, bits5..4 - Rx out emp type, bits3..0 - Rx out amplitude support
-//  uint8_t Reserved5;      //226 - reserved
-//  uint8_t TxRx_Cfg;      //227 - bits7..6 - FEC control, bits5..4-reserv, bits3..1 - Tx and Rx cfg, bit0-reserv
-//  uint8_t Max_TC_stab_time;  //228 - max TC stabilization time
-//  uint8_t Max_CTLE_set_time;  //229 - max CTLE settling time
-//  uint8_t FEC_en;        //230 - bits7..6 - FEC enable flags, bits5..0-reserv
-//  uint8_t Tx_ForceSquelch;  //231 - bits7..4 - reserv, bits3..0 - Tx force squelch (bit3-ch4..,bit0-ch1)
-//  uint8_t Reserved6;      //232 - reserved
-//  uint8_t Tx_AEFreeze;    //233 - bits7..4 - reserv, bits3..0 - Tx adapt eq freeze (bit3-ch1..,bit0-ch4)
-//  uint8_t TxIn_Eq_ctrl[2];  //234..235 - 234 - ch1 and ch2, 235 - ch3 and ch4 - Tx input equalizer control
-//                //  bits7..4 - ch1(3), bits3..0 - ch2(4)
-//  uint8_t RxOut_Emp_ctrl[2];  //236..237 - 236 - ch1 and ch2, 237 - ch3 and ch4 - Rx output emphasis control
-//                //  bits7..4 - ch1(3), bits3..0 - ch2(4)
-//  uint8_t RxOut_Ampl_ctrl[2];  //238..239 - 238 - ch1 and ch2, 239 - ch3 and ch4 - Rx output amplitude control
-//                //  bits7..4 - ch1(3), bits3..0 - ch2(4)
-//  uint8_t RxTx_Sq_Dis;    //240 - bits7..4 - Rx squelch disable (bit7-ch4..,bit4-ch1), bits3..0 - Tx squelch disable (bit3-ch4..,bit0-ch1)
-//  uint8_t RxOut_Dis_Tx_AE;  //241 - bits7..4 - Rx output disable (bit7-ch4..,bit4-ch1), bits3..0 - Tx adapt eq en (bit3-ch4..,bit0-ch1)
-//  uint8_t Mask_RxPwr[2];    //242..243 - mask for Rx Power Hi and Low alarms and warning
-//  uint8_t Mask_TxBias[2];    //244..245 - mask for Tx Bias Hi and Low alarms and warning
-//  uint8_t Mask_TxPwr[2];    //246..247 - mask for Tx Power Hi and Low alarms and warning
-//  uint8_t Reserved7[4];    //248..251 - reserved
-//  uint8_t Reserved8[4];    //252..255 - reserved
-//} UpPage03_TypeDef;
-//
-//typedef union UpPage03_Un {
-//  uint8_t Bytes[128];
-//  UpPage03_TypeDef var;
-//} UpPage03_t;
+#define  GRP_CMD_MATA_DATA_RD        0x01 // command to read group of registers of MATA
+#define  GRP_CMD_MATA_DATA_WR        0x02 // command to write group of registers of MATA
+#define  GRP_CMD_UPD_TX_CFG          0x03 // command to update Tx part of config
+#define  GRP_CMD_UPD_GLB_RX_CFG      0x04 // command to update Global and Rx part of config
+#define  GRP_CMD_WRITE_1ST_QUARTER   0x05 // command to write 1st quarter of Page to write to flash
+#define  GRP_CMD_WRITE_2ND_QUARTER   0x06 // command to write 2nd quarter of Page to write to flash
+#define  GRP_CMD_WRITE_3RD_QUARTER   0x07 // command to write 3rd quarter of Page to write to flash
+#define  GRP_CMD_WR_4TH_Q_AND_UPDATE 0x08 // command to write 4th quarter of Page and update page in flash
+#define  GRP_CMD_Tx_CALIBR_UPDATE    0x09 // command to update Tx calibration coefs
+#define  GRP_CMD_Rx_CALIBR_UPDATE    0x0A // command to update Rx calibration coefs
 
-//--------------
-
-#define  GRP_CMD_MASC_DATA_RD      0x01 // command to read group of registers of MASC
-#define  GRP_CMD_MASC_DATA_WR      0x02 // command to write group of registers of MASC
-#define  GRP_CMD_WRITE_1ST_QUARTER    0x03 // command to write group of registers of channel 3 of GN1185
-#define  GRP_CMD_WRITE_2ND_QUARTER    0x04 // command to write group of registers of channel 4 of GN1185
-#define  GRP_CMD_WRITE_3RD_QUARTER    0x05 // command to read group of registers of all channels of GN1185
-#define  GRP_CMD_WR_4TH_Q_AND_UPDATE  0x06 // command to execute macro for GN2104S
-#define  GRP_CMD_TX_2104_DATA_RD  0x07 // command to read data of Tx GN2104S
-#define  GRP_CMD_RX_2104_DATA_RD  0x08 // command to read data of Rx GN2104S
-#define  GRP_CMD_TX_2104_CFG_WR    0x09 // command to write config data to Tx GN2104S
-#define  GRP_CMD_RX_2104_CFG_WR    0x0A // command to write config data to Rx GN2104S
-#define  GRP_CMD_DAC_VALUE_UPDATE  0x0B // command to update value of DAC
-#define  GRP_CMD_GLOB_TX_EN_CHANGE  0x0C // command to change value of Global Tx Enable flag
-#define  GRP_CMD_Tx_CALIBR_UPDATE  0x0D // command to update Tx calibration coefs
-#define  GRP_CMD_Rx_CALIBR_UPDATE  0x0E // command to update Rx calibration coefs
-
-#define  GRP_CMD_RESULT_OK        0x00 // command executed successfully
-#define  GRP_CMD_RESULT_ERR        0x01 // command failed
-#define  GRP_CMD_RESULT_CRC_FAIL    0x02 // Incorrect CRC for full page
-#define  GRP_CMD_RESULT_CC_BASE_FAIL  0x03 // Incorrect CC_BASE
-#define  GRP_CMD_RESULT_CC_EXT_FAIL    0x04 // Incorrect CC_EXT
-#define  GRP_CMD_RESULT_CC_BOTH_FAIL  0x05 // Incorrect CC_BASE and CC_EXT
-#define  GRP_CMD_RESULT_CC_DMI_FAIL    0x06 // Incorrect CC_DMI
-#define  GRP_CMD_RESULT_CFG_CRC_FAIL  0x07 // Incorrect CSum for config page
+#define  GRP_CMD_RESULT_OK           0x00 // command executed successfully
+#define  GRP_CMD_RESULT_ERR          0x01 // command failed
+#define  GRP_CMD_RESULT_CRC_FAIL     0x02 // Incorrect CRC for full page
+#define  GRP_CMD_RESULT_CC_BASE_FAIL 0x03 // Incorrect CC_BASE
+#define  GRP_CMD_RESULT_CC_EXT_FAIL  0x04 // Incorrect CC_EXT
+#define  GRP_CMD_RESULT_CC_BOTH_FAIL 0x05 // Incorrect CC_BASE and CC_EXT
+#define  GRP_CMD_RESULT_CC_DMI_FAIL  0x06 // Incorrect CC_DMI
+#define  GRP_CMD_RESULT_CFG_CRC_FAIL 0x07 // Incorrect CSum for config page
 #define  GRP_CMD_RESULT_BAD_CONST    0x08 // Bad constant
 
-#define  FLASH_UPD_A0_LOW      0x01 // A0 low
-#define  FLASH_UPD_A2_LOW      0x02 // A2 low
-#define  FLASH_UPD_A2_HI      0x03 // A2 hi
+#define  FLASH_UPD_A0_LOW 0x01 // A0 low
+#define  FLASH_UPD_A2_LOW 0x02 // A2 low
+#define  FLASH_UPD_A2_HI  0x03 // A2 hi
 
 #endif  //__SFP28_SYSTEM_H__
