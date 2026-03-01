@@ -7,6 +7,8 @@ extern "C" {
 #include "../inc/sfp28.h"
 #include <string.h>
 
+#include "../Retarget/retarget_conf.h" // printf
+
 /**
  * @brief
  * Flash locations (adjust within 64KB program flash) 
@@ -22,14 +24,42 @@ A0_Page_t A0_Page;
 A2_Page_t A2_Page;
 A2Up_Page_t A2Up_Page;
 
+static void print_page(const uint8_t* page_buff) {
+  for (uint32_t i = 0; i < 128; ++i) {
+    if (i % 16 == 0) {
+      printf("%3u:", i);
+    }
+    printf(" %02X", page_buff[i]);
+    if (i % 16 == 15) {
+      printf("\n\r");
+    }  
+  }
+}
+
+
 void a0a2_pages_init_from_flash(void) {
   flash_read(FLASH_A0,    (uint8_t*)&A0_Page.var,   sizeof(A0_Page.var));
   flash_read(FLASH_A2,    (uint8_t*)&A2_Page.var,   sizeof(A2_Page.var));
   flash_read(FLASH_A2_UP, (uint8_t*)&A2Up_Page.var, sizeof(A2Up_Page.var));
+  
+  printf("READ:\n\rA0\n\r");
+  print_page(A0_Page.Bytes);
+  printf("A2\n\r");
+  print_page(A2_Page.Bytes);
+  printf("A2Up\n\r");
+  print_page(A2Up_Page.Bytes);
 }
 
 void a0a2_pages_commit_to_flash(void) {
   flash_page_erase(FLASH_PAGE);
+  
+  printf("FLASH:\n\rA0\n\r");
+  print_page(A0_Page.Bytes);
+  printf("A2\n\r");
+  print_page(A2_Page.Bytes);
+  printf("A2Up\n\r");
+  print_page(A2Up_Page.Bytes);
+
   flash_write(FLASH_A0,    (uint8_t*)&A0_Page.var,   sizeof(A0_Page.var));
   flash_write(FLASH_A2,    (uint8_t*)&A2_Page.var,   sizeof(A2_Page.var));
   flash_write(FLASH_A2_UP, (uint8_t*)&A2Up_Page.var, sizeof(A2Up_Page.var));
