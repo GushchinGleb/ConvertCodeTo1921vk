@@ -184,8 +184,8 @@ static void com_i2c_addres_set(void) {
 static void init_com_I2C(void) {
   // 10K resistor already implemented
   // set both to 0x1 if the wires not pulled to the 3V3
-  int sda_pullup = 0x1; // [page 215]
-  int scl_pullup = 0x1; // [page 215]
+  int sda_pullup = 0x0; // [page 215]
+  int scl_pullup = 0x0; // [page 215]
   
   // Configure SDA/SCL pins (A1/A0)
   COM_GPIOSDA->PULLMODE_bit.COM_SDA_PIN = sda_pullup; // enable pullup [page 51] [page 212]
@@ -418,10 +418,8 @@ static void perform_SCL_raise_action(void) {
 
   case COM_I2C_RW:
     com_i2c.rw = read_com_SDA();
-    if (!com_i2c.rw) { // receive data from master
-      com_i2c.l_addr = 0;
-      com_i2c.f_raddr = 1; // read the local address in the selected page
-    }
+    com_i2c.l_addr = 0;
+    com_i2c.f_raddr = 1; // read the local address in the selected page
     com_i2c.state = COM_I2C_WACK;
     break;
   
