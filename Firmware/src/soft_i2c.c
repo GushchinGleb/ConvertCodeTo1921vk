@@ -418,8 +418,10 @@ static void perform_SCL_raise_action(void) {
 
   case COM_I2C_RW:
     com_i2c.rw = read_com_SDA();
-    com_i2c.l_addr = 0;
-    com_i2c.f_raddr = 1; // read the local address in the selected page
+    if (!com_i2c.rw) {
+      com_i2c.l_addr = 0;
+      com_i2c.f_raddr = 1; // read the local address in the selected page
+    }
     com_i2c.state = COM_I2C_WACK;
     break;
   

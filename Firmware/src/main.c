@@ -22,7 +22,7 @@ extern "C" {
 
 #include "../Retarget/retarget_conf.h" // printf
 
-#define CHECK_INT_I2C // perform internal I2C check
+// #define CHECK_INT_I2C // perform internal I2C check
 // #define CHECK_COM_I2C // perform external I2C check (disable main logic)
 
 extern uint8_t Time_flags;
@@ -88,9 +88,8 @@ int main (void) {
 #ifdef CHECK_INT_I2C
   i2c_check(); /** TODO: Remove after testing */  
   printf("\n\rCOMPLETE\n\r");
-#endif // CHECK_INT_I2C
-  
   while(1);
+#endif // CHECK_INT_I2C
 
 #ifdef CHECK_COM_I2C
   while(1) {
