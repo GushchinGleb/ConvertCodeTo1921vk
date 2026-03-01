@@ -36,13 +36,24 @@ extern uint8_t i2c_dbg_rdp;
 extern uint8_t i2c_dbg_wrp;
 
 static void gpio_init(void);
+
+/// @return [0 - success; !0 - error]
 static uint8_t Check_CC_BASE_and_CC_EXT(const uint8_t *A0Low_ptr);
+
+/// @return [0 - success; !0 - error]
 static uint8_t Check_CC_DMI(const uint8_t *A2Low_ptr);
+
+/// @return [0 - success; !0 - error]
 static uint8_t Check_Cfg_data_CSum(const A2Up_Page_t *A2UpPtr);
+
 static void Check_timer_interval(void);
+
 static void Check_register_action(void);
+
 static void Init_variables(void);
+
 static void periph_init(void);
+
 static void read_in_pins(void);
 
 #ifdef CHECK_INT_I2C
@@ -177,50 +188,44 @@ static uint8_t Check_CC_BASE_and_CC_EXT(const uint8_t *A0Low_ptr) {
   uint8_t result = 0;  //default result is OK
 
   //Check CC_BASE
-  uint16_t Temp_u16 = 0;
+  uint16_t crc = 0;
   for(uint16_t i = CC_BASE_START; i < CC_BASE_POS; i++) {
-    Temp_u16 += A0Low_ptr[i];
+    crc += A0Low_ptr[i];
   }
-  if(A0Low_ptr[CC_BASE_POS] != (Temp_u16 & 0xFF))
+  if(A0Low_ptr[CC_BASE_POS] != (crc & 0xFF)) {
     result += 1;
+	}
 
   //Check CC_BASE
-  Temp_u16 = 0;
+  crc = 0;
   for(uint16_t i = CC_EXT_START; i < CC_EXT_POS; i++) {
-    Temp_u16 += A0Low_ptr[i];
+    crc += A0Low_ptr[i];
   }
-  if(A0Low_ptr[CC_EXT_POS] != (Temp_u16 & 0xFF))
+  if(A0Low_ptr[CC_EXT_POS] != (crc & 0xFF)) {
     result += 2;
+	}
 
-  return(result);
+  return result;
 }
 
 static uint8_t Check_CC_DMI(const uint8_t *A2Low_ptr) {
-  uint8_t result = 0;  //default result is OK
-
   //Check CC_DMI
-  uint16_t Temp_u16 = 0;
+  uint16_t crc = 0;
   for(uint16_t i = CC_DMI_START; i < CC_DMI_POS; i++) {
-    Temp_u16 += A2Low_ptr[i];
+    crc += A2Low_ptr[i];
   }
-  if(A2Low_ptr[CC_DMI_POS] != (Temp_u16 & 0xFF))
-    result = 1;
 
-  return(result);
+  return A2Low_ptr[CC_DMI_POS] != (crc & 0xFF);
 }
 
 static uint8_t Check_Cfg_data_CSum(const A2Up_Page_t *A2UpPtr) {
-  uint8_t result = 0;  //default result is OK
-
   //Check CC_BASE
-  uint16_t Temp_u16 = 0;
+  uint16_t crc = 0;
   for(uint16_t i = 0; i < sizeof(MATA_cfg_t) + sizeof(MALD_cfg_t); i++) {
-    Temp_u16 += A2UpPtr->Bytes[i];
+    crc += A2UpPtr->Bytes[i];
   }
-  if(Temp_u16 != A2UpPtr->var.CSum)
-    result = 1;    //Bad CSum
 
-  return(result);
+  return crc != A2UpPtr->var.CSum;
 }
 
 void Check_timer_interval() {
@@ -328,49 +333,69 @@ static void cmd_write_data_to(uint8_t slave_addr) {
 }
 
 static void cmd_write_data_to_flash_pages(void) {
-  uint16_t Temp_u16 = 0;
+  uint16_t check_sum = 0;
   for(uint8_t i = 0; i < 128; i++) {
-    Temp_u16 += Temp_page_data[i];
+    check_sum += Temp_page_data[i];
   }
-  if(Temp_u16 == ((A2Up_Page.var.GrpBuf_CRC[0] << 8) | A2Up_Page.var.GrpBuf_CRC[1])) {
-    //Correct CRC -> check page number (UpPage05.var.GrpAddress)
-    A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_OK;
-    if(A2Up_Page.var.GrpAddress == FLASH_UPD_A0_LOW) {
-      //Update A0 Low Page -> Check CC_BASE and CC_EXT
-      uint8_t Temp_u8 = Check_CC_BASE_and_CC_EXT(Temp_page_data);
-      if(Temp_u8 == 0) {
-        //Correct values for CC_BASE and CC_EXT
-        //Copy data to A0 Low Page in RAM
-        memcpy(&A0_Page.Bytes[0], Temp_page_data, 128);
-        //Update A0 Low page in Flash
-        a0a2_pages_commit_to_flash();
-      } else
-        A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_CC_BASE_FAIL + Temp_u8 - 1;
-    } else if(A2Up_Page.var.GrpAddress == FLASH_UPD_A2_LOW) {
-      //Update A2 Low Page -> Check CC_DMI
-      uint8_t Temp_u8 = Check_CC_DMI(Temp_page_data);
-      if(Temp_u8 == 0) {
-        //Correct values for CC_DMI
-        //Copy data to A2 Low Page in RAM
-        memcpy(&A2_Page.Bytes[0], Temp_page_data, 128);
-        //Update A2 Low page in Flash
-        a0a2_pages_commit_to_flash();
-      } else
-        A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_CC_DMI_FAIL;
-    } else if(A2Up_Page.var.GrpAddress == FLASH_UPD_A2_HI) {
-      //Update A2 Up Page -> Check config CRC
-      if(Check_Cfg_data_CSum((A2Up_Page_t *)&Temp_page_data) == 0) {
-        //Copy only config structure to A2Up page in RAM
-        memcpy((uint8_t *)&A2Up_Page, Temp_page_data, (sizeof(MATA_cfg_t) + sizeof(MALD_cfg_t) + 2));  //copy data with CSum
-        memcpy(&A0_Page.Bytes[0], Temp_page_data, 128);
-        //Update A0 Low page in Flash
-        a0a2_pages_commit_to_flash();
-      } else
-        A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_CFG_CRC_FAIL;
-    }
-  }
-  else
+	
+	const uint16_t correct_crc = ((A2Up_Page.var.GrpBuf_CRC[0] << 8) | A2Up_Page.var.GrpBuf_CRC[1]);
+	
+	if (check_sum != correct_crc) {
     A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_CRC_FAIL;
+		return;
+	}
+	//Correct CRC -> check page number (UpPage05.var.GrpAddress)
+	A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_OK;
+
+	switch (A2Up_Page.var.GrpAddress) {
+	case FLASH_UPD_A0_LOW: {
+			//Update A0 Low Page -> Check CC_BASE and CC_EXT
+			const uint8_t result = Check_CC_BASE_and_CC_EXT(Temp_page_data);
+			if(result != 0) { 
+				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_CC_BASE_FAIL + result - 1;
+				return;
+			}
+			//Correct values for CC_BASE and CC_EXT
+			//Copy data to A0 Low Page in RAM
+			memcpy(&A0_Page.Bytes[0], Temp_page_data, 128);
+			//Update A0 Low page in Flash
+			a0a2_pages_commit_to_flash();
+		}
+		return;
+	case FLASH_UPD_A2_LOW: {
+			//Update A2 Low Page -> Check CC_DMI
+			const uint8_t result = Check_CC_DMI(Temp_page_data);
+			if (result != 0) {
+				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_CC_DMI_FAIL;
+				return;
+			}
+			//Correct values for CC_DMI
+			//Copy data to A2 Low Page in RAM
+			memcpy(&A2_Page.Bytes[0], Temp_page_data, 128);
+			//Update A2 Low page in Flash
+			a0a2_pages_commit_to_flash();
+		}
+		return;
+	case FLASH_UPD_A2_HI: {
+			// Convert CRC from big endian to litle endian
+			const uint8_t tmp_byte = Temp_page_data[54];
+			Temp_page_data[54] = Temp_page_data[55];
+			Temp_page_data[55] = tmp_byte;
+			const uint8_t result = Check_Cfg_data_CSum((A2Up_Page_t *)&Temp_page_data);
+			if (result != 0) {
+				A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_CFG_CRC_FAIL;
+				return;
+			}
+			//Copy only config structure to A2Up page in RAM
+			memcpy((uint8_t *)&A2Up_Page, Temp_page_data, (sizeof(MATA_cfg_t) + sizeof(MALD_cfg_t) + 2));  //copy data with CSum
+			memcpy(&A0_Page.Bytes[0], Temp_page_data, 128);
+			//Update A0 Low page in Flash
+			a0a2_pages_commit_to_flash();
+		}
+		return;
+	default:
+		return;
+	}
 }
 
 #ifdef CHECK_INT_I2C
@@ -469,8 +494,16 @@ static void Init_variables(void) {
   memset(&A2Up_Page, 0, 128);
 
   a0a2_pages_init_from_flash();
+	
+	for (uint32_t byte = 0; byte < 128; ++byte) {
+		if ((A0_Page.Bytes[byte] & A2_Page.Bytes[byte] & A2Up_Page.Bytes[byte]) != 0xFF) {
+			return; // Flash is initialized
+		}
+	}
+	
+	printf("Flash is empty: set to defaul\n\r");
 
-#ifdef CHECK_COM_I2C
+//#ifdef CHECK_COM_I2C
   A0_Page.Bytes[  0] =   3; // ID
   A0_Page.Bytes[  1] =   4; // Ext ID
   A0_Page.Bytes[  2] =   7; // Connector
@@ -695,7 +728,7 @@ static void Init_variables(void) {
   A2_Page.Bytes[220 - 128] = 177;  
   A2_Page.Bytes[221 - 128] =  19;  
   A2_Page.Bytes[222 - 128] = 255;  
-  A2_Page.Bytes[223 - 128] =  52;  
+  A2_Page.Bytes[223 - 128] = 251;  
   A2_Page.Bytes[224 - 128] =  73;  
   A2_Page.Bytes[225 - 128] =   0;  
   A2_Page.Bytes[226 - 128] = 207;  
@@ -857,7 +890,7 @@ static void Init_variables(void) {
   A2Up_Page.Bytes[253 - 128] =   0; // GrpBuffer29
   A2Up_Page.Bytes[254 - 128] =   0; // GrpBuffer30
   A2Up_Page.Bytes[255 - 128] =   0; // GrpBuffer31
-#endif // CHECK_COM_I2C
+//#endif // CHECK_COM_I2C
 }
 
 static void periph_init() {
