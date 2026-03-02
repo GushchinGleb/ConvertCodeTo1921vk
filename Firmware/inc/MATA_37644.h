@@ -10,7 +10,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#define MATA_CHIPID 0x8E // I2C address of the chip
+#define MATA_CHIPID 0x0E // I2C address of the chip
 
 // Registers address: [MATA-37644_V3.pdf page 22]
 #define MATA_RA_CHIPID             0x00 // always 0x8E
