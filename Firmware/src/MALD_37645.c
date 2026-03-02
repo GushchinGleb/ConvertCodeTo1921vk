@@ -191,33 +191,6 @@ void Init_MADL_Default_Cfg(void) {
   A2Up_Page.var.CSum = 0x0000;
 }
 
-/**
- * @brief Update config to MASC chip
- */
-void UpdateCfg_MASC(void) {
-  //Write config to chip
-//  Temp_buffer[0] = 0x00;      //RegAddr is 1st byte of data
-//  memcpy(&Temp_buffer[1], &TempBuf_128.u8[0], 64);
-//  if(Write_soft_i2c(I2C_UX2291_ADDR, Temp_buffer, 65) !=0 ) {
-//    //Set flag of error
-//    UpPage05.var.Tx_UX_status_flags |= ST_TXRX_CFG_INIT_ERR_FLAG;
-//  }
-//  //Write 2nd part of config (up to UX2291_TX_SYS_CTRL) (101-64 = 37 bytes)
-//  Temp_buffer[0] = 0x40;      //RegAddr is 1st byte of data
-//  memcpy(&Temp_buffer[1], &TempBuf_128.u8[64], 37);
-//  if(Write_soft_i2c(I2C_UX2291_ADDR, Temp_buffer, 38) !=0 ) {
-//    //Set flag of error
-//    UpPage05.var.Tx_UX_status_flags |= ST_TXRX_CFG_INIT_ERR_FLAG;
-//  }
-//
-//  //Update value of UX2291_TX_SYS_CTRL (don't change AMUX_ADDR it is used for measurement)
-//  Read_soft_i2c(I2C_UX2291_ADDR, UX2291_TX_SYS_CTRL, Temp_buffer, 1);
-//  Temp_buffer[1] = Temp_buffer[0] & 0xF0;    //clear all bits except AMUX_ADDR
-//  Temp_buffer[1] |= (UpPage04.var.TX_cfg.TX_SYS_CTRL & 0x0F);    //mask only config
-//  Temp_buffer[0] = UX2291_TX_SYS_CTRL;      //RegAddr is 1st byte of data
-//  Write_soft_i2c(I2C_UX2291_ADDR, Temp_buffer, 2);
-}
-
 /*
  * Work with ADC of MASC-37029 chip
  */
@@ -278,11 +251,14 @@ void Read_MALD_state(void)
 
 //Read 'Num' bytes from MASC-37029 beginning from 'RegAddr' to buffer
 bool read_register_from_MALD(uint8_t addr, uint8_t *value) {
-  if (int_I2C_write(MALD_CHIPID, &addr, sizeof(addr)) != 0) {
-    return false;
-  }
-  
-  return int_I2C_read(MALD_CHIPID, value, sizeof(*value)) == 0; //add additional byte because of last byte always read as 0xFF
+	uint8_t rx_data = 0x0;
+	const uint8_t result = int_I2C_request(MALD_CHIPID, &addr, 1, &rx_data, 1);
+	if (result != 0) {
+		return false;
+	}
+	
+	*value = rx_data;
+	return true;
 }
 
 //Write 'Num' bytes to MASC-37029 beginning from 'RegAddr' from buffer

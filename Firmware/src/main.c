@@ -262,6 +262,8 @@ static uint8_t Temp_page_data[128];
 static void cmd_read_data_from(uint8_t slave_addr);
 static void cmd_write_data_to(uint8_t slave_addr);
 static void cmd_write_data_to_flash_pages(void);
+static void cmd_write_MALD_config(void);
+static void cmd_write_MATA_config(void);
 
 static void Check_register_action(void) {
   if(A2Up_Page.var.GrpCommand == 0) {
@@ -284,6 +286,12 @@ static void Check_register_action(void) {
   case GRP_CMD_MALD_DATA_WR:
     cmd_write_data_to(MALD_CHIPID);
     break;
+  case GRP_CMD_UPD_TX_CFG:
+    cmd_write_MALD_config();
+    break;
+  case GRP_CMD_UPD_GLB_RX_CFG:
+    cmd_write_MATA_config();
+    break;
   case GRP_CMD_WRITE_1ST_QUARTER:
     //Group command to write 1st quarter (32 bytes) of page data
     memcpy(Temp_page_data, A2Up_Page.var.GrpBuffer, 32);
@@ -299,6 +307,7 @@ static void Check_register_action(void) {
   case GRP_CMD_WR_4TH_Q_AND_UPDATE:
     //Group command to write 4th quarter (32 bytes) of page data and update flash page
     memcpy(&Temp_page_data[96], A2Up_Page.var.GrpBuffer, 32);
+		printf("CMD_FLASH_UPD: addr: %hhu\n\r", A2Up_Page.var.GrpAddress);
     cmd_write_data_to_flash_pages();
     break;
   default:
@@ -389,7 +398,7 @@ static void cmd_write_data_to_flash_pages(void) {
       }
       //Copy only config structure to A2Up page in RAM
       memcpy((uint8_t *)&A2Up_Page, Temp_page_data, (sizeof(MATA_cfg_t) + sizeof(MALD_cfg_t) + 2));  //copy data with CSum
-      memcpy(&A0_Page.Bytes[0], Temp_page_data, 128);
+      memcpy(&A2Up_Page.Bytes[0], Temp_page_data, 128);
       //Update A0 Low page in Flash
       a0a2_pages_commit_to_flash();
     }
@@ -397,6 +406,66 @@ static void cmd_write_data_to_flash_pages(void) {
   default:
     return;
   }
+}
+
+static void write_reg(uint8_t addr, uint8_t reg, uint8_t data) {
+  const uint8_t buff[2] = {reg, data};
+  
+  const uint8_t result = int_I2C_write(addr, buff, sizeof(buff));
+  if (result != 0) {
+    printf("Error: write_reg: addr:%s(%hhu), reg:%hhu, data:%hhu\n\r", addr == MALD_CHIPID ? "MALD" : addr == MATA_CHIPID ? "MATA" : "UNKN", addr, reg, data);
+  }
+}
+
+static void cmd_write_MALD_config(void) {
+  const MALD_37645_cfg_struct_t* cfg = &A2Up_Page.var.MALD_cfg.MALD_cfg;
+  write_reg(MALD_CHIPID, MALD_RA_RESET,             cfg->RESET            );
+  write_reg(MALD_CHIPID, MALD_RA_IO_CTRL,           cfg->IO_CTRL          );
+  write_reg(MALD_CHIPID, MALD_RA_CDRCTRL,           cfg->CDRCTRL          );
+  write_reg(MALD_CHIPID, MALD_RA_I2C_ADDRESS_MODE,  cfg->I2C_ADDRESS_MODE );
+  write_reg(MALD_CHIPID, MALD_RA_CHANNEL_MODE,      cfg->CHANNEL_MODE     );
+  write_reg(MALD_CHIPID, MALD_RA_LOCKPHASE,         cfg->LOCKPHASE        );
+//write_reg(MALD_CHIPID, MALD_RA_LOS_LOL_TX_FAULT,  cfg->LOS_LOL_TX_FAULT ); // read only
+  write_reg(MALD_CHIPID, MALD_RA_LOS_LOL_TX_ALARM,  cfg->LOS_LOL_TX_ALARM );
+  write_reg(MALD_CHIPID, MALD_RA_IGNORE_TX_FAULT,   cfg->IGNORE_TX_FAULT  );
+  write_reg(MALD_CHIPID, MALD_RA_LOS_THRSH_AUTO_SQ, cfg->LOS_THRSH_AUTO_SQ);
+  write_reg(MALD_CHIPID, MALD_RA_CTLE_X,            cfg->CTLE_X           );
+  write_reg(MALD_CHIPID, MALD_RA_OUTPUT_MUTE_SLEW,  cfg->OUTPUT_MUTE_SLEW );
+  write_reg(MALD_CHIPID, MALD_RA_LBIAS,             cfg->LBIAS            );
+  write_reg(MALD_CHIPID, MALD_RA_LMOD,              cfg->LMOD             );
+  write_reg(MALD_CHIPID, MALD_RA_PREFALL,           cfg->PREFALL          );
+  write_reg(MALD_CHIPID, MALD_RA_TDE,               cfg->TDE              );
+  write_reg(MALD_CHIPID, MALD_RA_CROSSING_ADJ,      cfg->CROSSING_ADJ     );
+  write_reg(MALD_CHIPID, MALD_RA_LBUMIN,            cfg->LBUMIN           );
+//write_reg(MALD_CHIPID, MALD_RA_BUMIN_ENABLE,      cfg->BUMIN_ENABLE     ); // read only
+  write_reg(MALD_CHIPID, MALD_RA_ADC_CONFIG0,       cfg->ADC_CONFIG0      );
+  write_reg(MALD_CHIPID, MALD_RA_ADC_CONFIG2,       cfg->ADC_CONFIG2      );
+  write_reg(MALD_CHIPID, MALD_RA_ADC_OUT0_MSBS,     cfg->ADC_OUT0_MSBS    );
+  write_reg(MALD_CHIPID, MALD_RA_ADC_OUT0_LSBS,     cfg->ADC_OUT0_LSBS    );
+  write_reg(MALD_CHIPID, MALD_RA_ADC_TX_SELECT,     cfg->ADC_TX_SELECT    );
+}
+
+static void cmd_write_MATA_config(void) {
+  const MATA_37644_cfg_struct_t* cfg = &A2Up_Page.var.MATA_cfg.MATA_cfg;
+  write_reg(MATA_CHIPID, MALD_RA_RESET,             cfg->RESET            );
+  write_reg(MATA_CHIPID, MATA_RA_MONITORS,          cfg->MONITORS         );
+  write_reg(MATA_CHIPID, MATA_RA_CDRCTRL,           cfg->CDRCTRL          );
+  write_reg(MATA_CHIPID, MATA_RA_I2C_ADDRESS_MODE,  cfg->I2C_ADDRESS_MODE );
+  write_reg(MATA_CHIPID, MATA_RA_CHANNEL_MODE,      cfg->CHANNEL_MODE     );
+  write_reg(MATA_CHIPID, MATA_RA_LOCKPHASE,         cfg->LOCKPHASE        );
+  write_reg(MATA_CHIPID, MATA_RA_LOS_MODE,          cfg->LOS_MODE         );
+//write_reg(MATA_CHIPID, MATA_RA_LOS_LOL_STATUS,    cfg->LOS_LOL_STATUS   ); // read only
+  write_reg(MATA_CHIPID, MATA_RA_LOS_LOL_ALARM,     cfg->LOS_LOL_ALARM    );
+  write_reg(MATA_CHIPID, MATA_RA_LOS_CTRL,          cfg->LOS_CTRL         );
+  write_reg(MATA_CHIPID, MATA_RA_SLA,               cfg->SLA              );
+  write_reg(MATA_CHIPID, MATA_RA_TIA_CTRL,          cfg->TIA_CTRL         );
+  write_reg(MATA_CHIPID, MATA_RA_OUTPUT_CTRL,       cfg->OUTPUT_CTRL      );
+  write_reg(MATA_CHIPID, MATA_RA_OUTPUT_SWING,      cfg->OUTPUT_SWING     );
+  write_reg(MATA_CHIPID, MATA_RA_OUTPUT_DEEMPH,     cfg->OUTPUT_DEEMPH    );
+  write_reg(MATA_CHIPID, MATA_RA_ADC_CONFIG0,       cfg->ADC_CONFIG0      );
+  write_reg(MATA_CHIPID, MATA_RA_ADC_CONFIG2,       cfg->ADC_CONFIG2      );
+//write_reg(MATA_CHIPID, MATA_RA_ADC_OUT0_MSBS,     cfg->ADC_OUT0_MSBS    ); // read only
+//write_reg(MATA_CHIPID, MATA_RA_ADC_OUT0_LSBS,     cfg->ADC_OUT0_LSBS    ); // read only
 }
 
 #ifdef CHECK_INT_I2C
