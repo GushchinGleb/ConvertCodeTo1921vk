@@ -251,14 +251,14 @@ void Read_MALD_state(void)
 
 //Read 'Num' bytes from MASC-37029 beginning from 'RegAddr' to buffer
 bool read_register_from_MALD(uint8_t addr, uint8_t *value) {
-	uint8_t rx_data = 0x0;
-	const uint8_t result = int_I2C_request(MALD_CHIPID, &addr, 1, &rx_data, 1);
-	if (result != 0) {
-		return false;
-	}
-	
-	*value = rx_data;
-	return true;
+  uint8_t rx_data = 0x0;
+  const uint8_t result = int_I2C_request(MALD_CHIPID, &addr, 1, &rx_data, 1);
+  if (result != 0) {
+    return false;
+  }
+  
+  *value = rx_data;
+  return true;
 }
 
 //Write 'Num' bytes to MASC-37029 beginning from 'RegAddr' from buffer

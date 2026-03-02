@@ -307,7 +307,7 @@ static void Check_register_action(void) {
   case GRP_CMD_WR_4TH_Q_AND_UPDATE:
     //Group command to write 4th quarter (32 bytes) of page data and update flash page
     memcpy(&Temp_page_data[96], A2Up_Page.var.GrpBuffer, 32);
-		printf("CMD_FLASH_UPD: addr: %hhu\n\r", A2Up_Page.var.GrpAddress);
+    printf("CMD_FLASH_UPD: addr: %hhu\n\r", A2Up_Page.var.GrpAddress);
     cmd_write_data_to_flash_pages();
     break;
   default:
