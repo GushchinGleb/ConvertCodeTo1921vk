@@ -94,6 +94,14 @@ uint8_t com_I2C_Read_data(uint8_t I2C_Current_Address);
 
 uint8_t* com_I2C_Decode_page_address(uint8_t Address, uint8_t I2C_Current_Page);
 
+/**
+ @brief The function checks connections from the I2C to the master.
+ @return {0 - connection success; 1 - SDA connections error; 2 - SCL connection error; 3 - both of the wires not connected}
+ */
+uint8_t com_I2C_Check_connection(void);
+
+void com_I2C_resset(void);
+
 // ==========================================
 // INTERNAL I2C API
 // 

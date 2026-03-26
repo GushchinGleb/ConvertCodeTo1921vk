@@ -6,6 +6,7 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "K1921VK035.h"
 
@@ -89,6 +90,7 @@ typedef struct {
 extern uint8_t* I2C_Data_Pointer; // from soft_i2c_api.c for communication with the external computer
 
 static volatile com_i2c_t com_i2c; // slave | external computer
+uint8_t com_i2c_timeout_flag = 0; // increment 10 times per second in tick.c
 static volatile int_i2c_t int_i2c; // master | internal communitation
 
 static void com_i2c_addres_set(void);
@@ -181,6 +183,15 @@ static void com_i2c_addres_set(void) {
   I2C_Data_Pointer = com_I2C_Decode_page_address(com_i2c.l_addr, com_i2c.p_id);
 }
 
+
+uint8_t com_I2C_Check_connection(void) {
+  return (!read_com_SCL() << 1) | !read_com_SDA();
+}
+
+void com_I2C_resset(void) {
+  memset((void*)&int_i2c, 0, sizeof(int_i2c));
+}
+
 static void init_com_I2C(void) {
   // 10K resistor already implemented
   // set both to 0x1 if the wires not pulled to the 3V3
@@ -227,6 +238,8 @@ static void init_com_I2C(void) {
   GPIOA->INTENSET = COM_SCL_PIN_MASK | COM_SDA_PIN_MASK; // enable SCL and SDA interrupts [page 219]
   
   // printf("command: sda:%d, scl:%d\n\r", COM_GPIOSDA->DATA >> 1 & 1, COM_GPIOSCL->DATA >> 0 & 1);
+  
+  com_I2C_resset();
 }
 
 static void init_int_I2C(void) {
@@ -337,6 +350,10 @@ void GPIOA_IRQHandler(void) {
   // perform_GPIOA_IRQ_int_event(); // arbitration loss
 }
 
+// Pin LED (A8) OUT
+#define GPIO_LED GPIOA
+#define PIN_LED PIN8
+
 static void perform_GPIOA_IRQ_com_event(void) {
   if (COM_GPIOSCL->INTSTATUS & COM_SCL_PIN_MASK) { // scl changes
     if (COM_GPIOSCL->INTPOLSET & COM_SCL_PIN_MASK) { // high
@@ -349,6 +366,7 @@ static void perform_GPIOA_IRQ_com_event(void) {
     // low
     com_i2c.scl = 0;
     perform_SCL_fall_action(); // write data to the master
+    GPIO_LED->DATAOUTTGL_bit.PIN_LED = 1;
     COM_GPIOSDA->INTPOLSET = COM_SCL_PIN_MASK; // set interrupt by high level
     COM_GPIOSDA->INTSTATUS = COM_SCL_PIN_MASK; // clear the interrupt
     return;
@@ -360,6 +378,7 @@ static void perform_GPIOA_IRQ_com_event(void) {
 
       if (com_i2c.scl) {
         perform_SDA_STOP();
+        com_i2c_timeout_flag = 0;
       }
 
       COM_GPIOSDA->INTPOLCLR = COM_SDA_PIN_MASK;
@@ -370,6 +389,7 @@ static void perform_GPIOA_IRQ_com_event(void) {
     com_i2c.sda = 0;
     if (com_i2c.scl) {
       perform_SDA_START();
+      com_i2c_timeout_flag = 100;
     }
 
     COM_GPIOSDA->INTPOLSET = COM_SDA_PIN_MASK;

@@ -6,6 +6,7 @@ extern "C" {
 #include <stdint.h>
 #include "../inc/tick.h"
 #include "../inc/sfp28.h"
+#include "../inc/soft_i2c.h"
 
 // Configure a general-purpose timer to 1 kHz and roll flags.
 
@@ -43,10 +44,19 @@ void tick_init(uint32_t sysclk_hz){
   return;
 }
 
+extern uint8_t com_i2c_timeout_flag;
+
 void TMR0_IRQHandler(void) { // startup_K1921VK035.s:100
   s_ms++;
   if(!(s_ms % 100)) {
     Time_flags |= TIME_100MS_FLAG;
+    
+    if (com_i2c_timeout_flag > 50) {
+      com_i2c_timeout_flag++;
+      if (com_i2c_timeout_flag > 110) {
+        com_I2C_resset();
+      }
+    }
   }
   if(!(s_ms % 500)) {
     Time_flags |= TIME_500MS_FLAG;

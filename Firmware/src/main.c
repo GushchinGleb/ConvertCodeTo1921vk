@@ -60,6 +60,10 @@ static void read_in_pins(void);
 static void i2c_check(void);
 #endif // CHECK_INT_I2C
 
+// Pin LED (A8) OUT
+#define GPIO_LED GPIOA
+#define PIN_LED PIN8
+
 //-----------------------------------------------------------------------------
 // main() Routine
 // ----------------------------------------------------------------------------
@@ -84,7 +88,18 @@ int main (void) {
   periph_init();
 
   Init_variables();
-    
+  
+  uint8_t result = com_I2C_Check_connection();
+  if (result != 0) {
+    printf("Command I2C wiring error. Failed to wiring: %s %s\n\r", result & 1 ? "SDA" : "", result & 2 ? "SCL" : "");
+    volatile uint32_t t = 10000000;
+    while (--t) {
+      if (t % 500000 == 0) {
+        GPIO_LED->DATAOUTTGL_bit.PIN_LED = 1;
+      }
+    }
+  }
+
 #ifdef CHECK_INT_I2C
   i2c_check(); /** TODO: Remove after testing */  
   printf("\n\rCOMPLETE\n\r");
@@ -124,10 +139,6 @@ static void gpio_init(){
   RCU->HRSTCFG_bit.GPIOAEN = 1;
   RCU->HCLKCFG_bit.GPIOBEN = 1;
   RCU->HRSTCFG_bit.GPIOBEN = 1;
-  
-  // Pin LED (A8) OUT
-  #define GPIO_LED GPIOA
-  #define PIN_LED PIN8
   
   GPIO_LED->DENSET_bit.PIN_LED  = 0x1; // OUT enable [page 210]
   GPIO_LED->OUTENSET_bit.PIN_LED = 0x1; // [page 51], [page 9]
