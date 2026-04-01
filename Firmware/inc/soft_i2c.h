@@ -18,14 +18,14 @@ extern "C" {
 #define INT_SCL_GPIOA
 // #define INT_SCL_GPIOB
 
-#define COM_SDA_PIN PIN1
-#define COM_SDA_PIN_MASK (1 << 1)
-#define COM_SCL_PIN PIN0
-#define COM_SCL_PIN_MASK (1 << 0)
-#define INT_SDA_PIN PIN5
-#define INT_SDA_PIN_MASK (1 << 5)
-#define INT_SCL_PIN PIN4
-#define INT_SCL_PIN_MASK (1 << 4)
+#define COM_SDA_PIN PIN5
+#define COM_SDA_PIN_MASK (1 << 5)
+#define COM_SCL_PIN PIN4
+#define COM_SCL_PIN_MASK (1 << 4)
+#define INT_SDA_PIN PIN1
+#define INT_SDA_PIN_MASK (1 << 1)
+#define INT_SCL_PIN PIN0
+#define INT_SCL_PIN_MASK (1 << 0)
 
 // ***  CONFIGURATION END  *** //
 

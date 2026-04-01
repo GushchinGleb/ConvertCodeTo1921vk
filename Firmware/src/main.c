@@ -12,6 +12,7 @@ extern "C" {
 #include "K1921VK035.h"
 
 #include "../inc/board.h"
+#include "../inc/debug_led.h"
 #include "../inc/eeprom_a0a2.h"
 #include "../inc/flash_if.h"
 #include "../inc/MASC_37029_defs.h"
@@ -60,10 +61,6 @@ static void read_in_pins(void);
 static void i2c_check(void);
 #endif // CHECK_INT_I2C
 
-// Pin LED (A8) OUT
-#define GPIO_LED GPIOA
-#define PIN_LED PIN8
-
 //-----------------------------------------------------------------------------
 // main() Routine
 // ----------------------------------------------------------------------------
@@ -95,7 +92,7 @@ int main (void) {
     volatile uint32_t t = 10000000;
     while (--t) {
       if (t % 500000 == 0) {
-        GPIO_LED->DATAOUTTGL_bit.PIN_LED = 1;
+        debug_led_toggle();
       }
     }
   }
@@ -140,8 +137,7 @@ static void gpio_init(){
   RCU->HCLKCFG_bit.GPIOBEN = 1;
   RCU->HRSTCFG_bit.GPIOBEN = 1;
   
-  GPIO_LED->DENSET_bit.PIN_LED  = 0x1; // OUT enable [page 210]
-  GPIO_LED->OUTENSET_bit.PIN_LED = 0x1; // [page 51], [page 9]
+  debug_led_init();
   
   // Pin TX_DISABLE (A7) IN
   #define GPIO_TX_DISABLE GPIOA
@@ -157,12 +153,14 @@ static void gpio_init(){
   
   GPIO_TX_FAULT->INMODE_bit.TX_FAULT_PIN = 0x1; // [page 51], [page 9]
   
-  // Pin LOS (A13) IN
-  #define GPIO_LOS GPIOA
-  #define LOS_PIN PIN13
-  #define LOS ((GPIO_LOS->DATA_bit.VAL & (1 << 13)) >> 13)
-  
-  GPIO_LOS->INMODE_bit.LOS_PIN = 0x1; // [page 51], [page 9]
+/// @author Nevidimka787
+#warning "The RX LOS pin is used for debugging and undefined behaviour may be caused (see `debug_led.c`)"
+//  // Pin LOS (A13) IN
+//  #define GPIO_LOS GPIOA
+//  #define LOS_PIN PIN13
+//  #define LOS ((GPIO_LOS->DATA_bit.VAL & (1 << 13)) >> 13)
+//  
+//  GPIO_LOS->INMODE_bit.LOS_PIN = 0x1; // [page 51], [page 9]
   
   // Pin RS0 (A12) IN
   #define GPIO_RS0 GPIOA
@@ -264,7 +262,7 @@ void Check_timer_interval() {
     //Read_temperature_sensor();
 
     //TEST
-    GPIO_LED->DATAOUTTGL_bit.PIN_LED = 1; // [page 51]
+    debug_led_toggle();
   }
 }
 
@@ -1010,12 +1008,15 @@ static void read_in_pins() {
   } else {
     A2_Page.var.Stat_Control &= ~ST_TX_FAULT_STATE_FLAG;
   }
-  //Check Rx LOS pin
-  if(LOS) {
-    A2_Page.var.Stat_Control |= ST_RX_LOS_STATE_FLAG;
-  } else {
-    A2_Page.var.Stat_Control &= ~ST_RX_LOS_STATE_FLAG;
-  }
+  
+/// @author Nevidimka787
+#warning "The RX LOS pin is used for debugging (see `debug_led.c`)"
+//  //Check Rx LOS pin
+//  if(LOS) {
+//    A2_Page.var.Stat_Control |= ST_RX_LOS_STATE_FLAG;
+//  } else {
+//    A2_Page.var.Stat_Control &= ~ST_RX_LOS_STATE_FLAG;
+//  }
   //Check RS0 pin and translate signal to M_RS0
   if(RS0) {
     A2_Page.var.Stat_Control |= ST_RS0_STATE_FLAG;

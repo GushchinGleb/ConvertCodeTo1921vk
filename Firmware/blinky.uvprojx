@@ -438,6 +438,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\soft_i2c.c</FilePath>
             </File>
+            <File>
+              <FileName>debug_led.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\debug_led.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -492,6 +497,11 @@
               <FileName>soft_i2c.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\inc\soft_i2c.h</FilePath>
+            </File>
+            <File>
+              <FileName>debug_led.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\inc\debug_led.h</FilePath>
             </File>
           </Files>
         </Group>

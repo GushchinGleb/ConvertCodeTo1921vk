@@ -2,6 +2,7 @@
 extern "C" {
 #endif // __cplusplus
 
+#include "../inc/debug_led.h"
 #include "../inc/soft_i2c.h"
 
 #include <stdint.h>
@@ -198,7 +199,20 @@ static void init_com_I2C(void) {
   int sda_pullup = 0x0; // [page 215]
   int scl_pullup = 0x0; // [page 215]
   
-  // Configure SDA/SCL pins (A1/A0)
+  #if COM_SDA_PIN_MASK != (1 << 5)
+  #error "check the new pin and remove or update the define"
+  #endif
+  #if COM_SCL_PIN_MASK != (1 << 4)
+  #error "check the new pin and remove or update the define"
+  #endif
+  GPIOA->LOCKKEY = 0xADEADBEE; // unlock LOCKSET [page 226]
+  GPIOA->LOCKCLR = (1 << 4) | (1 << 5); // unlock A4 and A5 [page 228]
+  GPIOA->LOCKKEY = 0x00000000; // lock LOCKSET [page 226]
+  GPIOA->ALTFUNCCLR = (1 << 4) | (1 << 5); // clear alternative function for A4 and A5 [page 215]
+  
+  // now the A4 and A5 are normal reseted pins
+  
+  // Configure SDA/SCL pins (A5/A4)
   COM_GPIOSDA->PULLMODE_bit.COM_SDA_PIN = sda_pullup; // enable pullup [page 51] [page 212]
   COM_GPIOSDA->OUTMODE_bit.COM_SDA_PIN = 0x1 ; // open drain [page 51] [page 212]
   COM_GPIOSDA->OUTENSET_bit.COM_SDA_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
@@ -245,22 +259,10 @@ static void init_com_I2C(void) {
 static void init_int_I2C(void) {
   // Set both to 0x0
   // if the wires is pulled to the 3V3
-  int sda_pullup = 0x1; // [page 215]
-  int scl_pullup = 0x1; // [page 215]
-  #if INT_SDA_PIN_MASK != (1 << 5)
-  #error "check the new pin and remove or update the define"
-  #endif
-  #if INT_SCL_PIN_MASK != (1 << 4)
-  #error "check the new pin and remove or update the define"
-  #endif
-  GPIOA->LOCKKEY = 0xADEADBEE; // unlock LOCKSET [page 226]
-  GPIOA->LOCKCLR = (1 << 4) | (1 << 5); // unlock A4 and A5 [page 228]
-  GPIOA->LOCKKEY = 0x00000000; // lock LOCKSET [page 226]
-  GPIOA->ALTFUNCCLR = (1 << 4) | (1 << 5); // clear alternative function for A4 and A5 [page 215]
+  int sda_pullup = 0x0; // [page 215]
+  int scl_pullup = 0x0; // [page 215]
   
-  // now the A4 and A5 are normal reseted pins
-  
-  // Configure SDA/SCL pins (A5/A4)
+  // Configure SDA/SCL pins (A1/A0)
   INT_GPIOSDA->PULLMODE_bit.INT_SDA_PIN = sda_pullup; // enable pullup [page 51] [page 212]
   INT_GPIOSDA->OUTMODE_bit.INT_SDA_PIN = 0x1 ; // open drain [page 51] [page 212]
   INT_GPIOSDA->OUTENSET_bit.INT_SDA_PIN = 1;   // allow to control port by DATAOUT [page 51] [page 213]
@@ -350,10 +352,6 @@ void GPIOA_IRQHandler(void) {
   // perform_GPIOA_IRQ_int_event(); // arbitration loss
 }
 
-// Pin LED (A8) OUT
-#define GPIO_LED GPIOA
-#define PIN_LED PIN8
-
 static void perform_GPIOA_IRQ_com_event(void) {
   if (COM_GPIOSCL->INTSTATUS & COM_SCL_PIN_MASK) { // scl changes
     if (COM_GPIOSCL->INTPOLSET & COM_SCL_PIN_MASK) { // high
@@ -366,7 +364,7 @@ static void perform_GPIOA_IRQ_com_event(void) {
     // low
     com_i2c.scl = 0;
     perform_SCL_fall_action(); // write data to the master
-    GPIO_LED->DATAOUTTGL_bit.PIN_LED = 1;
+    debug_led_toggle();
     COM_GPIOSDA->INTPOLSET = COM_SCL_PIN_MASK; // set interrupt by high level
     COM_GPIOSDA->INTSTATUS = COM_SCL_PIN_MASK; // clear the interrupt
     return;
