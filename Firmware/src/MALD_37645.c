@@ -32,6 +32,7 @@ void Init_MALD_37645(void) {
   }
   else {
     A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
+    return; // error on the first writer, so srop the initialisation
   }
   
   //Soft Reset of MALD

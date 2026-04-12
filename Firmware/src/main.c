@@ -122,6 +122,8 @@ int main (void) {
 
   Init_MALD_37645();
   Init_MATA_37644();
+  
+  printf("Enter main loop\n\r");
 
   while (1) {
     //Check timer intervals
@@ -136,6 +138,9 @@ static void gpio_init(){
   RCU->HRSTCFG_bit.GPIOAEN = 1;
   RCU->HCLKCFG_bit.GPIOBEN = 1;
   RCU->HRSTCFG_bit.GPIOBEN = 1;
+  
+  // GPIOA->PULLMODE = 0xAAAAAAAA; // pull all to GND [page 212]
+  // GPIOB->PULLMODE = 0xAAAAAAAA; // pull all to GND [page 212]
   
   debug_led_init();
   
@@ -182,6 +187,7 @@ static void gpio_init(){
   #define M_RS0_PIN PIN10
   #define M_RS0 GPIO_M_RS0->DATAOUTCLR_bit.M_RS0_PIN
   
+  // GPIO_M_RS0->PULLMODE_bit.M_RS0_PIN = 0x0; // no pull [page 212]
   GPIO_M_RS0->DENSET_bit.M_RS0_PIN  = 0x1; // push pull [page 212]
   GPIO_M_RS0->OUTENSET_bit.M_RS0_PIN = 0x1; // [page 51], [page 9]
   
@@ -190,6 +196,7 @@ static void gpio_init(){
   #define M_RS1_PIN PIN11
   #define M_RS1 GPIO_M_RS1->DATAOUTCLR_bit.M_RS1_PIN
   
+  // GPIO_M_RS1->PULLMODE_bit.M_RS1_PIN = 0x0; // no pull [page 212]
   GPIO_M_RS1->DENSET_bit.M_RS1_PIN  = 0x1; // push pull [page 212]
   GPIO_M_RS1->OUTENSET_bit.M_RS1_PIN = 0x1; // [page 51], [page 9]
 }
@@ -244,15 +251,25 @@ void Check_timer_interval() {
 
     read_in_pins();
     
-    Work_with_MATA_ADC();
-    Work_with_MALD_ADC();
+    if (!(A2Up_Page.var.MATA_status_flags & ST_MATA_I2C_RW_ERR_FLAG)) {
+      Work_with_MATA_ADC();
+    }
+    if (!(A2Up_Page.var.MALD_status_flags & ST_MALD_I2C_RW_ERR_FLAG)) {
+      Work_with_MALD_ADC();
+    }
+    if ((A2Up_Page.var.MATA_status_flags & ST_MATA_I2C_RW_ERR_FLAG) || (A2Up_Page.var.MALD_status_flags & ST_MALD_I2C_RW_ERR_FLAG)) {
+      debug_led_toggle();
+    }
   }
   if(Time_flags & TIME_500MS_FLAG) { // 500 ms
     Time_flags &= ~TIME_500MS_FLAG;
 
-    Read_MALD_state();
-    Read_MATA_state();
-
+    if (!(A2Up_Page.var.MATA_status_flags & ST_MATA_I2C_RW_ERR_FLAG)) {
+      Read_MATA_state();
+    }
+    if (!(A2Up_Page.var.MALD_status_flags & ST_MALD_I2C_RW_ERR_FLAG)) {
+      Read_MALD_state();
+    }
   }
   if(Time_flags & TIME_1SEC_FLAG) { // 1 s
     //1 second interval

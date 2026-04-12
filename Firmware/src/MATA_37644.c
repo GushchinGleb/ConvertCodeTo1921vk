@@ -33,6 +33,7 @@ void Init_MATA_37644(void) {
   }
   else {
     A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
+    return; // error on the first writer, so srop the initialisation
   }
   
   //Soft Reset of MATA

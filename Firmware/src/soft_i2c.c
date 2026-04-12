@@ -793,9 +793,17 @@ uint8_t int_I2C_write_complete(void) {
 uint8_t int_I2C_read(uint8_t addr, uint8_t *rx_buff, uint8_t rx_len) {
   int_I2C_start_read(addr, 0x0, 0, rx_buff, rx_len);
   uint8_t status = 0;
+  volatile uint32_t tiks = SystemCoreClock / 40;
   do {
     status = int_I2C_read_complete();
-  } while (status == 2); // BUSY
+  } while (status == 2 && --tiks); // BUSY
+
+  if (!tiks) {
+    printf("int_I2C_request: timeout\n\r");
+  }
+  else {
+    printf("int_I2C_request: OK\n\r");
+  }
   
   return status == 0 ? 0 : 1;
 }
@@ -803,9 +811,17 @@ uint8_t int_I2C_read(uint8_t addr, uint8_t *rx_buff, uint8_t rx_len) {
 uint8_t int_I2C_request(uint8_t addr, const uint8_t* tx_buff, uint8_t tx_len, uint8_t* rx_buff, uint8_t rx_len) {
   int_I2C_start_read(addr, tx_buff, tx_len, rx_buff, rx_len);
   uint8_t status = 0;
+  volatile uint32_t tiks = SystemCoreClock / 40;
   do {
     status = int_I2C_read_complete();
-  } while (status == 2); // BUSY
+  } while (status == 2 && --tiks); // BUSY
+
+  if (!tiks) {
+    printf("int_I2C_request: timeout\n\r");
+  }
+  else {
+    printf("int_I2C_request: OK\n\r");
+  }
   
   return status == 0 ? 0 : 1;
 }
@@ -814,12 +830,19 @@ uint8_t int_I2C_write(uint8_t addr, const uint8_t *tx_buff, uint8_t tx_len) {
   int_I2C_start_write(addr, tx_buff, tx_len);
   uint8_t status = 0;
   
-  volatile uint32_t tiks = SystemCoreClock / 4;
-  
+  volatile uint32_t tiks = SystemCoreClock / 40;
+ 
   do {
     status = int_I2C_write_complete();
-  } while (status == 2 && tiks--); // BUSY
-  
+  } while (status == 2 && --tiks); // BUSY
+
+  if (!tiks) {
+    printf("int_I2C_request: timeout\n\r");
+  }
+  else {
+    printf("int_I2C_request: OK : tiks: %u / %u\n\r", tiks, SystemCoreClock / 4);
+  }
+ 
   return status == 0 ? 0 : 1;
 }
 
