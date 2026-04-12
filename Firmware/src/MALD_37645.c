@@ -19,6 +19,7 @@ const MALD_37645_cfg_struct_t MALD_37645_default_config;// = { };
 // Init Tx (MALD-37645)
 //==============================================================================
 void Init_MALD_37645(void) {
+  A2Up_Page.var.MALD_status_flags = 0x0; // clear MATA flags
   uint8_t rv; // reg value
   // Read CHIP_ID of UX2291 and compare to constant
   if(read_register_from_MALD(MALD_RA_CHIPID, &rv)) {

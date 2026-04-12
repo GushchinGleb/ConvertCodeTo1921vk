@@ -20,6 +20,7 @@ const MATA_37644_cfg_struct_t MATA_37644_default_config;// = { };
 // Init Rx (MATA-37644)
 //==============================================================================
 void Init_MATA_37644(void) {
+  A2Up_Page.var.MATA_status_flags = 0x0; // clear MATA flags
   uint8_t rv; // reg value
   // Read CHIP_ID of UX2291 and compare to constant
   if(read_register_from_MATA(MATA_RA_CHIPID, &rv)) {
