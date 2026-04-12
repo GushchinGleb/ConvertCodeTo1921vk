@@ -203,6 +203,12 @@ void UpdateCfg_MATA(void)
 
 // Work with ADC of MATA-37029 chip
 void Work_with_MATA_ADC(void) {
+  if (A2Up_Page.var.MATA_status_flags & ST_MATA_I2C_RW_ERR_FLAG) {
+    A2Up_Page.var.MATA_ADC_V33 = 0xFFFF;
+    A2Up_Page.var.MATA_ADC_Temp = 0xFFFF;
+    A2Up_Page.var.MATA_ADC_RSSI = 0xFFFF;
+    return; // return invalid state
+  }
   uint8_t ADC_rvs[2]; // registers values
   read_register_from_MATA(MATA_RA_ADC_OUT0_LSBS, &ADC_rvs[0]); // bits: [ 3:0]
   read_register_from_MATA(MATA_RA_ADC_OUT0_MSBS, &ADC_rvs[1]); // bits: [11:4]
@@ -232,6 +238,10 @@ void Work_with_MATA_ADC(void) {
 
 // Read state of MATA chip
 void Read_MATA_state(void) {
+  if (A2Up_Page.var.MATA_status_flags & ST_MATA_I2C_RW_ERR_FLAG) {
+    A2Up_Page.var.MATA_LOS_LOL_state = 0xFF;
+    return; // return invalid state
+  }
   uint8_t status;
   read_register_from_MATA(MATA_RA_LOS_LOL_STATUS, &status); // [MATA-37644_V3.pdf page 27]
   A2Up_Page.var.MATA_LOS_LOL_state = status;

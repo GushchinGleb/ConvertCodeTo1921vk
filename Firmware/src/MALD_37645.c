@@ -197,6 +197,15 @@ void Init_MADL_Default_Cfg(void) {
  * Work with ADC of MASC-37029 chip
  */
 void Work_with_MALD_ADC(void) {
+  if (A2Up_Page.var.MALD_status_flags & ST_MALD_I2C_RW_ERR_FLAG) {
+    A2Up_Page.var.MALD_ADC_V33 = 0xFFFF;
+    A2Up_Page.var.MALD_ADC_IBIAS_ref = 0xFFFF;
+    A2Up_Page.var.MALD_ADC_IBIAS_msrt = 0xFFFF;
+    A2Up_Page.var.MALD_ADC_Temp = 0xFFFF;
+    A2Up_Page.var.MALD_ADC_IMON = 0xFFFF;
+    return; // return invalid state
+  }
+    
   uint8_t ADC_rvs[2]; // registers values
   read_register_from_MALD(MALD_RA_ADC_OUT0_LSBS, &ADC_rvs[0]); // bits: [ 3:0]
   read_register_from_MALD(MALD_RA_ADC_OUT0_MSBS, &ADC_rvs[1]); // bits: [11:4]
@@ -244,6 +253,10 @@ void Work_with_MALD_ADC(void) {
 // Read state of MASC chip
 void Read_MALD_state(void)
 {
+  if (A2Up_Page.var.MALD_status_flags & ST_MALD_I2C_RW_ERR_FLAG) {
+    A2Up_Page.var.MALD_TxFault_state = 0xFF;
+    return; // invalid status
+  }
   uint8_t state;
   //Read state (2 bytes - MASC_LOS_LOL_STATE and MASC_TXFAULT_STATE)
   if (read_register_from_MALD(MALD_RA_LOS_LOL_TX_FAULT, &state)) {

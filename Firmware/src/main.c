@@ -251,12 +251,8 @@ void Check_timer_interval() {
 
     read_in_pins();
     
-    if (!(A2Up_Page.var.MATA_status_flags & ST_MATA_I2C_RW_ERR_FLAG)) {
-      Work_with_MATA_ADC();
-    }
-    if (!(A2Up_Page.var.MALD_status_flags & ST_MALD_I2C_RW_ERR_FLAG)) {
-      Work_with_MALD_ADC();
-    }
+    Work_with_MATA_ADC();
+    Work_with_MALD_ADC();
     if ((A2Up_Page.var.MATA_status_flags & ST_MATA_I2C_RW_ERR_FLAG) || (A2Up_Page.var.MALD_status_flags & ST_MALD_I2C_RW_ERR_FLAG)) {
       debug_led_toggle();
     }
@@ -264,12 +260,8 @@ void Check_timer_interval() {
   if(Time_flags & TIME_500MS_FLAG) { // 500 ms
     Time_flags &= ~TIME_500MS_FLAG;
 
-    if (!(A2Up_Page.var.MATA_status_flags & ST_MATA_I2C_RW_ERR_FLAG)) {
-      Read_MATA_state();
-    }
-    if (!(A2Up_Page.var.MALD_status_flags & ST_MALD_I2C_RW_ERR_FLAG)) {
-      Read_MALD_state();
-    }
+    Read_MATA_state();
+    Read_MALD_state();
   }
   if(Time_flags & TIME_1SEC_FLAG) { // 1 s
     //1 second interval
