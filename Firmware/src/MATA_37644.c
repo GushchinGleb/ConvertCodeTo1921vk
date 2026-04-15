@@ -250,11 +250,13 @@ void Read_MATA_state(void) {
 //Read 'Num' bytes from MATA-37029 beginning from 'RegAddr' to buffer
 bool read_register_from_MATA(uint8_t addr, uint8_t *value) {
   uint8_t rx_data = 0x0;
-  const uint8_t result = int_I2C_request(MATA_CHIPID, &addr, 1, &rx_data, 1);
-  if (result != 0) {
+  if (int_I2C_write(MATA_CHIPID, &addr, 1) != 0) {
     return false;
   }
-  
+  if (int_I2C_read(MATA_CHIPID, &rx_data, 1) != 0) {
+    return false;
+  }
+
   *value = rx_data;
   return true;
 }

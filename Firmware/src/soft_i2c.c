@@ -724,7 +724,7 @@ void int_I2C_start_read(uint8_t addr, const uint8_t* wr_data, uint32_t wr_data_s
 
   int_i2c.rx_buf = buffer;
   int_i2c.rx_size = size;
-  int_i2c.tx_id = 0;
+  int_i2c.rx_id = 0;
 
   int_i2c.ack = 1; // no ack
   int_i2c.error = 0; // no error
@@ -802,7 +802,7 @@ uint8_t int_I2C_read(uint8_t addr, uint8_t *rx_buff, uint8_t rx_len) {
     printf("int_I2C_request: timeout\n\r");
   }
   else {
-    printf("int_I2C_request: OK\n\r");
+    // printf("int_I2C_request: OK\n\r");
   }
   
   return status == 0 ? 0 : 1;
@@ -820,7 +820,7 @@ uint8_t int_I2C_request(uint8_t addr, const uint8_t* tx_buff, uint8_t tx_len, ui
     printf("int_I2C_request: timeout\n\r");
   }
   else {
-    printf("int_I2C_request: OK\n\r");
+    // printf("int_I2C_request: result %hhu\n\r", status);
   }
   
   return status == 0 ? 0 : 1;
@@ -840,7 +840,7 @@ uint8_t int_I2C_write(uint8_t addr, const uint8_t *tx_buff, uint8_t tx_len) {
     printf("int_I2C_request: timeout\n\r");
   }
   else {
-    printf("int_I2C_request: OK : tiks: %u / %u\n\r", tiks, SystemCoreClock / 4);
+    // printf("int_I2C_request: OK : tiks: %u / %u\n\r", tiks, SystemCoreClock / 4);
   }
  
   return status == 0 ? 0 : 1;
