@@ -38,6 +38,9 @@ extern uint8_t i2c_dbg_wrp;
 
 static void gpio_init(void);
 
+/// @brief The function sets unused ports to the GND. [Schematic for production board]
+static void gpio_set_Z_to_GND(void);
+
 /// @return [0 - success; !0 - error]
 static uint8_t Check_CC_BASE_and_CC_EXT(const uint8_t *A0Low_ptr);
 
@@ -139,8 +142,7 @@ static void gpio_init(){
   RCU->HCLKCFG_bit.GPIOBEN = 1;
   RCU->HRSTCFG_bit.GPIOBEN = 1;
   
-  // GPIOA->PULLMODE = 0xAAAAAAAA; // pull all to GND [page 212]
-  // GPIOB->PULLMODE = 0xAAAAAAAA; // pull all to GND [page 212]
+  gpio_set_Z_to_GND();
   
   debug_led_init();
   
@@ -199,6 +201,15 @@ static void gpio_init(){
   // GPIO_M_RS1->PULLMODE_bit.M_RS1_PIN = 0x0; // no pull [page 212]
   GPIO_M_RS1->DENSET_bit.M_RS1_PIN  = 0x1; // push pull [page 212]
   GPIO_M_RS1->OUTENSET_bit.M_RS1_PIN = 0x1; // [page 51], [page 9]
+}
+
+static void gpio_set_Z_to_GND(void) {
+  GPIOA->DENSET = 0x80; // push pull [page 212] // port 15 (1000 0000 0000 0000)
+  GPIOA->PULLMODE_bit.PIN15 = 0x1; // pulldown
+  
+  GPIOB->DENSET = 0x1CFE; // push pull [page 212] // (0001 1100 1111 1110)
+  GPIOB->PULLMODE &= ~0x03F0FFFC; // 0000 0011  1111 0000  1111 1111  1111 1100 // clear pull mode page[212]
+  GPIOB->PULLMODE |=  0x02A0AAA8; // 0000 0010  1010 0000  1010 1010  1010 1000 // set to pulldown page[212]
 }
 
 static uint8_t Check_CC_BASE_and_CC_EXT(const uint8_t *A0Low_ptr) {

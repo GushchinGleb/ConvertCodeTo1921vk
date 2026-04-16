@@ -11,6 +11,7 @@
 *.ilk
 *.map
 *.exp
+*.lst
 
 # Precompiled Headers
 *.gch
@@ -50,6 +51,7 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+Firmware/Objects/**
 
 # debug information files
 *.dwo
