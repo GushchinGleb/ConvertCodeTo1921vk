@@ -29,7 +29,7 @@ extern "C" {
 #include <stdint.h>
 
 //-- Defines -------------------------------------------------------------------
-#define CKO_OSE
+#define CKO_OSI
 #define OSECLK_VAL 16000000
 
 #define OSICLK_VAL 8000000
