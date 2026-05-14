@@ -26,7 +26,7 @@ typedef struct A2Up_Page_TypeDef {
   uint8_t  Reserved_state[1];   //191 - reserved
   uint16_t MATA_ADC_V33;        //192..193 - ADC result for V33 (from MATA)
   uint16_t MATA_ADC_Temp;       //194..195 - ADC result for temperature (from MATA)
-  uint16_t MATA_ADC_RSSI;       //196..197 - ADC result for RSSI (from MATA)
+  uint16_t MATA_ADC_RSSI;       //196..197 - ADC result for Received Signal Strength Indicator (from MATA)
   uint16_t MALD_ADC_V33;        //198..199 - ADC result for V33 (from MADL)
   uint16_t MALD_ADC_Temp;       //200..201 - ADC result for temperature (from MADL)
   uint16_t MALD_ADC_IBIAS_ref;  //202..203 - ADC result for IBIAS reference (from MADL)

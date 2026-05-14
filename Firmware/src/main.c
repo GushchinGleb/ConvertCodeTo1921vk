@@ -60,6 +60,8 @@ static void periph_init(void);
 
 static void read_in_pins(void);
 
+static void UpdateDiagnosticRegs(void);
+
 #ifdef CHECK_INT_I2C
 static void i2c_check(void);
 #endif // CHECK_INT_I2C
@@ -265,8 +267,10 @@ void Check_timer_interval() {
     Work_with_MATA_ADC();
     Work_with_MALD_ADC();
     if ((A2Up_Page.var.MATA_status_flags & ST_MATA_I2C_RW_ERR_FLAG) || (A2Up_Page.var.MALD_status_flags & ST_MALD_I2C_RW_ERR_FLAG)) {
-      debug_led_toggle();
-    }
+      debug_led_toggle(); // an error
+    } else {
+			UpdateDiagnosticRegs(); // no error. Update info registers
+		}
   }
   if(Time_flags & TIME_500MS_FLAG) { // 500 ms
     Time_flags &= ~TIME_500MS_FLAG;
@@ -1053,6 +1057,27 @@ static void read_in_pins() {
     A2_Page.var.Stat_Control &= ~ST_RS1_STATE_FLAG;
     M_RS1 = 0;
   }
+}
+
+static void UpdateDiagnosticRegs(void) {
+	// Stat_Control is updated in `read_in_pins`
+
+	const uint16_t MALD_temperature = A2Up_Page.var.MALD_ADC_Temp;
+	// const uint16_t MATA_temperature = A2Up_Page.var.MATA_ADC_Temp;
+	memcpy(A2_Page.var.Temperature, &MALD_temperature, sizeof(MALD_temperature));
+
+	const uint16_t MALD_voltage = A2Up_Page.var.MALD_ADC_V33;
+	// const uint16_t MATA_voltage = A2Up_Page.var.MATA_ADC_V33;
+	memcpy(A2_Page.var.Vcc, &MALD_voltage, sizeof(MALD_voltage));
+	
+	const uint16_t MALD_TX_bias = A2Up_Page.var.MALD_ADC_IBIAS_msrt;
+	memcpy(A2_Page.var.TxBias, &MALD_TX_bias, sizeof(MALD_TX_bias));
+	
+	const uint16_t MALD_TX_power = A2Up_Page.var.MALD_ADC_IMON;
+	memcpy(A2_Page.var.TxPower, &MALD_TX_power, sizeof(MALD_TX_power));
+	
+	const uint16_t MATA_RX_power = A2Up_Page.var.MATA_ADC_RSSI;
+	memcpy(A2_Page.var.RxPower, &MATA_RX_power, sizeof(MATA_RX_power));
 }
 
 #ifdef __cplusplus
