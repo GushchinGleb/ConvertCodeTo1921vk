@@ -6,15 +6,16 @@ extern "C" {
 #include <stdint.h>
 #include "../inc/tick.h"
 #include "../inc/sfp28.h"
-#include "../inc/soft_i2c.h"
 
 // Configure a general-purpose timer to 1 kHz and roll flags.
 
 uint8_t Time_flags;
-static uint16_t s_ms = 0;
+static uint8_t Timer10ms_count = 0;		// Counter for 10ms timer
+static uint8_t Timer100ms_count = 0;		// Counter for 100ms timer
+static uint32_t us_tick_num = 0;
 
 void tick_init(uint32_t sysclk_hz){
-  const uint32_t timer_freq = 1000u; // 1 kHz
+  const uint32_t timer_freq = 100u; // 100 Hz
   uint32_t delay_tiks = sysclk_hz / timer_freq - 1;
   
   RCU->PCLKCFG |= RCU_PCLKCFG_TMR0EN_Msk | RCU_PCLKCFG_TMR1EN_Msk;
@@ -29,44 +30,46 @@ void tick_init(uint32_t sysclk_hz){
   TMR0->CTRL = TMR_CTRL_ON_Msk | TMR_CTRL_INTEN_Msk;
   TMR0->INTSTATUS = TMR_INTSTATUS_INT_Msk;
   
-  const uint32_t soft_i2c_freq = 100000 * 4; // 400 kHz
-  delay_tiks = sysclk_hz / soft_i2c_freq - 1;
+	// Init timer 1 for us delay function
+	// We don't use interrupt for this timer
+	// Timer will be load and start in delay function
+	us_tick_num = sysclk_hz / 1000000 - 1;
 
-  TMR1->LOAD = delay_tiks;  // [page 56]
-  TMR1->VALUE = 0L;         // [page 56]
-  
-  NVIC_SetPriority(TMR1_IRQn, (1UL << __NVIC_PRIO_BITS) + 5UL); // I2C clock. Midle priority.
-  NVIC_EnableIRQ(TMR1_IRQn);
-  
-  TMR1->CTRL = TMR_CTRL_ON_Msk | TMR_CTRL_INTEN_Msk;
-  TMR1->INTSTATUS = TMR_INTSTATUS_INT_Msk;
+  TMR1->CTRL = 0;	//stop timer
+  TMR1->INTSTATUS = TMR_INTSTATUS_INT_Msk;	//Clear int
   
   return;
 }
 
-extern uint8_t com_i2c_timeout_flag;
-
 void TMR0_IRQHandler(void) { // startup_K1921VK035.s:100
-  s_ms++;
-  if(!(s_ms % 100)) {
-    Time_flags |= TIME_100MS_FLAG;
-    
-    if (com_i2c_timeout_flag > 50) {
-      com_i2c_timeout_flag++;
-      if (com_i2c_timeout_flag > 110) {
-        com_I2C_resset();
-      }
-    }
-  }
-  if(!(s_ms % 500)) {
-    Time_flags |= TIME_500MS_FLAG;
-  }
-  if(!(s_ms % 1000)) {
-    Time_flags |= TIME_1SEC_FLAG;
-    s_ms=0;
-  }
+	//Inc counter
+	Timer10ms_count++;
+	if(Timer10ms_count >= 10) {
+		Time_flags |= TIME_100MS_FLAG;
+		Timer10ms_count = 0;
+		Timer100ms_count++;
+	}
+	if(Timer100ms_count == 5)
+		Time_flags |= TIME_500MS_FLAG;
+	if(Timer100ms_count >= 10) {
+		Time_flags |= TIME_500MS_FLAG;
+		Time_flags |= TIME_1SEC_FLAG;
+		Timer100ms_count = 0;
+	}
   
   TMR0->INTSTATUS = TMR_INTSTATUS_INT_Msk;
+}
+
+// TMR1 is used as delay counter
+void delay_us(uint32_t us_count) {
+  uint32_t Temp_u32 = us_count * us_tick_num;
+  TMR1->LOAD = Temp_u32;  // [page 56]
+	TMR1->VALUE = Temp_u32;         // [page 56]
+  TMR1->INTSTATUS = TMR_INTSTATUS_INT_Msk;
+  TMR1->CTRL = TMR_CTRL_ON_Msk | TMR_CTRL_INTEN_Msk;
+	while(TMR1->INTSTATUS_bit.INT == 0);
+  TMR1->CTRL = 0;	//stop timer
+  TMR1->INTSTATUS = TMR_INTSTATUS_INT_Msk;	//Clear int
 }
 
 // TMR1_IRQHandler is realised in soft_i2c.c

@@ -29,8 +29,9 @@ extern "C" {
 #include <stdint.h>
 
 //-- Defines -------------------------------------------------------------------
-#define CKO_OSI
-#define OSECLK_VAL 16000000
+#define CKO_PLL				//CKO_OSI
+#define SYSCLK_PLL		//SYSCLK_OSI
+//#define OSECLK_VAL 16000000
 
 #define OSICLK_VAL 8000000
 #ifndef OSECLK_VAL
@@ -38,6 +39,7 @@ extern "C" {
 #endif
 #define OSECLK_STARTUP_TIMEOUT 0x100000
 #define SYSCLK_SWITCH_TIMEOUT 0x100000
+#define POWER_STABLE_TIMEOUT 0x100000
 
 //-- Variables -----------------------------------------------------------------
 extern uint32_t SystemCoreClock; // System Clock Frequency (Core Clock)

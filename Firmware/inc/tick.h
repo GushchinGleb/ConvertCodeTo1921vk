@@ -13,6 +13,8 @@ extern "C" {
  */
 void tick_init(uint32_t sysclk_hz);
 
+void delay_us(uint32_t us_count);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

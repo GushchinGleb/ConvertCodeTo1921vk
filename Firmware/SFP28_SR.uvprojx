@@ -7,7 +7,7 @@
 
   <Targets>
     <Target>
-      <TargetName>blinky_K1921VK035</TargetName>
+      <TargetName>SFP28_SR_K1921VK035</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
       <pCCUsed>5060960::V5.06 update 7 (build 960)::.\ARMCC</pCCUsed>
@@ -49,7 +49,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\Objects\</OutputDirectory>
-          <OutputName>blinky</OutputName>
+          <OutputName>SFP28_SR</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>0</CreateHexFile>
@@ -337,9 +337,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>RETARGET, SYSCLK_PLL, OSECLK_VAL=16000000</Define>
+              <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>.\CMSIS\Core\Include;.\CMSIS\Device\Include;.\bsp\NIIET-BB-K1921VK035;..\blinky;.\Retarget</IncludePath>
+              <IncludePath>.\CMSIS\Core\Include;.\CMSIS\Device\Include;.\bsp\NIIET-BB-K1921VK035</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -399,16 +399,6 @@
           <GroupName>src</GroupName>
           <Files>
             <File>
-              <FileName>eeprom_a0a2.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\eeprom_a0a2.c</FilePath>
-            </File>
-            <File>
-              <FileName>flash_if.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\flash_if.c</FilePath>
-            </File>
-            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\main.c</FilePath>
@@ -419,9 +409,19 @@
               <FilePath>.\src\tick.c</FilePath>
             </File>
             <File>
-              <FileName>MATA_37644.c</FileName>
+              <FileName>flash_if.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\MATA_37644.c</FilePath>
+              <FilePath>.\src\flash_if.c</FilePath>
+            </File>
+            <File>
+              <FileName>soft_slave_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\soft_slave_i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>soft_master_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\soft_master_i2c.c</FilePath>
             </File>
             <File>
               <FileName>MALD_37645.c</FileName>
@@ -429,19 +429,9 @@
               <FilePath>.\src\MALD_37645.c</FilePath>
             </File>
             <File>
-              <FileName>com_i2c_api.c</FileName>
+              <FileName>MATA_37644.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\com_i2c_api.c</FilePath>
-            </File>
-            <File>
-              <FileName>soft_i2c.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\soft_i2c.c</FilePath>
-            </File>
-            <File>
-              <FileName>debug_led.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\debug_led.c</FilePath>
+              <FilePath>.\src\MATA_37644.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -452,11 +442,6 @@
               <FileName>board.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\inc\board.h</FilePath>
-            </File>
-            <File>
-              <FileName>eeprom_a0a2.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\inc\eeprom_a0a2.h</FilePath>
             </File>
             <File>
               <FileName>flash_if.h</FileName>
@@ -484,39 +469,14 @@
               <FilePath>.\inc\MALD_37645.h</FilePath>
             </File>
             <File>
-              <FileName>pages.h</FileName>
+              <FileName>soft_slave_i2c.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\inc\pages.h</FilePath>
+              <FilePath>.\inc\soft_slave_i2c.h</FilePath>
             </File>
             <File>
-              <FileName>MASC_37029_defs.h</FileName>
+              <FileName>soft_master_i2c.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\inc\MASC_37029_defs.h</FilePath>
-            </File>
-            <File>
-              <FileName>soft_i2c.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\inc\soft_i2c.h</FilePath>
-            </File>
-            <File>
-              <FileName>debug_led.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\inc\debug_led.h</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>retarget</GroupName>
-          <Files>
-            <File>
-              <FileName>retarget.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\Retarget\retarget.c</FilePath>
-            </File>
-            <File>
-              <FileName>retarget_conf.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\Retarget\retarget_conf.h</FilePath>
+              <FilePath>.\inc\soft_master_i2c.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -533,8 +493,9 @@
   <LayerInfo>
     <Layers>
       <Layer>
-        <LayName>blinky</LayName>
+        <LayName>SFP28_SR</LayName>
         <LayPrjMark>1</LayPrjMark>
+        <LayTitle>K1921_SFP28_SR</LayTitle>
       </Layer>
     </Layers>
   </LayerInfo>

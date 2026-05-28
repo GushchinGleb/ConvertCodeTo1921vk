@@ -7,8 +7,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "../inc/soft_i2c.h"
-#include "../inc/pages.h"
+#include "../inc/soft_master_i2c.h"
+#include "../inc/sfp28.h"
 
 extern A2Up_Page_t A2Up_Page; // from eeprom_a0a2.c
 
@@ -19,7 +19,6 @@ const MALD_37645_cfg_struct_t MALD_37645_default_config;// = { };
 // Init Tx (MALD-37645)
 //==============================================================================
 void Init_MALD_37645(void) {
-  A2Up_Page.var.MALD_status_flags = 0x0; // clear MATA flags
   uint8_t rv; // reg value
   // Read CHIP_ID of UX2291 and compare to constant
   if(read_register_from_MALD(MALD_RA_CHIPID, &rv)) {
@@ -33,7 +32,6 @@ void Init_MALD_37645(void) {
   }
   else {
     A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-    return; // error on the first writer, so srop the initialisation
   }
   
   //Soft Reset of MALD
@@ -197,15 +195,6 @@ void Init_MADL_Default_Cfg(void) {
  * Work with ADC of MASC-37029 chip
  */
 void Work_with_MALD_ADC(void) {
-  if (A2Up_Page.var.MALD_status_flags & ST_MALD_I2C_RW_ERR_FLAG) {
-    A2Up_Page.var.MALD_ADC_V33 = 0xFFFF;
-    A2Up_Page.var.MALD_ADC_IBIAS_ref = 0xFFFF;
-    A2Up_Page.var.MALD_ADC_IBIAS_msrt = 0xFFFF;
-    A2Up_Page.var.MALD_ADC_Temp = 0xFFFF;
-    A2Up_Page.var.MALD_ADC_IMON = 0xFFFF;
-    return; // return invalid state
-  }
-    
   uint8_t ADC_rvs[2]; // registers values
   read_register_from_MALD(MALD_RA_ADC_OUT0_LSBS, &ADC_rvs[0]); // bits: [ 3:0]
   read_register_from_MALD(MALD_RA_ADC_OUT0_MSBS, &ADC_rvs[1]); // bits: [11:4]
@@ -253,10 +242,6 @@ void Work_with_MALD_ADC(void) {
 // Read state of MASC chip
 void Read_MALD_state(void)
 {
-  if (A2Up_Page.var.MALD_status_flags & ST_MALD_I2C_RW_ERR_FLAG) {
-    A2Up_Page.var.MALD_TxFault_state = 0xFF;
-    return; // invalid status
-  }
   uint8_t state;
   //Read state (2 bytes - MASC_LOS_LOL_STATE and MASC_TXFAULT_STATE)
   if (read_register_from_MALD(MALD_RA_LOS_LOL_TX_FAULT, &state)) {
@@ -267,13 +252,10 @@ void Read_MALD_state(void)
 //Read 'Num' bytes from MASC-37029 beginning from 'RegAddr' to buffer
 bool read_register_from_MALD(uint8_t addr, uint8_t *value) {
   uint8_t rx_data = 0x0;
-  if (int_I2C_write(MALD_CHIPID, &addr, 1) != 0) {
+	if(Read_soft_i2c(MALD_CHIPID, addr, &rx_data, 1) != 0) {
     return false;
-  }
-  if (int_I2C_read(MALD_CHIPID, &rx_data, 1) != 0) {
-    return false;
-  }
-
+	}
+  
   *value = rx_data;
   return true;
 }
@@ -284,7 +266,11 @@ bool write_register_to_MALD(uint8_t addr, uint8_t value) {
   send_buff[0] = addr;
   send_buff[1] = value;
   
-  return int_I2C_write(MALD_CHIPID, send_buff, sizeof(send_buff)) == 0;
+	if(Write_soft_i2c(MALD_CHIPID, send_buff, 2) !=0 ) {
+		//Set flag of error
+    return false;
+	}
+	return true;
 }
 
 #ifdef __cplusplus

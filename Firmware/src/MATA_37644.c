@@ -8,8 +8,8 @@ extern "C" {
 #include <stdio.h>
 
 #include "../inc/MATA_37644.h"
-#include "../inc/soft_i2c.h"
-#include "../inc/pages.h"
+#include "../inc/soft_master_i2c.h"
+#include "../inc/sfp28.h"
 
 extern A2Up_Page_t A2Up_Page; // from eeprom_a0a2.c
 
@@ -20,7 +20,6 @@ const MATA_37644_cfg_struct_t MATA_37644_default_config;// = { };
 // Init Rx (MATA-37644)
 //==============================================================================
 void Init_MATA_37644(void) {
-  A2Up_Page.var.MATA_status_flags = 0x0; // clear MATA flags
   uint8_t rv; // reg value
   // Read CHIP_ID of UX2291 and compare to constant
   if(read_register_from_MATA(MATA_RA_CHIPID, &rv)) {
@@ -34,7 +33,6 @@ void Init_MATA_37644(void) {
   }
   else {
     A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-    return; // error on the first writer, so srop the initialisation
   }
   
   //Soft Reset of MATA
@@ -203,12 +201,6 @@ void UpdateCfg_MATA(void)
 
 // Work with ADC of MATA-37029 chip
 void Work_with_MATA_ADC(void) {
-  if (A2Up_Page.var.MATA_status_flags & ST_MATA_I2C_RW_ERR_FLAG) {
-    A2Up_Page.var.MATA_ADC_V33 = 0xFFFF;
-    A2Up_Page.var.MATA_ADC_Temp = 0xFFFF;
-    A2Up_Page.var.MATA_ADC_RSSI = 0xFFFF;
-    return; // return invalid state
-  }
   uint8_t ADC_rvs[2]; // registers values
   read_register_from_MATA(MATA_RA_ADC_OUT0_LSBS, &ADC_rvs[0]); // bits: [ 3:0]
   read_register_from_MATA(MATA_RA_ADC_OUT0_MSBS, &ADC_rvs[1]); // bits: [11:4]
@@ -238,10 +230,6 @@ void Work_with_MATA_ADC(void) {
 
 // Read state of MATA chip
 void Read_MATA_state(void) {
-  if (A2Up_Page.var.MATA_status_flags & ST_MATA_I2C_RW_ERR_FLAG) {
-    A2Up_Page.var.MATA_LOS_LOL_state = 0xFF;
-    return; // return invalid state
-  }
   uint8_t status;
   read_register_from_MATA(MATA_RA_LOS_LOL_STATUS, &status); // [MATA-37644_V3.pdf page 27]
   A2Up_Page.var.MATA_LOS_LOL_state = status;
@@ -250,13 +238,10 @@ void Read_MATA_state(void) {
 //Read 'Num' bytes from MATA-37029 beginning from 'RegAddr' to buffer
 bool read_register_from_MATA(uint8_t addr, uint8_t *value) {
   uint8_t rx_data = 0x0;
-  if (int_I2C_write(MATA_CHIPID, &addr, 1) != 0) {
+	if(Read_soft_i2c(MATA_CHIPID, addr, &rx_data, 1) != 0) {
     return false;
-  }
-  if (int_I2C_read(MATA_CHIPID, &rx_data, 1) != 0) {
-    return false;
-  }
-
+	}
+  
   *value = rx_data;
   return true;
 }
@@ -267,7 +252,11 @@ bool write_register_to_MATA(uint8_t addr, uint8_t value) {
   send_buff[0] = addr;
   send_buff[1] = value;
   
-  return int_I2C_write(MATA_CHIPID, send_buff, sizeof(send_buff)) == 0;
+	if(Write_soft_i2c(MATA_CHIPID, send_buff, 2) !=0 ) {
+		//Set flag of error
+    return false;
+	}
+	return true;
 }
 
 #ifdef __cplusplus

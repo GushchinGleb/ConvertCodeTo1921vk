@@ -60,6 +60,10 @@ void ClkInit()
     uint32_t timeout_counter = 0;
     uint32_t sysclk_source;
 
+    timeout_counter = 0;
+    while (timeout_counter < POWER_STABLE_TIMEOUT)
+        timeout_counter++;
+	
 //clockout control
 #if defined CKO_OSI
     SIU->CLKOUTCTL = SIU_CLKOUTCTL_CLKOUTEN_Msk;
@@ -112,7 +116,7 @@ void ClkInit()
 #elif defined OSICLK_VAL
     RCU->PLLCFG = (RCU_PLLCFG_REFSRC_OSICLK << RCU_PLLCFG_REFSRC_Pos) |
                   (1 << RCU_PLLCFG_N_Pos) |
-                  (25 << RCU_PLLCFG_M_Pos);
+                  (20 << RCU_PLLCFG_M_Pos);
 #else
 #error "Please define OSICLK_VAL and OSECLK_VAL with correct values!"
 #endif
