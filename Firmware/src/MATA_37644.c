@@ -201,10 +201,20 @@ void UpdateCfg_MATA(void)
 
 // Work with ADC of MATA-37029 chip
 void Work_with_MATA_ADC(void) {
-  uint8_t ADC_rvs[2]; // registers values
-  read_register_from_MATA(MATA_RA_ADC_OUT0_LSBS, &ADC_rvs[0]); // bits: [ 3:0]
+  uint8_t config2 = 0xFF;
+  if (!read_register_from_MATA(MATA_RA_ADC_CONFIG2, &config2)) {
+     return;
+  }
+  if (config2) {
+     write_register_to_MATA(MATA_RA_ADC_CONFIG2, 0x0);
+    return;
+  }
+
+  uint8_t ADC_rvs[2] = {0xFF, 0xFF}; // registers values
+  
   read_register_from_MATA(MATA_RA_ADC_OUT0_MSBS, &ADC_rvs[1]); // bits: [11:4]
-  uint16_t value = ((ADC_rvs[1] << 4) | (ADC_rvs[0] & 0xF));
+  read_register_from_MATA(MATA_RA_ADC_OUT0_LSBS, &ADC_rvs[0]); // bits: [ 3:0]
+  uint16_t value = (((uint16_t)ADC_rvs[1] << 4) | (ADC_rvs[0] & 0xF));
   read_register_from_MATA(MATA_RA_ADC_CONFIG0, &A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG0);
 
   switch(A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG0) {

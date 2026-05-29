@@ -97,8 +97,8 @@ typedef struct A2_Page_TypeDef {
   uint8_t Reserved[3];     //92..94 -
   uint8_t CC_DMI;          //95 - Check code for Base Diagnostic Fields (addresses 0 to 94)
   //96..105 - Diagnostics
-  uint8_t Temperature[2];  //96..97 - Internally measured module temperature (1st - MSB, 2nd - LSB)
-  uint8_t Vcc[2];          //98..99 - Internally measured supply voltage in transceiver (1st - MSB, 2nd - LSB)
+  uint8_t MATA_Temp[2];    //96..97 - Internally measured module temperature (1st - MSB, 2nd - LSB)
+  uint8_t MATA_Vcc[2];     //98..99 - Internally measured supply voltage in transceiver (1st - MSB, 2nd - LSB)
   uint8_t TxBias[2];       //100..101 - Internally measured TX Bias Current (1st - MSB, 2nd - LSB)
   uint8_t TxPower[2];      //102..103 - Measured TX output power (1st - MSB, 2nd - LSB)
   uint8_t RxPower[2];      //104..105 - Measured RX input power (1st - MSB, 2nd - LSB)
@@ -168,7 +168,7 @@ typedef struct A2Up_Page_TypeDef {
   uint16_t MALD_ADC_IBIAS_ref;  //202..203 - ADC result for IBIAS reference (from MADL)
   uint16_t MALD_ADC_IBIAS_msrt; //204..205 - ADC result for IBIAS measurement (from MADL)
   uint16_t MALD_ADC_IMON;       //206..207 - ADC result for MDIN MD current sink (from MADL)
-  uint8_t  Reserved206[10];     //208..217 - reserved
+  uint8_t  Reserved208[10];     //208..217 - reserved
   uint8_t  GrpCommand;          //218 - Group command, it will clear after action
   uint8_t  GrpAddress;          //219 - Address for Group command
   uint8_t  GrpSize;             //220 - Size for Group command

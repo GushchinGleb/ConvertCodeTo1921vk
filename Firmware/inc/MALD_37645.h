@@ -10,10 +10,10 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#define MALD_CHIPID 0x0F // I2C address of the chip
+#define MALD_CHIPID (0x0F << 1) // I2C address of the chip
 
 // --- Registers address [MAld-37645_V3.pdf page 24]
-#define MALD_RA_CHIPID             0x00 // always 0x8E
+#define MALD_RA_CHIPID             0x00 // always 0x8F
 #define MALD_RA_REVID              0x01 // always 0x01
 #define MALD_RA_RESET              0x02 // write -> 0xAA -> reset
 #define MALD_RA_IO_CTRL            0x03 // [MAld-37645_V3.pdf page 26] and so on

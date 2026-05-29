@@ -195,10 +195,19 @@ void Init_MADL_Default_Cfg(void) {
  * Work with ADC of MASC-37029 chip
  */
 void Work_with_MALD_ADC(void) {
-  uint8_t ADC_rvs[2]; // registers values
-  read_register_from_MALD(MALD_RA_ADC_OUT0_LSBS, &ADC_rvs[0]); // bits: [ 3:0]
+	if (!read_register_from_MALD(MALD_RA_ADC_CONFIG2, &A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG2)) {
+		A2Up_Page.var.Reserved208[5] = 0xFF;
+		return;
+	}
+	if (A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG2) {
+		write_register_to_MATA(MATA_RA_ADC_CONFIG2, 0x0);
+		return;
+	}
+	
+  uint8_t ADC_rvs[2] = {0xFF, 0xFF}; // registers values
   read_register_from_MALD(MALD_RA_ADC_OUT0_MSBS, &ADC_rvs[1]); // bits: [11:4]
-  uint16_t ADC_value = ((ADC_rvs[1] << 4) | (ADC_rvs[0] & 0xF));
+  read_register_from_MALD(MALD_RA_ADC_OUT0_LSBS, &ADC_rvs[0]); // bits: [ 3:0]
+  uint16_t ADC_value = (((uint16_t)ADC_rvs[1] << 4) | (ADC_rvs[0] & 0xF));
   read_register_from_MALD(MALD_RA_ADC_CONFIG0, &A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG0);
   
   uint8_t config = (A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG0 & 0x0F) << 4;
@@ -210,7 +219,7 @@ void Work_with_MALD_ADC(void) {
   switch(config) {
   case 0x00: // VCC33
     A2Up_Page.var.MALD_ADC_V33 = ADC_value;
-    config = 0x01;
+    config = 0x02;
     break;
   case 0x02: // IBIAS reference
     A2Up_Page.var.MALD_ADC_IBIAS_ref = ADC_value;
@@ -232,11 +241,8 @@ void Work_with_MALD_ADC(void) {
   }
 
   //Write to ADC control (start new conversion) ans save new stage
-  A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG0 = config >> 4;
-  write_register_to_MATA(MALD_RA_ADC_CONFIG0, A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG0);
-
-  A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_TX_SELECT = config & 0xF;
-  write_register_to_MATA(MALD_RA_ADC_TX_SELECT, A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_TX_SELECT);
+  write_register_to_MALD(MALD_RA_ADC_CONFIG0, config >> 4);
+  write_register_to_MALD(MALD_RA_ADC_TX_SELECT, config & 0xF);
 }
 
 // Read state of MASC chip

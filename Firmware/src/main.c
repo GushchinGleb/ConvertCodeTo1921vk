@@ -25,6 +25,7 @@ void periph_init(void);
 void Check_timer_interval(void);
 void Load_memory_from_Flash(void);
 void Check_register_action(void);
+void Update_diagnostic_regs(void);
 
 extern uint8_t Time_flags;
 
@@ -163,6 +164,8 @@ void Check_timer_interval() {
 
     Work_with_MATA_ADC();
     Work_with_MALD_ADC();
+
+    Update_diagnostic_regs();
   }
 	
   if(Time_flags & TIME_500MS_FLAG) { // 500 ms
@@ -428,6 +431,35 @@ void Check_register_action(void) {
   }
 
   A2Up_Page.var.GrpCommand = 0;  //Command is handled -> Clear it
+}
+//====================================
+
+//====================================
+void Update_diagnostic_regs(void) {
+	// Stat_Control is updated in `read_in_pins`
+	A2_Page_TypeDef* A2 = &A2_Page.var;
+	A2Up_Page_TypeDef* A2Up = &A2Up_Page.var;
+	
+	A2->MATA_Temp[0] = A2Up->MATA_ADC_Temp >> 8;
+	A2->MATA_Temp[1] = A2Up->MATA_ADC_Temp & 0xFF;
+	
+	A2->MATA_Vcc[0] = A2Up->MATA_ADC_V33 >> 8;
+	A2->MATA_Vcc[1] = A2Up->MATA_ADC_V33 & 0xFF;
+
+	A2->TxBias[0] = A2Up->MALD_ADC_IBIAS_msrt >> 8;
+	A2->TxBias[1] = A2Up->MALD_ADC_IBIAS_msrt & 0xFF;
+
+	A2->TxPower[0] = A2Up->MALD_ADC_IMON >> 8;
+	A2->TxPower[1] = A2Up->MALD_ADC_IMON & 0xFF;
+	
+	A2->RxPower[0] = A2Up->MATA_ADC_RSSI >> 8;
+	A2->RxPower[1] = A2Up->MATA_ADC_RSSI & 0xFF;
+
+//	A2->MALD_Vcc[0] = A2Up->MALD_ADC_V33 >> 8;
+//	A2->MALD_Vcc[1] = A2Up->MALD_ADC_V33 & 0xFF;
+
+//	A2->MALD_Temp[0] = A2Up->MALD_ADC_Temp >> 8;
+//	A2->MALD_Temp[1] = A2Up->MALD_ADC_Temp & 0xFF;
 }
 //====================================
 
