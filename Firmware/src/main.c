@@ -440,20 +440,33 @@ void Update_diagnostic_regs(void) {
 	A2_Page_TypeDef* A2 = &A2_Page.var;
 	A2Up_Page_TypeDef* A2Up = &A2Up_Page.var;
 	
-	A2->MATA_Temp[0] = A2Up->MATA_ADC_Temp >> 8;
-	A2->MATA_Temp[1] = A2Up->MATA_ADC_Temp & 0xFF;
+	const float MATA_temp = 0.29f * ((float)A2Up->MATA_ADC_Temp - 1133.f) + 25.f; // [deg]
+	const int16_t MATA_temp_i = (int16_t)(MATA_temp * 256.f + 0.5f); // compatibility with old CARL GUI
+	A2->MATA_Temp[0] = MATA_temp_i >> 8;
+	A2->MATA_Temp[1] = MATA_temp_i & 0xFF;
 	
-	A2->MATA_Vcc[0] = A2Up->MATA_ADC_V33 >> 8;
-	A2->MATA_Vcc[1] = A2Up->MATA_ADC_V33 & 0xFF;
-
-	A2->TxBias[0] = A2Up->MALD_ADC_IBIAS_msrt >> 8;
-	A2->TxBias[1] = A2Up->MALD_ADC_IBIAS_msrt & 0xFF;
-
-	A2->TxPower[0] = A2Up->MALD_ADC_IMON >> 8;
-	A2->TxPower[1] = A2Up->MALD_ADC_IMON & 0xFF;
+	const float MATA_3v3 = (float)A2Up->MATA_ADC_V33 / 594.f; // [V]
+	const int16_t MATA_3v3_i = (int16_t)(MATA_3v3 * 10000.f + 0.5f); // compatibility with old CARL GUI
+	A2->MATA_Vcc[0] = MATA_3v3_i >> 8;
+	A2->MATA_Vcc[1] = MATA_3v3_i & 0xFF;
 	
-	A2->RxPower[0] = A2Up->MATA_ADC_RSSI >> 8;
-	A2->RxPower[1] = A2Up->MATA_ADC_RSSI & 0xFF;
+	const float IBIAS_VAR1 = 1.f; // MALD datasheet page 18
+	const uint16_t IBIAS_VAR2 = A2Up_Page.var.MALD_ADC_IBIAS_ref;
+	const uint16_t IBIAS_VAR3 = A2Up->MALD_ADC_IBIAS_msrt;
+	const float MALD_IBIAS = (float)(IBIAS_VAR3 - IBIAS_VAR2) * IBIAS_VAR1 * 40.1e-6f * 1000.f; // [mA] MALD datasheet page 16
+	const int16_t MALD_IBIAS_i = (int16_t)(MALD_IBIAS * 500.f + 0.5f); // compatibility with old CARL GUI
+	A2->TxBias[0] = MALD_IBIAS_i >> 8;
+	A2->TxBias[1] = MALD_IBIAS_i & 0xFF;
+	
+	const float MALD_IMON = (float)A2Up->MALD_ADC_IMON * 411e-9f * 1e3f; // [mA]
+	const int16_t MALD_IMON_i = (int16_t)(MALD_IMON * 10000.f + 0.5f); // compatibility with old CARL GUI
+	A2->TxPower[0] = MALD_IMON_i >> 8;
+	A2->TxPower[1] = MALD_IMON_i & 0xFF;
+	
+	const float MATA_RSII = (float)A2Up->MATA_ADC_RSSI * 411e-9f * 1e3f; // [mA]
+	const int16_t MATA_RSII_i = (int16_t)(MATA_RSII * 10000.f + 0.5f); // compatibility with old CARL GUI
+	A2->RxPower[0] = MATA_RSII_i >> 8;
+	A2->RxPower[1] = MATA_RSII_i & 0xFF;
 
 //	A2->MALD_Vcc[0] = A2Up->MALD_ADC_V33 >> 8;
 //	A2->MALD_Vcc[1] = A2Up->MALD_ADC_V33 & 0xFF;
