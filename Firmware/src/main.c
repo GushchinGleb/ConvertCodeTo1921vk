@@ -451,8 +451,8 @@ void Update_diagnostic_regs(void) {
 	A2->MATA_Vcc[1] = MATA_3v3_i & 0xFF;
 	
 	const float IBIAS_VAR1 = 1.f; // MALD datasheet page 18
-	const uint16_t IBIAS_VAR2 = A2Up_Page.var.MALD_ADC_IBIAS_ref;
-	const uint16_t IBIAS_VAR3 = A2Up->MALD_ADC_IBIAS_msrt;
+	const int16_t IBIAS_VAR2 = (int16_t)A2Up_Page.var.MALD_ADC_IBIAS_ref;
+	const int16_t IBIAS_VAR3 = (int16_t)A2Up->MALD_ADC_IBIAS_msrt;
 	const float MALD_IBIAS = (float)(IBIAS_VAR3 - IBIAS_VAR2) * IBIAS_VAR1 * 40.1e-6f * 1000.f; // [mA] MALD datasheet page 16
 	const int16_t MALD_IBIAS_i = (int16_t)(MALD_IBIAS * 500.f + 0.5f); // compatibility with old CARL GUI
 	A2->TxBias[0] = MALD_IBIAS_i >> 8;
