@@ -29,6 +29,8 @@ void Update_diagnostic_regs(void);
 
 extern uint8_t Time_flags;
 
+int8_t master_i2c_status = 0; // -1 -- error
+
 //Temp variables
 uint8_t Temp_buffer[128];
 uint8_t Temp_page_data[128];
@@ -49,6 +51,10 @@ int main (void) {
 
 	//Load SFP28 module memory blocks from flash
 	Load_memory_from_Flash();
+	
+	const char comp_time[32] = __TIME__;
+	// the minute of the compilation
+	A2_Page.var.Reserved_1 = comp_time[4] - '0' + (comp_time[3] - '0') * 10;
   
   Init_MALD_37645();
   Init_MATA_37644();
@@ -112,9 +118,6 @@ static void gpio_init(){
 	// LOS 
 	GPIO_LOS->DENSET = LOS_PIN_MASK; // OUT enable [page 210]
   GPIO_LOS->OUTENSET = LOS_PIN_MASK; // [page 51], [page 9]
-	//TEST
-//  GPIO_LOS->OUTMODE_bit.LOS_PIN = 0x1 ; // open drain [page 51] [page 212]
-	//TEST
   GPIO_LOS->DATAOUTSET = LOS_PIN_MASK;       // default level is High
 
 	// RS0 input from SFP connector
@@ -153,7 +156,7 @@ void periph_init() {
 	soft_i2c_slave_init();
 
 	// Init master interface to internal devices 
-	soft_i2c_master_init();
+	master_i2c_status = soft_i2c_master_init();
 }
 //====================================
 
@@ -166,6 +169,19 @@ void Check_timer_interval() {
     Work_with_MALD_ADC();
 
     Update_diagnostic_regs();
+		
+    const int MALD_fail = A2Up_Page.var.MALD_status_flags & ST_MALD_I2C_RW_ERR_FLAG;
+    const int MATA_fail = A2Up_Page.var.MATA_status_flags & ST_MATA_I2C_RW_ERR_FLAG;
+
+    if (MALD_fail && MATA_fail) { // rapid puls
+	    GPIO_LOS->DATAOUTTGL = LOS_PIN_MASK;
+    }
+    else if (MALD_fail) { // long puls
+	    GPIO_LOS->DATAOUTSET = LOS_PIN_MASK;
+    }
+    else if (MATA_fail) { // short puls
+      GPIO_LOS->DATAOUTCLR = LOS_PIN_MASK;
+    }
   }
 	
   if(Time_flags & TIME_500MS_FLAG) { // 500 ms
@@ -173,6 +189,10 @@ void Check_timer_interval() {
 
     Read_MALD_state();
     Read_MATA_state();
+		
+    if (master_i2c_status != 0) {
+	    GPIO_LOS->DATAOUTCLR = LOS_PIN_MASK;
+    }
   }
 	
   if(Time_flags & TIME_1SEC_FLAG) { // 1 s
@@ -184,9 +204,6 @@ void Check_timer_interval() {
 
     //TEST
 		GPIO_LOS->DATAOUTTGL = LOS_PIN_MASK;
-//		GPIO_LOS->DATAOUTCLR = LOS_PIN_MASK;
-//		GPIO_LOS->DATAOUTSET = LOS_PIN_MASK;
-		GPIO_RST_TX->DATAOUTTGL = RST_TX_MASK;
     //TEST
 	}
 }

@@ -155,9 +155,12 @@ static uint8_t i2c_inb(void) {
 static int test_bus(void) {
 
 	//Testing bus SDA and SCL
+	
+	int result = 0;
 
 	if ((GPIO_DEV_I2C->DATA & DEV_SDA_MASK) == 0) {
 		//bus seems to be busy
+		result = -1;
 		goto bailout;
 	}
 
@@ -165,6 +168,7 @@ static int test_bus(void) {
 	delay_us(MAS_I2C_DELAY_HALF);
 	if (GPIO_DEV_I2C->DATA & DEV_SDA_MASK) {
 		// SDA stuck high!
+		result = -2;
 		goto bailout;
 	}
 
@@ -172,6 +176,7 @@ static int test_bus(void) {
 	delay_us(MAS_I2C_DELAY_HALF);
 	if ((GPIO_DEV_I2C->DATA & DEV_SDA_MASK) == 0) {
 		// SDA stuck low!
+		result = -3;
 		goto bailout;
 	}
 
@@ -179,6 +184,7 @@ static int test_bus(void) {
 	delay_us(MAS_I2C_DELAY_HALF);
 	if ((GPIO_DEV_I2C->DATA & DEV_SDA_MASK) == 0) {
 		// SDA unexpected low while pulling SCL low!
+		result = -4;
 		goto bailout;
 	}
 
@@ -186,11 +192,12 @@ static int test_bus(void) {
 	delay_us(MAS_I2C_DELAY_HALF);
 	if ((GPIO_DEV_I2C->DATA & DEV_SDA_MASK) == 0) {
 		// SDA unexpected low while pulling SCL high!
+		result = -5;
 		goto bailout;
 	}
 
 //	i2c_dbg("Test OK\n");
-	return 0;
+	return result;
 
 	bailout: //
 	sclhi();
@@ -198,7 +205,7 @@ static int test_bus(void) {
 	sdahi();
 	delay_us(MAS_I2C_DELAY_HALF);
 
-	return -1;
+	return result;
 }
 
 /* ----- Utility functions
@@ -328,10 +335,12 @@ int soft_i2c_master_init(void) {
   GPIO_DEV_I2C->DATAOUTSET = DEV_SCL_MASK | DEV_SDA_MASK;       // SDA and SCL high
   GPIO_DEV_I2C->OUTENSET = DEV_SCL_MASK | DEV_SDA_MASK;   // allow to control port by DATAOUT [page 51] [page 213]
   GPIO_DEV_I2C->DENSET = DEV_SCL_MASK | DEV_SDA_MASK; // connect control to the physical port
-
-	if (test_bus()) {
-		//TODO set error
-		return -1;
+	
+	delay_us(MAS_I2C_DELAY_HALF);
+	
+	const int test_result = test_bus(); // 0 -- success; -1, -2, ... -- test failed
+	if (test_result) {
+		return test_result;
 	}
 
 	i2c_master_inited = 1;

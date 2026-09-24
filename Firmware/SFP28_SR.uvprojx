@@ -337,7 +337,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define></Define>
+              <Define>SYSCLK_OSI</Define>
               <Undefine></Undefine>
               <IncludePath>.\CMSIS\Core\Include;.\CMSIS\Device\Include;.\bsp\NIIET-BB-K1921VK035</IncludePath>
             </VariousControls>
