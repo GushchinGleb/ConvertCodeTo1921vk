@@ -157,27 +157,29 @@ bool write_register_to_MATA(uint8_t addr, uint8_t value) {
 }
 
 void update_MATA_config(void) {
-//write_register_to_MATA(MATA_RA_CHIPID          , A2Up_Page.var.MATA_cfg.MATA_cfg.CHIPID          ); // read only
-//write_register_to_MATA(MATA_RA_REVID           , A2Up_Page.var.MATA_cfg.MATA_cfg.REVID           ); // read only
-  write_register_to_MATA(MATA_RA_RESET           , A2Up_Page.var.MATA_cfg.MATA_cfg.RESET           );
-  write_register_to_MATA(MATA_RA_MONITORS        , A2Up_Page.var.MATA_cfg.MATA_cfg.MONITORS        );
-  write_register_to_MATA(MATA_RA_CDRCTRL         , A2Up_Page.var.MATA_cfg.MATA_cfg.CDRCTRL         );
-  write_register_to_MATA(MATA_RA_I2C_ADDRESS_MODE, A2Up_Page.var.MATA_cfg.MATA_cfg.I2C_ADDRESS_MODE);
-  write_register_to_MATA(MATA_RA_CHANNEL_MODE    , A2Up_Page.var.MATA_cfg.MATA_cfg.CHANNEL_MODE    );
-  write_register_to_MATA(MATA_RA_LOCKPHASE       , A2Up_Page.var.MATA_cfg.MATA_cfg.LOCKPHASE       );
-  write_register_to_MATA(MATA_RA_LOS_MODE        , A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_MODE        );
-//write_register_to_MATA(MATA_RA_LOS_LOL_STATUS  , A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_LOL_STATUS  ); // read only
-  write_register_to_MATA(MATA_RA_LOS_LOL_ALARM   , A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_LOL_ALARM   );
-  write_register_to_MATA(MATA_RA_LOS_CTRL        , A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_CTRL        );
-  write_register_to_MATA(MATA_RA_SLA             , A2Up_Page.var.MATA_cfg.MATA_cfg.SLA             );
-  write_register_to_MATA(MATA_RA_TIA_CTRL        , A2Up_Page.var.MATA_cfg.MATA_cfg.TIA_CTRL        );
-  write_register_to_MATA(MATA_RA_OUTPUT_CTRL     , A2Up_Page.var.MATA_cfg.MATA_cfg.OUTPUT_CTRL     );
-  write_register_to_MATA(MATA_RA_OUTPUT_SWING    , A2Up_Page.var.MATA_cfg.MATA_cfg.OUTPUT_SWING    );
-  write_register_to_MATA(MATA_RA_OUTPUT_DEEMPH   , A2Up_Page.var.MATA_cfg.MATA_cfg.OUTPUT_DEEMPH   );
-//write_register_to_MATA(MATA_RA_ADC_CONFIG0     , A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG0     ); // controled by Work_with_MATA_ADC
-//write_register_to_MATA(MATA_RA_ADC_CONFIG2     , A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG2     ); // controled by Work_with_MATA_ADC
-//write_register_to_MATA(MATA_RA_ADC_OUT0_MSBS   , A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_OUT0_MSBS   ); // controled by Work_with_MATA_ADC
-//write_register_to_MATA(MATA_RA_ADC_OUT0_LSBS   , A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_OUT0_LSBS   ); // controled by Work_with_MATA_ADC
+  MATA_37644_cfg_struct_t* MATA_cfg = &A2Up_Page.var.MATA_cfg.MATA_cfg;
+
+//write_register_to_MATA(MATA_RA_CHIPID          , MATA_cfg->CHIPID          ); // read only
+//write_register_to_MATA(MATA_RA_REVID           , MATA_cfg->REVID           ); // read only
+  write_register_to_MATA(MATA_RA_RESET           , MATA_cfg->RESET           );
+  write_register_to_MATA(MATA_RA_MONITORS        , MATA_cfg->MONITORS        );
+  write_register_to_MATA(MATA_RA_CDRCTRL         , MATA_cfg->CDRCTRL         );
+  write_register_to_MATA(MATA_RA_I2C_ADDRESS_MODE, MATA_cfg->I2C_ADDRESS_MODE);
+  write_register_to_MATA(MATA_RA_CHANNEL_MODE    , MATA_cfg->CHANNEL_MODE    );
+  write_register_to_MATA(MATA_RA_LOCKPHASE       , MATA_cfg->LOCKPHASE       );
+  write_register_to_MATA(MATA_RA_LOS_MODE        , MATA_cfg->LOS_MODE        );
+//write_register_to_MATA(MATA_RA_LOS_LOL_STATUS  , MATA_cfg->LOS_LOL_STATUS  ); // read only
+  write_register_to_MATA(MATA_RA_LOS_LOL_ALARM   , MATA_cfg->LOS_LOL_ALARM   );
+  write_register_to_MATA(MATA_RA_LOS_CTRL        , MATA_cfg->LOS_CTRL        );
+  write_register_to_MATA(MATA_RA_SLA             , MATA_cfg->SLA             );
+  write_register_to_MATA(MATA_RA_TIA_CTRL        , MATA_cfg->TIA_CTRL        );
+  write_register_to_MATA(MATA_RA_OUTPUT_CTRL     , MATA_cfg->OUTPUT_CTRL     );
+  write_register_to_MATA(MATA_RA_OUTPUT_SWING    , MATA_cfg->OUTPUT_SWING    );
+  write_register_to_MATA(MATA_RA_OUTPUT_DEEMPH   , MATA_cfg->OUTPUT_DEEMPH   );
+//write_register_to_MATA(MATA_RA_ADC_CONFIG0     , MATA_cfg->ADC_CONFIG0     ); // controled by Work_with_MATA_ADC
+//write_register_to_MATA(MATA_RA_ADC_CONFIG2     , MATA_cfg->ADC_CONFIG2     ); // controled by Work_with_MATA_ADC
+//write_register_to_MATA(MATA_RA_ADC_OUT0_MSBS   , MATA_cfg->ADC_OUT0_MSBS   ); // controled by Work_with_MATA_ADC
+//write_register_to_MATA(MATA_RA_ADC_OUT0_LSBS   , MATA_cfg->ADC_OUT0_LSBS   ); // controled by Work_with_MATA_ADC
 }
 
 void cmd_write_MATA_config(void) {

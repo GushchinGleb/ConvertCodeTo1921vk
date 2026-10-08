@@ -173,32 +173,34 @@ bool write_register_to_MALD(uint8_t addr, uint8_t value) {
 }
 
 void update_MALD_config(void) {
-//write_register_to_MALD(MALD_RA_CHIPID           , A2Up_Page.var.MALD_cfg.MALD_cfg.CHIPID           ); // read only
-//write_register_to_MALD(MALD_RA_REVID            , A2Up_Page.var.MALD_cfg.MALD_cfg.REVID            ); // read only
-  write_register_to_MALD(MALD_RA_RESET            , A2Up_Page.var.MALD_cfg.MALD_cfg.RESET            );
-  write_register_to_MALD(MALD_RA_IO_CTRL          , A2Up_Page.var.MALD_cfg.MALD_cfg.IO_CTRL          );
-  write_register_to_MALD(MALD_RA_CDRCTRL          , A2Up_Page.var.MALD_cfg.MALD_cfg.CDRCTRL          );
-  write_register_to_MALD(MALD_RA_I2C_ADDRESS_MODE , A2Up_Page.var.MALD_cfg.MALD_cfg.I2C_ADDRESS_MODE );
-  write_register_to_MALD(MALD_RA_CHANNEL_MODE     , A2Up_Page.var.MALD_cfg.MALD_cfg.CHANNEL_MODE     );
-  write_register_to_MALD(MALD_RA_LOCKPHASE        , A2Up_Page.var.MALD_cfg.MALD_cfg.LOCKPHASE        );
-//write_register_to_MALD(MALD_RA_LOS_LOL_TX_FAULT , A2Up_Page.var.MALD_cfg.MALD_cfg.LOS_LOL_TX_FAULT ); // read only
-  write_register_to_MALD(MALD_RA_LOS_LOL_TX_ALARM , A2Up_Page.var.MALD_cfg.MALD_cfg.LOS_LOL_TX_ALARM );
-  write_register_to_MALD(MALD_RA_IGNORE_TX_FAULT  , A2Up_Page.var.MALD_cfg.MALD_cfg.IGNORE_TX_FAULT  );
-  write_register_to_MALD(MALD_RA_LOS_THRSH_AUTO_SQ, A2Up_Page.var.MALD_cfg.MALD_cfg.LOS_THRSH_AUTO_SQ);
-  write_register_to_MALD(MALD_RA_CTLE_X           , A2Up_Page.var.MALD_cfg.MALD_cfg.CTLE_X           );
-  write_register_to_MALD(MALD_RA_OUTPUT_MUTE_SLEW , A2Up_Page.var.MALD_cfg.MALD_cfg.OUTPUT_MUTE_SLEW );
-  write_register_to_MALD(MALD_RA_LBIAS            , A2Up_Page.var.MALD_cfg.MALD_cfg.LBIAS            );
-  write_register_to_MALD(MALD_RA_LMOD             , A2Up_Page.var.MALD_cfg.MALD_cfg.LMOD             );
-  write_register_to_MALD(MALD_RA_PREFALL          , A2Up_Page.var.MALD_cfg.MALD_cfg.PREFALL          );
-  write_register_to_MALD(MALD_RA_TDE              , A2Up_Page.var.MALD_cfg.MALD_cfg.TDE              );
-  write_register_to_MALD(MALD_RA_CROSSING_ADJ     , A2Up_Page.var.MALD_cfg.MALD_cfg.CROSSING_ADJ     );
-  write_register_to_MALD(MALD_RA_LBUMIN           , A2Up_Page.var.MALD_cfg.MALD_cfg.LBUMIN           );
-//write_register_to_MALD(MALD_RA_BUMIN_ENABLE     , A2Up_Page.var.MALD_cfg.MALD_cfg.BUMIN_ENABLE     ); // read only
-//write_register_to_MALD(MALD_RA_ADC_CONFIG0      , A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG0      ); // controled by Work_with_MALD_ADC
-//write_register_to_MALD(MALD_RA_ADC_CONFIG2      , A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG2      ); // controled by Work_with_MALD_ADC
-//write_register_to_MALD(MALD_RA_ADC_OUT0_MSBS    , A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_OUT0_MSBS    ); // controled by Work_with_MALD_ADC
-//write_register_to_MALD(MALD_RA_ADC_OUT0_LSBS    , A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_OUT0_LSBS    ); // controled by Work_with_MALD_ADC
-//write_register_to_MALD(MALD_RA_ADC_TX_SELECT    , A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_TX_SELECT    ); // controled by Work_with_MALD_ADC
+  MALD_37645_cfg_struct_t* MALD_cfg = &A2Up_Page.var.MALD_cfg.MALD_cfg;
+
+//write_register_to_MALD(MALD_RA_CHIPID           , MALD_cfg->CHIPID           ); // read only
+//write_register_to_MALD(MALD_RA_REVID            , MALD_cfg->REVID            ); // read only
+  write_register_to_MALD(MALD_RA_RESET            , MALD_cfg->RESET            );
+  write_register_to_MALD(MALD_RA_IO_CTRL          , MALD_cfg->IO_CTRL          );
+  write_register_to_MALD(MALD_RA_CDRCTRL          , MALD_cfg->CDRCTRL          );
+  write_register_to_MALD(MALD_RA_I2C_ADDRESS_MODE , MALD_cfg->I2C_ADDRESS_MODE );
+  write_register_to_MALD(MALD_RA_CHANNEL_MODE     , MALD_cfg->CHANNEL_MODE     );
+  write_register_to_MALD(MALD_RA_LOCKPHASE        , MALD_cfg->LOCKPHASE        );
+//write_register_to_MALD(MALD_RA_LOS_LOL_TX_FAULT , MALD_cfg->LOS_LOL_TX_FAULT ); // read only
+  write_register_to_MALD(MALD_RA_LOS_LOL_TX_ALARM , MALD_cfg->LOS_LOL_TX_ALARM );
+  write_register_to_MALD(MALD_RA_IGNORE_TX_FAULT  , MALD_cfg->IGNORE_TX_FAULT  );
+  write_register_to_MALD(MALD_RA_LOS_THRSH_AUTO_SQ, MALD_cfg->LOS_THRSH_AUTO_SQ);
+  write_register_to_MALD(MALD_RA_CTLE_X           , MALD_cfg->CTLE_X           );
+  write_register_to_MALD(MALD_RA_OUTPUT_MUTE_SLEW , MALD_cfg->OUTPUT_MUTE_SLEW );
+  write_register_to_MALD(MALD_RA_LBIAS            , MALD_cfg->LBIAS            );
+  write_register_to_MALD(MALD_RA_LMOD             , MALD_cfg->LMOD             );
+  write_register_to_MALD(MALD_RA_PREFALL          , MALD_cfg->PREFALL          );
+  write_register_to_MALD(MALD_RA_TDE              , MALD_cfg->TDE              );
+  write_register_to_MALD(MALD_RA_CROSSING_ADJ     , MALD_cfg->CROSSING_ADJ     );
+  write_register_to_MALD(MALD_RA_LBUMIN           , MALD_cfg->LBUMIN           );
+//write_register_to_MALD(MALD_RA_BUMIN_ENABLE     , MALD_cfg->BUMIN_ENABLE     ); // read only
+//write_register_to_MALD(MALD_RA_ADC_CONFIG0      , MALD_cfg->ADC_CONFIG0      ); // controled by Work_with_MALD_ADC
+//write_register_to_MALD(MALD_RA_ADC_CONFIG2      , MALD_cfg->ADC_CONFIG2      ); // controled by Work_with_MALD_ADC
+//write_register_to_MALD(MALD_RA_ADC_OUT0_MSBS    , MALD_cfg->ADC_OUT0_MSBS    ); // controled by Work_with_MALD_ADC
+//write_register_to_MALD(MALD_RA_ADC_OUT0_LSBS    , MALD_cfg->ADC_OUT0_LSBS    ); // controled by Work_with_MALD_ADC
+//write_register_to_MALD(MALD_RA_ADC_TX_SELECT    , MALD_cfg->ADC_TX_SELECT    ); // controled by Work_with_MALD_ADC
 }
 
 void cmd_write_MALD_config(void) {
