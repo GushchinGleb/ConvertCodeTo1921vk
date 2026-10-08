@@ -120,16 +120,18 @@ void Read_MATA_state(void) {
     A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
   }
   
+  MATA_37644_cfg_struct_t* MATA_cfg = &A2Up_Page.var.MATA_cfg.MATA_cfg;
+  
   // Read only registers
-  write_register_to_MATA(MATA_RA_CHIPID, A2Up_Page.var.MATA_cfg.MATA_cfg.CHIPID);
-  write_register_to_MATA(MATA_RA_REVID, A2Up_Page.var.MATA_cfg.MATA_cfg.REVID);
-  write_register_to_MATA(MATA_RA_LOS_LOL_STATUS, A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_LOL_STATUS);
+  read_register_from_MATA(MATA_RA_CHIPID, &MATA_cfg->CHIPID);
+  read_register_from_MATA(MATA_RA_REVID, &MATA_cfg->REVID);
+  read_register_from_MATA(MATA_RA_LOS_LOL_STATUS, &MATA_cfg->LOS_LOL_STATUS);
   
   // ADC registers
-  write_register_to_MATA(MATA_RA_ADC_CONFIG0, A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG0);
-  write_register_to_MATA(MATA_RA_ADC_CONFIG2, A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG2);
-  write_register_to_MATA(MATA_RA_ADC_OUT0_MSBS, A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_OUT0_MSBS);
-  write_register_to_MATA(MATA_RA_ADC_OUT0_LSBS, A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_OUT0_LSBS);
+  read_register_from_MATA(MATA_RA_ADC_CONFIG0, &MATA_cfg->ADC_CONFIG0);
+  read_register_from_MATA(MATA_RA_ADC_CONFIG2, &MATA_cfg->ADC_CONFIG2);
+  read_register_from_MATA(MATA_RA_ADC_OUT0_MSBS, &MATA_cfg->ADC_OUT0_MSBS);
+  read_register_from_MATA(MATA_RA_ADC_OUT0_LSBS, &MATA_cfg->ADC_OUT0_LSBS);
 }
 
 //Read 'Num' bytes from MATA-37029 beginning from 'RegAddr' to buffer

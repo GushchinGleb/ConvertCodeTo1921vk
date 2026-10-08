@@ -133,19 +133,21 @@ void Read_MALD_state(void) {
   else {
     A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
   }
+  
+  MALD_37645_cfg_struct_t* MALD_cfg = &A2Up_Page.var.MALD_cfg.MALD_cfg;
 
   // Read only registers
-  read_register_from_MALD(MALD_RA_CHIPID, &A2Up_Page.var.MALD_cfg.MALD_cfg.CHIPID);
-  read_register_from_MALD(MALD_RA_REVID, &A2Up_Page.var.MALD_cfg.MALD_cfg.REVID);
-  read_register_from_MALD(MALD_RA_LOS_LOL_TX_FAULT, &A2Up_Page.var.MALD_cfg.MALD_cfg.LOS_LOL_TX_FAULT);
-  read_register_from_MALD(MALD_RA_BUMIN_ENABLE, &A2Up_Page.var.MALD_cfg.MALD_cfg.BUMIN_ENABLE);
+  read_register_from_MALD(MALD_RA_CHIPID, &MALD_cfg->CHIPID);
+  read_register_from_MALD(MALD_RA_REVID, &MALD_cfg->REVID);
+  read_register_from_MALD(MALD_RA_LOS_LOL_TX_FAULT, &MALD_cfg->LOS_LOL_TX_FAULT);
+  read_register_from_MALD(MALD_RA_BUMIN_ENABLE, &MALD_cfg->BUMIN_ENABLE);
 
   // ADC registers
-  read_register_from_MALD(MALD_RA_ADC_CONFIG0, &A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG0);
-  read_register_from_MALD(MALD_RA_ADC_CONFIG2, &A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG2);
-  read_register_from_MALD(MALD_RA_ADC_OUT0_MSBS, &A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_OUT0_MSBS);
-  read_register_from_MALD(MALD_RA_ADC_OUT0_LSBS, &A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_OUT0_LSBS);
-  read_register_from_MALD(MALD_RA_ADC_TX_SELECT, &A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_TX_SELECT);
+  read_register_from_MALD(MALD_RA_ADC_CONFIG0, &MALD_cfg->ADC_CONFIG0);
+  read_register_from_MALD(MALD_RA_ADC_CONFIG2, &MALD_cfg->ADC_CONFIG2);
+  read_register_from_MALD(MALD_RA_ADC_OUT0_MSBS, &MALD_cfg->ADC_OUT0_MSBS);
+  read_register_from_MALD(MALD_RA_ADC_OUT0_LSBS, &MALD_cfg->ADC_OUT0_LSBS);
+  read_register_from_MALD(MALD_RA_ADC_TX_SELECT, &MALD_cfg->ADC_TX_SELECT);
 }
 
 //Read 'Num' bytes from MASC-37029 beginning from 'RegAddr' to buffer
