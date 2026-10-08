@@ -104,6 +104,16 @@ bool read_register_from_MALD(uint8_t addr, uint8_t *value);
  */
 bool write_register_to_MALD(uint8_t addr, uint8_t value);
 
+/**
+ * @brief The function reads data from GrpCmdBuff and writes it over I2C to the MALD.
+ * Results:
+ *   GRP_CMD_RESULT_OK  -- success
+ *   GRP_CMD_RESULT_ERR -- one or more I2C transactions were failed
+ */
+void cmd_write_MALD_config(void);
+
+void update_MALD_config(void);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

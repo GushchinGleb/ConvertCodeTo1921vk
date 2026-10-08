@@ -61,100 +61,8 @@ void Init_MALD_37645(void) {
   //TEST
 
   //Init common part
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.IO_CTRL;
-  if(!write_register_to_MALD(MALD_RA_IO_CTRL, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.CDRCTRL;
-  if(!write_register_to_MALD(MALD_RA_CDRCTRL, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.I2C_ADDRESS_MODE;
-  if(!write_register_to_MALD(MALD_RA_I2C_ADDRESS_MODE, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.CHANNEL_MODE;
-  if(!write_register_to_MALD(MALD_RA_CHANNEL_MODE, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.LOCKPHASE;
-  if(!write_register_to_MALD(MALD_RA_LOCKPHASE, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.LOS_LOL_TX_ALARM;
-  if(!write_register_to_MALD(MALD_RA_LOS_LOL_TX_ALARM, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.IGNORE_TX_FAULT;
-  if(!write_register_to_MALD(MALD_RA_IGNORE_TX_FAULT, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.LOS_THRSH_AUTO_SQ;
-  if(!write_register_to_MALD(MALD_RA_LOS_THRSH_AUTO_SQ, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.CTLE_X;
-  if(!write_register_to_MALD(MALD_RA_CTLE_X, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.OUTPUT_MUTE_SLEW;
-  if(!write_register_to_MALD(MALD_RA_OUTPUT_MUTE_SLEW, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.LBIAS;
-  if(!write_register_to_MALD(MALD_RA_LBIAS, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.LMOD;
-  if(!write_register_to_MALD(MALD_RA_LMOD, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.PREFALL;
-  if(!write_register_to_MALD(MALD_RA_PREFALL, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.TDE;
-  if(!write_register_to_MALD(MALD_RA_TDE, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.CROSSING_ADJ;
-  if(!write_register_to_MALD(MALD_RA_CROSSING_ADJ, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.LBUMIN;
-  if(!write_register_to_MALD(MALD_RA_LBUMIN, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG0;
-  if(!write_register_to_MALD(MALD_RA_ADC_CONFIG0, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG2;
-  if(!write_register_to_MALD(MALD_RA_ADC_CONFIG2, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_TX_SELECT;
-  if(!write_register_to_MALD(MALD_RA_ADC_TX_SELECT, rv)) {
-      A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
-  }
+	
+	update_MALD_config();
 }
 //================================================================================
 
@@ -189,6 +97,8 @@ void Init_MADL_Default_Cfg(void) {
   A2Up_Page.var.MALD_cfg.TxPwr_calibration = 256;
 
   A2Up_Page.var.CSum = 0x0000;
+	
+	update_MALD_config();
 }
 
 /*
@@ -245,14 +155,21 @@ void Work_with_MALD_ADC(void) {
   write_register_to_MALD(MALD_RA_ADC_TX_SELECT, config & 0xF);
 }
 
-// Read state of MASC chip
-void Read_MALD_state(void)
-{
+// Read state of MALD chip
+void Read_MALD_state(void) {
   uint8_t state;
   //Read state (2 bytes - MASC_LOS_LOL_STATE and MASC_TXFAULT_STATE)
   if (read_register_from_MALD(MALD_RA_LOS_LOL_TX_FAULT, &state)) {
     A2Up_Page.var.MALD_TxFault_state = state;
+    A2Up_Page.var.MALD_status_flags &= ~ST_MALD_I2C_RW_ERR_FLAG;
+  } else {
+    A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
   }
+
+  read_register_from_MALD(MALD_RA_CHIPID, &A2Up_Page.var.MALD_cfg.MALD_cfg.CHIPID);
+  read_register_from_MALD(MALD_RA_REVID, &A2Up_Page.var.MALD_cfg.MALD_cfg.REVID);
+  read_register_from_MALD(MALD_RA_LOS_LOL_TX_FAULT, &A2Up_Page.var.MALD_cfg.MALD_cfg.LOS_LOL_TX_FAULT);
+  read_register_from_MALD(MALD_RA_BUMIN_ENABLE, &A2Up_Page.var.MALD_cfg.MALD_cfg.BUMIN_ENABLE);
 }
 
 //Read 'Num' bytes from MASC-37029 beginning from 'RegAddr' to buffer
@@ -277,6 +194,50 @@ bool write_register_to_MALD(uint8_t addr, uint8_t value) {
     return false;
 	}
 	return true;
+}
+
+void update_MALD_config(void) {
+//write_register_to_MALD(MALD_RA_CHIPID           , A2Up_Page.var.MALD_cfg.MALD_cfg.CHIPID           ); // read only
+//write_register_to_MALD(MALD_RA_REVID            , A2Up_Page.var.MALD_cfg.MALD_cfg.REVID            ); // read only
+  write_register_to_MALD(MALD_RA_RESET            , A2Up_Page.var.MALD_cfg.MALD_cfg.RESET            );
+  write_register_to_MALD(MALD_RA_IO_CTRL          , A2Up_Page.var.MALD_cfg.MALD_cfg.IO_CTRL          );
+  write_register_to_MALD(MALD_RA_CDRCTRL          , A2Up_Page.var.MALD_cfg.MALD_cfg.CDRCTRL          );
+  write_register_to_MALD(MALD_RA_I2C_ADDRESS_MODE , A2Up_Page.var.MALD_cfg.MALD_cfg.I2C_ADDRESS_MODE );
+  write_register_to_MALD(MALD_RA_CHANNEL_MODE     , A2Up_Page.var.MALD_cfg.MALD_cfg.CHANNEL_MODE     );
+  write_register_to_MALD(MALD_RA_LOCKPHASE        , A2Up_Page.var.MALD_cfg.MALD_cfg.LOCKPHASE        );
+//write_register_to_MALD(MALD_RA_LOS_LOL_TX_FAULT , A2Up_Page.var.MALD_cfg.MALD_cfg.LOS_LOL_TX_FAULT ); // read only
+  write_register_to_MALD(MALD_RA_LOS_LOL_TX_ALARM , A2Up_Page.var.MALD_cfg.MALD_cfg.LOS_LOL_TX_ALARM );
+  write_register_to_MALD(MALD_RA_IGNORE_TX_FAULT  , A2Up_Page.var.MALD_cfg.MALD_cfg.IGNORE_TX_FAULT  );
+  write_register_to_MALD(MALD_RA_LOS_THRSH_AUTO_SQ, A2Up_Page.var.MALD_cfg.MALD_cfg.LOS_THRSH_AUTO_SQ);
+  write_register_to_MALD(MALD_RA_CTLE_X           , A2Up_Page.var.MALD_cfg.MALD_cfg.CTLE_X           );
+  write_register_to_MALD(MALD_RA_OUTPUT_MUTE_SLEW , A2Up_Page.var.MALD_cfg.MALD_cfg.OUTPUT_MUTE_SLEW );
+  write_register_to_MALD(MALD_RA_LBIAS            , A2Up_Page.var.MALD_cfg.MALD_cfg.LBIAS            );
+  write_register_to_MALD(MALD_RA_LMOD             , A2Up_Page.var.MALD_cfg.MALD_cfg.LMOD             );
+  write_register_to_MALD(MALD_RA_PREFALL          , A2Up_Page.var.MALD_cfg.MALD_cfg.PREFALL          );
+  write_register_to_MALD(MALD_RA_TDE              , A2Up_Page.var.MALD_cfg.MALD_cfg.TDE              );
+  write_register_to_MALD(MALD_RA_CROSSING_ADJ     , A2Up_Page.var.MALD_cfg.MALD_cfg.CROSSING_ADJ     );
+  write_register_to_MALD(MALD_RA_LBUMIN           , A2Up_Page.var.MALD_cfg.MALD_cfg.LBUMIN           );
+//write_register_to_MALD(MALD_RA_BUMIN_ENABLE     , A2Up_Page.var.MALD_cfg.MALD_cfg.BUMIN_ENABLE     ); // read only
+//write_register_to_MALD(MALD_RA_ADC_CONFIG0      , A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG0      ); // controled by Work_with_MALD_ADC
+//write_register_to_MALD(MALD_RA_ADC_CONFIG2      , A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG2      ); // controled by Work_with_MALD_ADC
+//write_register_to_MALD(MALD_RA_ADC_OUT0_MSBS    , A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_OUT0_MSBS    ); // controled by Work_with_MALD_ADC
+//write_register_to_MALD(MALD_RA_ADC_OUT0_LSBS    , A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_OUT0_LSBS    ); // controled by Work_with_MALD_ADC
+//write_register_to_MALD(MALD_RA_ADC_TX_SELECT    , A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_TX_SELECT    ); // controled by Work_with_MALD_ADC
+}
+
+void cmd_write_MALD_config(void) {
+  const int size = A2Up_Page.var.GrpSize;
+  if (size < 26) {
+    A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_ERR;
+    return;
+  }
+
+  const uint8_t* buff = A2Up_Page.var.GrpBuffer;
+  A2Up_Page.var.MALD_status_flags &= ~ST_MALD_I2C_RW_ERR_FLAG; // clear flag
+	
+	memcpy(&A2Up_Page.var.MALD_cfg.MALD_cfg, buff, 26);
+  
+  A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_OK;
 }
 
 #ifdef __cplusplus
