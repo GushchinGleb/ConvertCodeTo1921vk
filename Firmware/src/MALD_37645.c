@@ -211,7 +211,7 @@ void cmd_write_MALD_config(void) {
   const uint8_t* buff = A2Up_Page.var.GrpBuffer;
   A2Up_Page.var.MALD_status_flags &= ~ST_MALD_I2C_RW_ERR_FLAG; // clear flag
 	
-	memcpy(&A2Up_Page.var.MALD_cfg.MALD_cfg, buff, 26);
+	memcpy(&A2Up_Page.var.MALD_cfg.MALD_cfg, buff, MALD_REGS_COUNT);
   
   A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_OK;
 }
