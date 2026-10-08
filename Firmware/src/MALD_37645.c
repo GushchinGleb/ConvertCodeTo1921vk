@@ -77,7 +77,7 @@ void Work_with_MALD_ADC(void) {
 		return;
 	}
 	if (A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG2) {
-		write_register_to_MATA(MATA_RA_ADC_CONFIG2, 0x0);
+		write_register_to_MALD(MALD_RA_ADC_CONFIG2, 0x0);
 		return;
 	}
 	
