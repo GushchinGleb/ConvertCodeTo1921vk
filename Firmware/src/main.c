@@ -424,7 +424,7 @@ void Check_register_action(void) {
     cmd_write_MALD_config();
     break;
   case GRP_CMD_UPD_GLB_RX_CFG:
-    // cmd_write_MATA_config();
+    cmd_write_MATA_config();
     break;
   case GRP_CMD_WRITE_1ST_QUARTER:
     //Group command to write 1st quarter (32 bytes) of page data

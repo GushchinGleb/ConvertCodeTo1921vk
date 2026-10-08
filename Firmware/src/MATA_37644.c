@@ -60,143 +60,14 @@ void Init_MATA_37644(void) {
     A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
   }
   //TEST
-
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.CHANNEL_MODE;
-  if(!write_register_to_MATA(MATA_RA_CHANNEL_MODE, rv)) {
-    A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
+  
+  //Init common part
+  
+  if (A2Up_Page.var.MATA_cfg.MATA_cfg.CHIPID != MATA_RDV_CHIPID) {
+    return; // Page is invalid. Skip update.
   }
 
-  // MONITORS
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.MONITORS;
-  if(!write_register_to_MATA(MATA_RA_MONITORS, rv)) {
-      A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.CDRCTRL;
-  if(!write_register_to_MATA(MATA_RA_CDRCTRL, rv)) {
-      A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.I2C_ADDRESS_MODE;
-  if(!write_register_to_MATA(MATA_RA_I2C_ADDRESS_MODE, rv)) {
-      A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.CHANNEL_MODE;
-  if(!write_register_to_MATA(MATA_RA_CHANNEL_MODE, rv)) {
-      A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.LOCKPHASE;
-  if(!write_register_to_MATA(MATA_RA_LOCKPHASE, rv)) {
-      A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_MODE;
-  if(!write_register_to_MATA(MATA_RA_LOS_MODE, rv)) {
-      A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_LOL_ALARM;
-  if(!write_register_to_MATA(MATA_RA_LOS_LOL_ALARM, rv)) {
-      A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_CTRL;
-  if(!write_register_to_MATA(MATA_RA_LOS_CTRL, rv)) {
-      A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.SLA;
-  if(!write_register_to_MATA(MATA_RA_SLA, rv)) {
-      A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.TIA_CTRL;
-  if(!write_register_to_MATA(MATA_RA_TIA_CTRL, rv)) {
-      A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.OUTPUT_CTRL;
-  if(!write_register_to_MATA(MATA_RA_OUTPUT_CTRL, rv)) {
-      A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.OUTPUT_SWING;
-  if(!write_register_to_MATA(MATA_RA_OUTPUT_SWING, rv)) {
-      A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.OUTPUT_DEEMPH;
-  if(!write_register_to_MATA(MATA_RA_OUTPUT_DEEMPH, rv)) {
-      A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG0;
-  if(!write_register_to_MATA(MATA_RA_ADC_CONFIG0, rv)) {
-      A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-  }
-
-  rv = A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG2;
-  if(!write_register_to_MATA(MATA_RA_ADC_CONFIG2, rv)) {
-      A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
-  }
-}
-
-/**
- * @brief Create default config for MATA-37029
- */
-void Init_MATA_Default_Cfg(void) { // [MATA-37644_V3.pdf page 22]
-  A2Up_Page.var.MATA_cfg.MATA_cfg.MONITORS           = 0x00;
-  A2Up_Page.var.MATA_cfg.MATA_cfg.CDRCTRL            = 0x00;
-  A2Up_Page.var.MATA_cfg.MATA_cfg.I2C_ADDRESS_MODE   = 0x00;
-  A2Up_Page.var.MATA_cfg.MATA_cfg.CHANNEL_MODE       = 0x40;
-  A2Up_Page.var.MATA_cfg.MATA_cfg.LOCKPHASE          = 0x00;
-  A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_MODE           = 0x00;
-
-  A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_LOL_ALARM      = 0x00;
-  A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_CTRL           = 0x00;
-  A2Up_Page.var.MATA_cfg.MATA_cfg.SLA                = 0x0F;
-  A2Up_Page.var.MATA_cfg.MATA_cfg.TIA_CTRL           = 0x00;
-  A2Up_Page.var.MATA_cfg.MATA_cfg.OUTPUT_CTRL        = 0x00;
-  A2Up_Page.var.MATA_cfg.MATA_cfg.OUTPUT_SWING       = 0x32;
-  A2Up_Page.var.MATA_cfg.MATA_cfg.OUTPUT_DEEMPH      = 0x00;
-  A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG0        = 0x12;
-  A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG2        = 0x00;
-
-  A2Up_Page.var.MATA_cfg.Global_TX_En = 0;    //Disable Tx by default
-  A2Up_Page.var.MATA_cfg.TxPwr_calibration = 256;
-
-  A2Up_Page.var.CSum = 0x0000;
-}
-
-/**
- * @brief Update config to MATA chip
- */
-void UpdateCfg_MATA(void)
-{
-
-  //Write config to chip
-//  Temp_buffer[0] = 0x00;      //RegAddr is 1st byte of data
-//  memcpy(&Temp_buffer[1], &TempBuf_128.u8[0], 64);
-//  if(Write_soft_i2c(I2C_UX2291_ADDR, Temp_buffer, 65) !=0 ) {
-//    //Set flag of error
-//    UpPage05.var.Tx_UX_status_flags |= ST_TXRX_CFG_INIT_ERR_FLAG;
-//  }
-//  //Write 2nd part of config (up to UX2291_TX_SYS_CTRL) (101-64 = 37 bytes)
-//  Temp_buffer[0] = 0x40;      //RegAddr is 1st byte of data
-//  memcpy(&Temp_buffer[1], &TempBuf_128.u8[64], 37);
-//  if(Write_soft_i2c(I2C_UX2291_ADDR, Temp_buffer, 38) !=0 ) {
-//    //Set flag of error
-//    UpPage05.var.Tx_UX_status_flags |= ST_TXRX_CFG_INIT_ERR_FLAG;
-//  }
-//
-//  //Update value of UX2291_TX_SYS_CTRL (don't change AMUX_ADDR it is used for measurement)
-//  Read_soft_i2c(I2C_UX2291_ADDR, UX2291_TX_SYS_CTRL, Temp_buffer, 1);
-//  Temp_buffer[1] = Temp_buffer[0] & 0xF0;    //clear all bits except AMUX_ADDR
-//  Temp_buffer[1] |= (UpPage04.var.TX_cfg.TX_SYS_CTRL & 0x0F);    //mask only config
-//  Temp_buffer[0] = UX2291_TX_SYS_CTRL;      //RegAddr is 1st byte of data
-//  Write_soft_i2c(I2C_UX2291_ADDR, Temp_buffer, 2);
+  update_MATA_config();
 }
 
 // Work with ADC of MATA-37029 chip
@@ -241,8 +112,24 @@ void Work_with_MATA_ADC(void) {
 // Read state of MATA chip
 void Read_MATA_state(void) {
   uint8_t status;
-  read_register_from_MATA(MATA_RA_LOS_LOL_STATUS, &status); // [MATA-37644_V3.pdf page 27]
-  A2Up_Page.var.MATA_LOS_LOL_state = status;
+  if (read_register_from_MATA(MATA_RA_LOS_LOL_STATUS, &status)) { // [MATA-37644_V3.pdf page 27]
+    A2Up_Page.var.MATA_LOS_LOL_state = status;
+    A2Up_Page.var.MATA_status_flags &= ~ST_MATA_I2C_RW_ERR_FLAG;
+  }
+  else {
+    A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
+  }
+  
+  // Read only registers
+  write_register_to_MATA(MATA_RA_CHIPID, A2Up_Page.var.MATA_cfg.MATA_cfg.CHIPID);
+  write_register_to_MATA(MATA_RA_REVID, A2Up_Page.var.MATA_cfg.MATA_cfg.REVID);
+  write_register_to_MATA(MATA_RA_LOS_LOL_STATUS, A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_LOL_STATUS);
+  
+  // ADC registers
+  write_register_to_MATA(MATA_RA_ADC_CONFIG0, A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG0);
+  write_register_to_MATA(MATA_RA_ADC_CONFIG2, A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG2);
+  write_register_to_MATA(MATA_RA_ADC_OUT0_MSBS, A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_OUT0_MSBS);
+  write_register_to_MATA(MATA_RA_ADC_OUT0_LSBS, A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_OUT0_LSBS);
 }
 
 //Read 'Num' bytes from MATA-37029 beginning from 'RegAddr' to buffer
@@ -267,6 +154,44 @@ bool write_register_to_MATA(uint8_t addr, uint8_t value) {
     return false;
 	}
 	return true;
+}
+
+void update_MATA_config(void) {
+//write_register_to_MATA(MATA_RA_CHIPID          , A2Up_Page.var.MATA_cfg.MATA_cfg.CHIPID          ); // read only
+//write_register_to_MATA(MATA_RA_REVID           , A2Up_Page.var.MATA_cfg.MATA_cfg.REVID           ); // read only
+  write_register_to_MATA(MATA_RA_RESET           , A2Up_Page.var.MATA_cfg.MATA_cfg.RESET           );
+  write_register_to_MATA(MATA_RA_MONITORS        , A2Up_Page.var.MATA_cfg.MATA_cfg.MONITORS        );
+  write_register_to_MATA(MATA_RA_CDRCTRL         , A2Up_Page.var.MATA_cfg.MATA_cfg.CDRCTRL         );
+  write_register_to_MATA(MATA_RA_I2C_ADDRESS_MODE, A2Up_Page.var.MATA_cfg.MATA_cfg.I2C_ADDRESS_MODE);
+  write_register_to_MATA(MATA_RA_CHANNEL_MODE    , A2Up_Page.var.MATA_cfg.MATA_cfg.CHANNEL_MODE    );
+  write_register_to_MATA(MATA_RA_LOCKPHASE       , A2Up_Page.var.MATA_cfg.MATA_cfg.LOCKPHASE       );
+  write_register_to_MATA(MATA_RA_LOS_MODE        , A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_MODE        );
+//write_register_to_MATA(MATA_RA_LOS_LOL_STATUS  , A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_LOL_STATUS  ); // read only
+  write_register_to_MATA(MATA_RA_LOS_LOL_ALARM   , A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_LOL_ALARM   );
+  write_register_to_MATA(MATA_RA_LOS_CTRL        , A2Up_Page.var.MATA_cfg.MATA_cfg.LOS_CTRL        );
+  write_register_to_MATA(MATA_RA_SLA             , A2Up_Page.var.MATA_cfg.MATA_cfg.SLA             );
+  write_register_to_MATA(MATA_RA_TIA_CTRL        , A2Up_Page.var.MATA_cfg.MATA_cfg.TIA_CTRL        );
+  write_register_to_MATA(MATA_RA_OUTPUT_CTRL     , A2Up_Page.var.MATA_cfg.MATA_cfg.OUTPUT_CTRL     );
+  write_register_to_MATA(MATA_RA_OUTPUT_SWING    , A2Up_Page.var.MATA_cfg.MATA_cfg.OUTPUT_SWING    );
+  write_register_to_MATA(MATA_RA_OUTPUT_DEEMPH   , A2Up_Page.var.MATA_cfg.MATA_cfg.OUTPUT_DEEMPH   );
+//write_register_to_MATA(MATA_RA_ADC_CONFIG0     , A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG0     ); // controled by Work_with_MATA_ADC
+//write_register_to_MATA(MATA_RA_ADC_CONFIG2     , A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_CONFIG2     ); // controled by Work_with_MATA_ADC
+//write_register_to_MATA(MATA_RA_ADC_OUT0_MSBS   , A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_OUT0_MSBS   ); // controled by Work_with_MATA_ADC
+//write_register_to_MATA(MATA_RA_ADC_OUT0_LSBS   , A2Up_Page.var.MATA_cfg.MATA_cfg.ADC_OUT0_LSBS   ); // controled by Work_with_MATA_ADC
+}
+
+void cmd_write_MATA_config(void) {
+  const int size = A2Up_Page.var.GrpSize;
+  if (size < MATA_REGS_COUNT) {
+    A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_ERR;
+    return;
+  }
+
+  const uint8_t* buff = A2Up_Page.var.GrpBuffer;
+	
+	memcpy(&A2Up_Page.var.MATA_cfg.MATA_cfg, buff, MATA_REGS_COUNT);
+  
+  A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_OK;
 }
 
 #ifdef __cplusplus

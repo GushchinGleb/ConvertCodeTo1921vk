@@ -12,6 +12,9 @@ extern "C" {
 
 #define MATA_CHIPID (0x0E << 1) // I2C address of the chip
 
+#define MATA_RDV_CHIPID 0x8E // default value of the CHIPID register
+#define MATA_REGS_COUNT 21
+
 // Registers address: [MATA-37644_V3.pdf page 22]
 #define MATA_RA_CHIPID             0x00 // always 0x8E
 #define MATA_RA_REVID              0x01 // always 0x01
@@ -92,6 +95,10 @@ bool read_register_from_MATA(uint8_t addr, uint8_t *value);
  * @param value[IN] a new value of the register
  */
 bool write_register_to_MATA(uint8_t addr, uint8_t value);
+
+void cmd_write_MATA_config(void);
+
+void update_MATA_config(void);
 
 #ifdef __cplusplus
 }
