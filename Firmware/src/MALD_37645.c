@@ -12,14 +12,12 @@ extern "C" {
 
 extern A2Up_Page_t A2Up_Page; // from eeprom_a0a2.c
 
-const MALD_37645_cfg_struct_t MALD_37645_default_config;// = { };
-//  .RESET_REG = 0 };
-
 //==============================================================================
 // Init Tx (MALD-37645)
 //==============================================================================
 void Init_MALD_37645(void) {
   uint8_t rv; // reg value
+   A2Up_Page.var.MALD_status_flags = 0x0;
   // Read CHIP_ID of UX2291 and compare to constant
   if(read_register_from_MALD(MALD_RA_CHIPID, &rv)) {
     //Check default values of register
@@ -61,45 +59,14 @@ void Init_MALD_37645(void) {
   //TEST
 
   //Init common part
+  
+  if (A2Up_Page.var.MALD_cfg.MALD_cfg.CHIPID != 0x8F) {
+    return; // Page is invalid. Skip update.
+  }
 	
 	update_MALD_config();
 }
 //================================================================================
-
-//==============================================================================
-// Create default config for MASC-37029
-//==============================================================================
-void Init_MADL_Default_Cfg(void) {
-  A2Up_Page.var.MALD_cfg.MALD_cfg.IO_CTRL           = 0x00;
-  A2Up_Page.var.MALD_cfg.MALD_cfg.CDRCTRL           = 0x00;
-  A2Up_Page.var.MALD_cfg.MALD_cfg.I2C_ADDRESS_MODE  = 0x00;
-  A2Up_Page.var.MALD_cfg.MALD_cfg.CHANNEL_MODE      = 0x40;
-  A2Up_Page.var.MALD_cfg.MALD_cfg.LOCKPHASE         = 0x00;
-
-  A2Up_Page.var.MALD_cfg.MALD_cfg.LOS_LOL_TX_ALARM  = 0x00;
-  A2Up_Page.var.MALD_cfg.MALD_cfg.IGNORE_TX_FAULT   = 0x0E;
-  A2Up_Page.var.MALD_cfg.MALD_cfg.LOS_THRSH_AUTO_SQ = 0x01;
-  A2Up_Page.var.MALD_cfg.MALD_cfg.CTLE_X            = 0x06;
-  A2Up_Page.var.MALD_cfg.MALD_cfg.OUTPUT_MUTE_SLEW  = 0x02;
-  A2Up_Page.var.MALD_cfg.MALD_cfg.LBIAS             = 0x00;
-  A2Up_Page.var.MALD_cfg.MALD_cfg.LMOD              = 0x00;
-  A2Up_Page.var.MALD_cfg.MALD_cfg.PREFALL           = 0x00;
-  A2Up_Page.var.MALD_cfg.MALD_cfg.TDE               = 0x00;
-  A2Up_Page.var.MALD_cfg.MALD_cfg.CROSSING_ADJ      = 0x10;
-  A2Up_Page.var.MALD_cfg.MALD_cfg.LBUMIN            = 0x00;
-
-  A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG0       = 0x00;
-  A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG2       = 0x00;
-
-  A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_TX_SELECT     = 0x00;
-
-  A2Up_Page.var.MALD_cfg.Global_TX_En = 0;    //Disable Tx by default
-  A2Up_Page.var.MALD_cfg.TxPwr_calibration = 256;
-
-  A2Up_Page.var.CSum = 0x0000;
-	
-	update_MALD_config();
-}
 
 /*
  * Work with ADC of MASC-37029 chip
@@ -166,10 +133,18 @@ void Read_MALD_state(void) {
     A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
   }
 
+  // Read only registers
   read_register_from_MALD(MALD_RA_CHIPID, &A2Up_Page.var.MALD_cfg.MALD_cfg.CHIPID);
   read_register_from_MALD(MALD_RA_REVID, &A2Up_Page.var.MALD_cfg.MALD_cfg.REVID);
   read_register_from_MALD(MALD_RA_LOS_LOL_TX_FAULT, &A2Up_Page.var.MALD_cfg.MALD_cfg.LOS_LOL_TX_FAULT);
   read_register_from_MALD(MALD_RA_BUMIN_ENABLE, &A2Up_Page.var.MALD_cfg.MALD_cfg.BUMIN_ENABLE);
+
+  // ADC registers
+  read_register_from_MALD(MALD_RA_ADC_CONFIG0, &A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG0);
+  read_register_from_MALD(MALD_RA_ADC_CONFIG2, &A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_CONFIG2);
+  read_register_from_MALD(MALD_RA_ADC_OUT0_MSBS, &A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_OUT0_MSBS);
+  read_register_from_MALD(MALD_RA_ADC_OUT0_LSBS, &A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_OUT0_LSBS);
+  read_register_from_MALD(MALD_RA_ADC_TX_SELECT, &A2Up_Page.var.MALD_cfg.MALD_cfg.ADC_TX_SELECT);
 }
 
 //Read 'Num' bytes from MASC-37029 beginning from 'RegAddr' to buffer
