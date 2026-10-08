@@ -12,6 +12,9 @@ extern "C" {
 
 #define MALD_CHIPID (0x0F << 1) // I2C address of the chip
 
+#define MALD_RDV_CHIPID 0x8F // default value of the CHIPID register
+#define MALD_REGS_COUNT 26
+
 // --- Registers address [MAld-37645_V3.pdf page 24]
 #define MALD_RA_CHIPID             0x00 // always 0x8F
 #define MALD_RA_REVID              0x01 // always 0x01

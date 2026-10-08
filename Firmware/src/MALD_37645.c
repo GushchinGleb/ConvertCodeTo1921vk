@@ -60,7 +60,7 @@ void Init_MALD_37645(void) {
 
   //Init common part
   
-  if (A2Up_Page.var.MALD_cfg.MALD_cfg.CHIPID != 0x8F) {
+  if (A2Up_Page.var.MALD_cfg.MALD_cfg.CHIPID != MALD_RDV_CHIPID) {
     return; // Page is invalid. Skip update.
   }
 	
@@ -129,7 +129,8 @@ void Read_MALD_state(void) {
   if (read_register_from_MALD(MALD_RA_LOS_LOL_TX_FAULT, &state)) {
     A2Up_Page.var.MALD_TxFault_state = state;
     A2Up_Page.var.MALD_status_flags &= ~ST_MALD_I2C_RW_ERR_FLAG;
-  } else {
+  }
+  else {
     A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
   }
 
@@ -202,7 +203,7 @@ void update_MALD_config(void) {
 
 void cmd_write_MALD_config(void) {
   const int size = A2Up_Page.var.GrpSize;
-  if (size < 26) {
+  if (size < MALD_REGS_COUNT) {
     A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_ERR;
     return;
   }
