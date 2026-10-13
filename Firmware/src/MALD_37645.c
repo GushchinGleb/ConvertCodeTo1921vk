@@ -205,6 +205,43 @@ void update_MALD_config(void) {
 //write_register_to_MALD(MALD_RA_ADC_TX_SELECT    , MALD_cfg->ADC_TX_SELECT    ); // controled by Work_with_MALD_ADC
 }
 
+void cmd_read_regs_from_MALD(void) {
+  const uint8_t regc = A2Up_Page.var.GrpSize;    // count or register
+  const uint8_t rega = A2Up_Page.var.GrpAddress; // address of the first register
+  
+  int errors = 0;
+  
+  for (int i = 0; i < regc; ++i) {
+    const int regi = rega + i;
+    uint8_t value;
+    if (!read_register_from_MALD(regi, &value)) {
+      errors++;
+      value = 0xFF;
+    }
+    
+    A2Up_Page.var.GrpBuffer[i] = value;
+  }
+  
+  A2Up_Page.var.GrpCmdResult = errors;
+}
+
+void cmd_write_regs_to_MALD(void) {
+  const uint8_t regc = A2Up_Page.var.GrpSize;    // count or register
+  const uint8_t rega = A2Up_Page.var.GrpAddress; // address of the first register
+  
+  int errors = 0;
+  
+  for (int i = 0; i < regc; ++i) {
+    const int regi = rega + i;
+    uint8_t value = A2Up_Page.var.GrpBuffer[i];
+    if (!read_register_from_MALD(regi, &value)) {
+      errors++;
+    }
+  }
+  
+  A2Up_Page.var.GrpCmdResult = errors;
+}
+
 void cmd_write_MALD_config(void) {
   const int size = A2Up_Page.var.GrpSize;
   if (size < MALD_REGS_COUNT) {

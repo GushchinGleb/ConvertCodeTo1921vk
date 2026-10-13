@@ -184,6 +184,43 @@ void update_MATA_config(void) {
 //write_register_to_MATA(MATA_RA_ADC_OUT0_LSBS   , MATA_cfg->ADC_OUT0_LSBS   ); // controled by Work_with_MATA_ADC
 }
 
+void cmd_read_regs_from_MATA(void) {
+  const uint8_t regc = A2Up_Page.var.GrpSize;    // count or register
+  const uint8_t rega = A2Up_Page.var.GrpAddress; // address of the first register
+  
+  int errors = 0;
+  
+  for (int i = 0; i < regc; ++i) {
+    const int regi = rega + i;
+    uint8_t value;
+    if (!read_register_from_MATA(regi, &value)) {
+      errors++;
+      value = 0xFF;
+    }
+    
+    A2Up_Page.var.GrpBuffer[i] = value;
+  }
+  
+  A2Up_Page.var.GrpCmdResult = errors;
+}
+
+void cmd_write_regs_to_MATA(void) {
+  const uint8_t regc = A2Up_Page.var.GrpSize;    // count or register
+  const uint8_t rega = A2Up_Page.var.GrpAddress; // address of the first register
+  
+  int errors = 0;
+  
+  for (int i = 0; i < regc; ++i) {
+    const int regi = rega + i;
+    uint8_t value = A2Up_Page.var.GrpBuffer[i];
+    if (!read_register_from_MATA(regi, &value)) {
+      errors++;
+    }
+  }
+  
+  A2Up_Page.var.GrpCmdResult = errors;
+}
+
 void cmd_write_MATA_config(void) {
   const int size = A2Up_Page.var.GrpSize;
   if (size < MATA_REGS_COUNT) {

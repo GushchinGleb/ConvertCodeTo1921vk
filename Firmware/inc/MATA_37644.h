@@ -96,6 +96,10 @@ bool read_register_from_MATA(uint8_t addr, uint8_t *value);
  */
 bool write_register_to_MATA(uint8_t addr, uint8_t value);
 
+void cmd_read_regs_from_MATA(void);
+
+void cmd_write_regs_to_MATA(void);
+
 void cmd_write_MATA_config(void);
 
 void update_MATA_config(void);

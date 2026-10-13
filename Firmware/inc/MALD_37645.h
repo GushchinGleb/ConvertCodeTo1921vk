@@ -107,6 +107,11 @@ bool read_register_from_MALD(uint8_t addr, uint8_t *value);
  */
 bool write_register_to_MALD(uint8_t addr, uint8_t value);
 
+
+void cmd_read_regs_from_MALD(void);
+
+void cmd_write_regs_to_MALD(void);
+
 /**
  * @brief The function reads data from GrpCmdBuff and writes it over I2C to the MALD.
  * Results:

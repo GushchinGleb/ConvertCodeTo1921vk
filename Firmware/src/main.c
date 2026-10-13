@@ -409,16 +409,16 @@ void Check_register_action(void) {
 
   switch (A2Up_Page.var.GrpCommand) {
   case GRP_CMD_MATA_DATA_RD:
-//    cmd_read_data_from(MATA_CHIPID);
+    cmd_read_regs_from_MATA();
     break;
   case GRP_CMD_MATA_DATA_WR:
-//    cmd_write_data_to(MATA_CHIPID);
+    cmd_write_regs_to_MATA();
     break;
   case GRP_CMD_MALD_DATA_RD:
-//    cmd_read_data_from(MALD_CHIPID);
+    cmd_read_regs_from_MALD();
     break;
   case GRP_CMD_MALD_DATA_WR:
-//    cmd_write_data_to(MALD_CHIPID);
+    cmd_write_regs_to_MALD();
     break;
   case GRP_CMD_UPD_TX_CFG:
     cmd_write_MALD_config();
