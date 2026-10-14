@@ -25,6 +25,7 @@ void periph_init(void);
 void Check_timer_interval(void);
 void Load_memory_from_Flash(void);
 void Check_register_action(void);
+void Read_diagnostic_pins(void);
 void Update_diagnostic_regs(void);
 
 extern uint8_t Time_flags;
@@ -189,6 +190,7 @@ void Check_timer_interval() {
 
     Read_MALD_state();
     Read_MATA_state();
+    Read_diagnostic_pins();
 		
     if (master_i2c_status != 0) {
 	    GPIO_LOS->DATAOUTCLR = LOS_PIN_MASK;
@@ -450,6 +452,22 @@ void Check_register_action(void) {
   A2Up_Page.var.GrpCommand = 0;  //Command is handled -> Clear it
 }
 //====================================
+
+
+void Read_diagnostic_pins(void) {
+  if (GPIO_RS0->DATA & RS0_PIN_MASK) {
+    A2_Page.var.Stat_Control |= ST_RS0_STATE_FLAG;
+  }
+  else {
+    A2_Page.var.Stat_Control &= ~ST_RS0_STATE_FLAG;
+  }
+  if (GPIO_RS1->DATA & RS0_PIN_MASK) {
+    A2_Page.var.Stat_Control |= ST_RS1_STATE_FLAG;
+  }
+  else {
+    A2_Page.var.Stat_Control &= ~ST_RS1_STATE_FLAG;
+  }
+}
 
 //====================================
 void Update_diagnostic_regs(void) {

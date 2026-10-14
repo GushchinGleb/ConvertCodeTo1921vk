@@ -10,6 +10,7 @@ extern "C" {
 #include "../inc/soft_master_i2c.h"
 #include "../inc/sfp28.h"
 
+extern A2_Page_t A2_Page; // from eeprom_a0a2.c
 extern A2Up_Page_t A2Up_Page; // from eeprom_a0a2.c
 
 //==============================================================================
@@ -128,11 +129,31 @@ void Read_MALD_state(void) {
   //Read state (2 bytes - MASC_LOS_LOL_STATE and MASC_TXFAULT_STATE)
   if (read_register_from_MALD(MALD_RA_LOS_LOL_TX_FAULT, &state)) {
     A2Up_Page.var.MALD_TxFault_state = state;
+    if (state & 0x20) {
+      A2_Page.var.Stat_Control |= ST_TX_FAULT_STATE_FLAG;
+    }
+    else {
+      A2_Page.var.Stat_Control &= ~ST_TX_FAULT_STATE_FLAG;
+    }
     A2Up_Page.var.MALD_status_flags &= ~ST_MALD_I2C_RW_ERR_FLAG;
   }
   else {
     A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
   }
+  
+  if (read_register_from_MALD(MALD_RA_CHANNEL_MODE, &state)) {
+    if (state & 0x80) { // channel disable
+      A2_Page.var.Stat_Control |= ST_TX_DISABLE_STATE_FLAG;
+    }
+    else {
+      A2_Page.var.Stat_Control &= ~ST_TX_DISABLE_STATE_FLAG;
+    }
+    A2Up_Page.var.MALD_status_flags &= ~ST_MALD_I2C_RW_ERR_FLAG;
+  }
+  else {
+    A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
+  }
+  
   
   MALD_37645_cfg_struct_t* MALD_cfg = &A2Up_Page.var.MALD_cfg.MALD_cfg;
 

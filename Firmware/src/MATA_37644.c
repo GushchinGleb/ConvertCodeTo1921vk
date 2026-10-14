@@ -11,6 +11,7 @@ extern "C" {
 #include "../inc/soft_master_i2c.h"
 #include "../inc/sfp28.h"
 
+extern A2_Page_t A2_Page; // from eeprom_a0a2.c
 extern A2Up_Page_t A2Up_Page; // from eeprom_a0a2.c
 
 const MATA_37644_cfg_struct_t MATA_37644_default_config;// = { };
@@ -118,6 +119,20 @@ void Read_MATA_state(void) {
   }
   else {
     A2Up_Page.var.MATA_status_flags |= ST_MATA_I2C_RW_ERR_FLAG;
+  }
+  
+  uint8_t state;
+  if (read_register_from_MATA(MATA_RA_LOS_LOL_STATUS, &state)) {
+    if (state & 0x13) { // channel disable
+      A2_Page.var.Stat_Control |= ST_RX_LOS_STATE_FLAG;
+    }
+    else {
+      A2_Page.var.Stat_Control &= ~ST_RX_LOS_STATE_FLAG;
+    }
+    A2Up_Page.var.MALD_status_flags &= ~ST_MALD_I2C_RW_ERR_FLAG;
+  }
+  else {
+    A2Up_Page.var.MALD_status_flags |= ST_MALD_I2C_RW_ERR_FLAG;
   }
   
   MATA_37644_cfg_struct_t* MATA_cfg = &A2Up_Page.var.MATA_cfg.MATA_cfg;
