@@ -325,6 +325,28 @@ void Load_memory_from_Flash(void)
 }
 //====================================
 
+static void cmd_flash_page(void) {
+  A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_FL_UPD_FAIL;
+  switch (A2Up_Page.var.GrpAddress) {
+    case 0xA0: // A0
+      flash_update(FLASH_A0, A0_Page.Bytes, 128);
+      break;
+    case 0xA2: // A2
+      flash_update(FLASH_A2, A2_Page.Bytes, 128);
+      break;
+    case 0xA3: // A2Up
+      memcpy(Temp_page_data, A2_Page.Bytes, 128);
+      flash_update(FLASH_A2_UP, Temp_page_data, 128);
+      break;
+    default:
+      A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_BAD_CONST;
+      return;
+  }
+  
+  A2Up_Page.var.GrpAddress |= 0x80; // adress should be rewrote for th next update
+  A2Up_Page.var.GrpCmdResult = GRP_CMD_RESULT_OK;
+}
+
 //====================================
 static void cmd_update_flash_page(void) {
   uint16_t check_sum = 0;
@@ -445,7 +467,12 @@ void Check_register_action(void) {
     memcpy(&Temp_page_data[96], A2Up_Page.var.GrpBuffer, 32);
     cmd_update_flash_page();
     break;
+  case GRP_CMD_FLASH_PAGE:
+    // kill slave I2C for some reason
+    //cmd_flash_page();
+    break;
   default:
+    A2Up_Page.var.GrpCmdResult = A2Up_Page.var.GrpCommand;
     break;
   }
 

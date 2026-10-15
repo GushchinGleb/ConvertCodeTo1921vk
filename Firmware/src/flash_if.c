@@ -76,11 +76,11 @@ int8_t flash_write(uint32_t addr, const uint8_t* data, uint32_t size) {
   return 0; // ok
 }
 
-int8_t flash_update(uint32_t addr, const uint8_t* data, uint32_t size) {
+int8_t flash_update(uint32_t addr, const uint8_t* data, uint32_t size) {  
   if (flash_page_erase(addr)) {
     return -1; // 
   }
-  
+
   if (flash_write( addr, data, size)) {
     return -1; // 
   }

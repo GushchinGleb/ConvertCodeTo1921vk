@@ -130,6 +130,7 @@ typedef union A2_Page_Un {
 #define  GRP_CMD_WRITE_2ND_QUARTER   0x22 // command to write 2nd quarter of Page to write to flash
 #define  GRP_CMD_WRITE_3RD_QUARTER   0x23 // command to write 3rd quarter of Page to write to flash
 #define  GRP_CMD_WR_4TH_Q_AND_UPDATE 0x24 // command to write 4th quarter of Page and update page in flash
+#define  GRP_CMD_FLASH_PAGE          0x25 // command update a page in flash
 #define  GRP_CMD_Tx_CALIBR_UPDATE    0x31 // command to update Tx calibration coefs
 #define  GRP_CMD_Rx_CALIBR_UPDATE    0x32 // command to update Rx calibration coefs
 
